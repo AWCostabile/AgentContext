@@ -172,12 +172,19 @@ filled tree, so that you can see what the indexes look like with something in th
 ## What is here today
 
 - The method, in this file, and the instruction an instance receives, in `template/AGENTS.md`.
-- The full skeleton of an instance, in `template/`: indexes, tags and leaf templates.
+- The full skeleton of an instance, in `template/`: indexes, tags, and the branch, leaf, rule and
+  product templates.
+- The core scripts, in `scripts/`: `cure.sh` the structural linter, `smell.sh` the heuristic smells,
+  `find.sh` tag and keyword search, and the two libraries they share. They read `.conf` and treat an
+  absent `private/` as normal. This repository runs them over its own skeleton as its one check:
+  `bash scripts/cure.sh --root template`.
+- The contract of every check, in `template/HYGIENE.md`, and the grammar and tier rules as plain
+  documents, in `template/rules/`.
 - The adapter contract, with four adapter directories whose READMEs describe them.
 
-Not in this repository yet: the linter and search scripts, the tier guard, the deployer, the adapter
-payloads, the constitution module and the worked example. Until they exist, `template/AGENTS.md`
-names tools you do not have, and you would deploy by hand.
+Not in this repository yet: the deployer, the adapter payloads (the tier guard among them), the
+constitution module and the worked example. Until the deployer exists, deploying is copying
+`template/` to your target, copying `scripts/` beside it, and filling in a `.conf`.
 
 ## Licence
 
