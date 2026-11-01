@@ -36,7 +36,8 @@ one leaf per area, each opening with a **State today** paragraph. Follow its lin
 
 Write in the deepest matching branch. **Leaf + Contents row + tags is one action**; in the private
 tree it ends with one commit. Copy new branches from `templates/branch`, and new products from
-`templates/product`, replacing every `{{ }}`.
+`templates/product` (its private mirror from `templates/product-mirror`), filling in every
+placeholder.
 
 ## The laws
 
