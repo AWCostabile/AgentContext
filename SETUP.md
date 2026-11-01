@@ -6,7 +6,7 @@ command, then confirm the check against what is now on disk before moving to the
 here asks you to read another file and work out what to do; when a step refuses, stop and tell the
 user what it said.
 
-The pinned release is `v0.4.0`. Replace it everywhere below if the user names another.
+The pinned release is `v0.6.0`. Replace it everywhere below if the user names another.
 
 ## Before you start: ask the user
 
@@ -45,10 +45,10 @@ Work in a scratch directory the user is happy to delete afterwards.
 **Run**
 
 ```
-curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/v0.4.0.tar.gz | tar xz
+curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/v0.6.0.tar.gz | tar xz
 ```
 
-**Check**: a directory `AgentContext-0.4.0/` exists and holds `init.sh`, `template/AGENTS.md`,
+**Check**: a directory `AgentContext-0.6.0/` exists and holds `init.sh`, `template/AGENTS.md`,
 `scripts/cure.sh` and `adapters/`. (GitHub names the archive's top directory after the tag without
 its `v`.) Nothing else has been written anywhere.
 
@@ -57,7 +57,7 @@ its `v`.) Nothing else has been written anywhere.
 **Run**
 
 ```
-cp AgentContext-0.4.0/template/.conf.example ./my.conf
+cp AgentContext-0.6.0/template/.conf.example ./my.conf
 ```
 
 Then edit `my.conf` from the user's answers: the `AI_` lines, the `MY_` lines and `CATALOGS`. Leave
@@ -78,7 +78,7 @@ prints `8`, and `grep '^CATALOGS=' my.conf` shows the user's catalogs in quotes.
 one; add `--name <RepositoryName>` if the directory's basename is not the name they want)
 
 ```
-bash AgentContext-0.4.0/init.sh --target <path> --conf ./my.conf
+bash AgentContext-0.6.0/init.sh --target <path> --conf ./my.conf
 ```
 
 **Check**: the output ends with `done: <path>` followed by the adapter list. Then:
@@ -143,7 +143,7 @@ user; a team that will run agent-led work wants it.
 **Run**
 
 ```
-cp -R AgentContext-0.4.0/modules/constitution/tree <path>/constitution && cd <path> && bash scripts/cure.sh
+cp -R AgentContext-0.6.0/modules/constitution/tree <path>/constitution && cd <path> && bash scripts/cure.sh
 ```
 
 Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
@@ -160,7 +160,7 @@ Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delet
 and the user keeps what applies and strikes the rest before the first commit. When a leaf is as
 the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what
 freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one). The
-adoption steps in `AgentContext-0.4.0/modules/constitution/README.md` walk the same ground. Commit.
+adoption steps in `AgentContext-0.6.0/modules/constitution/README.md` walk the same ground. Commit.
 
 ## 8. Adopt the codebase module (optional)
 
@@ -172,7 +172,7 @@ repository sits beside the instance, as the workspace sees it.
 **Run** (from the instance root, once per product; `<repository>` is the product's checkout beside it)
 
 ```
-cp -R AgentContext-0.4.0/modules/codebase <path>/modules/codebase && cd <path>
+cp -R AgentContext-0.6.0/modules/codebase <path>/modules/codebase && cd <path>
 python modules/codebase/codebase.py --repo ../<repository> --into public/<catalog>/<Product>/codebase \
   --profile ../<repository>/codebase.profile.json --write-agent
 ```
