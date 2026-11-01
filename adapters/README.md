@@ -16,10 +16,10 @@ without any of them.
 
 | Adapter | Status |
 | ------- | ------ |
-| [Claude Code](./claude-code/README.md) | written; its payload is not in this repository yet |
-| [Codex](./codex/README.md) | stub, no payload |
-| [Cursor](./cursor/README.md) | stub, no payload |
-| [Gemini CLI](./gemini-cli/README.md) | stub, no payload |
+| [Claude Code](./claude-code/README.md) | written |
+| [Codex](./codex/README.md) | stub, porting spec in section 3 |
+| [Cursor](./cursor/README.md) | stub, porting spec in section 3 |
+| [Gemini CLI](./gemini-cli/README.md) | stub, porting spec in section 3 |
 
 ## What every adapter README says
 
