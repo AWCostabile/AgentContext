@@ -211,5 +211,21 @@ else
   fi
 fi
 
+# -- 11. every worked example lints clean ------------------------------------------------------------------
+# An example is a deployed instance committed under examples/: any directory there holding a
+# .conf. The repository's own scripts lint it, and it carries no placeholder outside templates/.
+nex=0
+for ex in "$SRC"/examples/*/; do
+  [ -f "${ex}.conf" ] || continue
+  ex=${ex%/}; name=${ex##*/}; nex=$((nex + 1))
+  bash "$SRC/scripts/cure.sh" --root "$ex" >/dev/null 2>&1; crc=$?
+  check "example $name: cure.sh reports 0 fails" '[ $crc -eq 0 ]'
+  bash "$SRC/scripts/smell.sh" --root "$ex" --quiet >/dev/null 2>&1; src=$?
+  check "example $name: smell.sh reports 0 smells" '[ $src -eq 0 ]'
+  left=$(grep -rlE '\{\{[A-Za-z]' --exclude-dir=.git "$ex" | grep -v /templates/)
+  check "example $name: no placeholder outside templates/${left:+ (left: $(printf '%s' "$left" | tr '\n' ' '))}" '[ -z "$left" ]'
+done
+[ $nex -eq 0 ] && info "no example holds a .conf: example step not run"
+
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL
