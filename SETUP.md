@@ -154,7 +154,13 @@ Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
 
 **Check**: `<path>/constitution/.index.md`, `constitution/history/rulings/`, `constitution/articles/`
 and `constitution/process/` exist; `cure.sh` still ends with 0 fails; `constitution/README.md` does
-not exist (the module's README stays in the release, only `tree/` is copied). Commit.
+not exist (the module's README stays in the release, only `tree/` is copied).
+
+Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1,
+and the user keeps what applies and strikes the rest before the first commit. When a leaf is as
+the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what
+freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one). The
+adoption steps in `AgentContext-0.4.0/modules/constitution/README.md` walk the same ground. Commit.
 
 ## How to update
 
