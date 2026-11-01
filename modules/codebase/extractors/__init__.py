@@ -11,6 +11,7 @@ extractor for another language. Adding a language is one module and one line bel
 """
 import fnmatch
 
+from . import typescript
 
 EXTRACTORS = {}
 
@@ -28,6 +29,7 @@ def register(module, name=None, default=None, patterns=None, exclude=None):
     EXTRACTORS[entry['name']] = entry
 
 
+register(typescript)
 
 
 def claims(entry, rel):
