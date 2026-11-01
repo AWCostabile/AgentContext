@@ -1,0 +1,26 @@
+# Agent Conduct — private/
+
+- This tree is the development cycle as known on ONE machine. It is not hidden from a
+  session here: it is the working memory of this machine. But it is not company-wide.
+- **One sanctioned crossing into `public/`:** what a change ACHIEVED may be distilled into
+  the public feature log (`public/<catalog>/<Product>/features/`): drafted at close-out in
+  the journal entry that accompanies its PR body here, and appended when the pull request
+  merges, because a change that has not merged is not yet true. How the work was run (plan,
+  wave, phase, sprint, kickoff, epic, retro, who asked for what) never crosses. The only
+  delivery trace `public/` may carry is one any teammate can find in the codebase itself: a
+  MERGED pull request of the product's repository.
+- Nothing else here is copied or paraphrased into `public/` without the owner saying so in
+  the current session. An owner RULING found inside a record here is lifted verbatim into a
+  public rulings leaf, by decision, never by drift.
+- Links run one way: leaves here link into `public/` freely; a `public/` leaf never links
+  to, or cites the path of, anything here.
+- `plans/`, `kickoffs/`, `prs/`, `appendices/` and `journal/retros/` are immutable
+  provenance, exactly as `public/**/history/` is: records are added verbatim with a manifest
+  row and never edited once landed.
+- This is a git repository of its own: trunk `main` only, ONE commit per filing action
+  (leaf + row + tags), plan and PR vocabulary welcome in subjects, history never rewritten,
+  `landed/<date>-<slug>` tags mark landings. Commit as the work is done.
+- **Commits here are path-scoped, always**, because this tree may have more than one
+  writer: `git add <new files>` first (a pathspec commit refuses an untracked file), then
+  `git commit -m "…" -- <paths>`. Never `git add -A` or `git add .`: it sweeps in another
+  writer's uncommitted edits.
