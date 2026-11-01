@@ -1,0 +1,33 @@
+# —— AI Traits —————————————————————————————————————————————————————————————— #
+
+# How Technical should the AI be?
+# - for example: 'beginner', 'junior', 'mid', 'senior',
+AI_TECHNICALITY=mid
+
+# What sort of speaking tone should the AI possess?
+# - for example: 'casual', 'direct', 'friendly', 'reserved'
+AI_TONE=direct
+
+# —— Personal Preferences ——————————————————————————————————————————————————— #
+
+# Details about how you wish to be referred to in documentation.
+MY_NAME="Sam Example"
+MY_NICK=Sam
+MY_PRONOUNS=They,Them
+MY_ROLE=Developer
+MY_USER=samexample
+
+# —— Catalogs ——————————————————————————————————————————————————————————————— #
+
+# The top-level buckets of `public/`, named by you. Each entry is one branch of
+# `public/` and its mirror in `private/`. Tools read the names from here and never
+# spell them.
+CATALOGS="products projects"
+
+# —— Private Tree —————————————————————————————————————————————————————————— #
+
+# `private/` is this machine's own development-cycle tree: a nested git repository
+# the parent ignores wholly. List the top-level private branches the search tools
+# include by default. Unset or empty means public-only, which is what a fresh clone
+# gets. `find.sh -p` searches everything under `private/` regardless of this key.
+PRIVATE_SCOPES="products projects journal"
