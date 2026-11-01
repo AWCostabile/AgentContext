@@ -1,0 +1,51 @@
+# Quillfeather: a worked example
+
+Quillfeather is an invented six-person company that makes software for independent bookshops. This
+directory is its knowledge tree, as it might look a fortnight after it was set up: two products and
+a website, each designed, ruled and logged, and one piece of work in flight. The company, its people,
+its products, its customers and its pull requests are all fictional.
+
+This page is for a reader of the template. It is not part of the instance: an agent working in the
+tree starts at [AGENTS.md](./AGENTS.md), as it would in yours.
+
+## How it was made
+
+1. A `.conf` was written for the founder, Sam Example, with the catalogs `products projects` and the
+   lean orchestration budget.
+2. The template's own deployer laid the instance down: `init.sh --target examples/quillfeather
+   --conf <that .conf> --name Quillfeather`, with no adapter.
+3. Everything under `public/` and `private/` was then filled by hand, following the rules the
+   instance received: each product copied from `templates/product`, each private mirror from
+   `templates/product-mirror`, every placeholder replaced.
+
+The core files (`AGENTS.md`, `HYGIENE.md`, `rules/`, `scripts/`, `templates/`, `.vscode/`,
+`.conf.example`) are the template's own, copied in by the deployer and listed with their hashes in
+`.agentcontext`. Read them in the template rather than here.
+
+## What to look at first
+
+1. **A feature log**: [Tillwright: Selling](./public/products/Tillwright/features/features.selling.md).
+   Its State today paragraph says what the till does now; its dated entries say what became true,
+   each ending with the merged pull request.
+2. **The design leaf it links**: [the till](./public/products/Tillwright/design/design.till.md), current
+   law, with the rulings it rests on named under its title.
+3. **That ruling**: [the till and customer orders](./public/products/Tillwright/history/rulings.till-and-orders.md),
+   the decision as it was made, and the manifest row in its index that says which pull requests
+   landed it.
+4. **The state of the work**: [private/journal/latest.md](./private/journal/latest.md), then the plan,
+   kickoff and pull-request record it points to, and the journal entry where the next feature-log
+   entry waits, drafted, for its merge.
+
+Run the tree's own tools from this directory: `bash scripts/find.sh -l` lists the tag vocabulary,
+`bash scripts/find.sh offline` finds the branches about the offline till, and `bash scripts/cure.sh`
+and `bash scripts/smell.sh` both come back clean.
+
+## What is left out
+
+- **No adapter.** The example is harness-neutral: search and filing are run by hand, and the linter
+  stands in for pre-write enforcement.
+- **No constitution module.** The tree's law about itself is the core `rules/`; nothing was adopted
+  from `modules/`.
+- **The private tree is a snapshot.** In a real instance `private/` is a git repository of its own
+  that the instance ignores, and `.conf` is ignored too. Here both are committed so you can read
+  them; the example's `.gitignore` says so.
