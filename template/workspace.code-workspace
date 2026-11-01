@@ -1,0 +1,25 @@
+{
+  "settings": {
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
+    },
+  },
+  "folders": [
+    {
+      "name": "Knowledge Tree",
+      "path": ".",
+    },
+    {
+      "name": "Knowledge Tree (Private)",
+      "path": "./private",
+    },
+    {
+      "name": "{{REPOSITORY_NAME}}",
+      "path": "../{{REPOSITORY_NAME}}",
+    },
+  ],
+}
