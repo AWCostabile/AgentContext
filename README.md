@@ -1,4 +1,4 @@
-# AgentContextTemplate
+# AgentContext
 
 A template for keeping what your organisation knows in one git repository, in a shape that coding
 agents and new hires can both read. It ships a method and an empty structure. You clone it, deploy
@@ -20,7 +20,7 @@ replaced it.
 ## Getting it
 
 ```
-git clone https://github.com/AWCostabile/AgentContextTemplate.git
+git clone https://github.com/AWCostabile/AgentContext.git
 ```
 
 The `template/` directory is the skeleton. It maps onto the root of your deployed copy, which is

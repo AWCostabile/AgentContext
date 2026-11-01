@@ -1,4 +1,4 @@
-# AgentContextTemplate
+# AgentContext
 
 Orientation for an agent working ON this template repository, not in a deployed instance. It holds
 a vendor-neutral, MIT-licensed knowledge-tree method: the method and an empty structure, never a
