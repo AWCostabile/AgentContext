@@ -35,6 +35,13 @@ rel=$("$PY" "$HOOKDIR/relpath.py" "$ROOT" 2>/dev/null) || exit 0
 lc=${rel,,}
 case "${lc##*/}" in .index.md|.tags|.agent) exit 0 ;; esac
 
+# A seed ruling is prospective law, not yet enacted: a leaf under any history/ whose first
+# twelve lines carry `_status:_ seed` stays writable until the owner changes that line.
+case "$lc" in
+  */history/*|history/*)
+    if [ -f "$ROOT/$rel" ] && head -n 12 "$ROOT/$rel" | grep -q -m1 '^_status:_ seed'; then exit 0; fi ;;
+esac
+
 reason=""
 case "$lc" in
   public/*/history/*|constitution/history/*)

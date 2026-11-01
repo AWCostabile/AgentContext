@@ -9,7 +9,9 @@ instance.
 - **A pre-write tier guard.** A `PreToolUse` hook refuses a Write or Edit into an immutable
   tier before it happens: `public/**/history/`, `constitution/history/`, and in the private tree
   `prs/`, `appendices/` and `journal/retros/`. A branch's own `.index.md`, `.tags` and `.agent`
-  stay writable, and so does a PR body whose `_landed as:_` line still reads `—`.
+  stay writable, and so does a PR body whose `_landed as:_` line still reads `—`. A leaf under
+  any `history/` whose first twelve lines carry a line starting `_status:_ seed` is prospective
+  law, not yet enacted, and stays writable until the owner changes that line on adoption.
   `KNOWLEDGE_TREE_TIER_OVERRIDE=1` lets a deliberate exception through.
 - **A lint after every write.** A `PostToolUse` hook runs `scripts/cure.sh --fast` after any
   write into the trees, `templates/`, `AGENTS.md` or `README.md`, and hands the FAIL lines back
