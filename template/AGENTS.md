@@ -67,6 +67,16 @@ is never rewritten. A machine with no `private/` is normal, and every tool treat
 
 ## Maintenance
 
-`bash scripts/cure.sh` lints the structure and fails on a broken invariant; `bash scripts/smell.sh`
-warns on heuristics; [HYGIENE.md](./HYGIENE.md) describes both. Run the linter after filing several
-leaves and before merging.
+The tree checks itself in two layers, and [HYGIENE.md](./HYGIENE.md) is the contract of both:
+
+- `bash scripts/cure.sh` lints the structure: every branch indexed and tagged, every leaf referenced,
+  every link resolving, nothing under `public/` pointing into `private/`, every catalog in `.conf`
+  present. A broken invariant is a FAIL and the exit code counts them; `--fast` skips the advisory
+  scans.
+- `bash scripts/smell.sh` hunts what is probably wrong and needs judgement: a stale design leaf, a dead
+  tag, an index row that no longer matches its leaf's title, process vocabulary in `public/`, a
+  retired spelling. Every finding is a WARN to fix or to record a reason for.
+
+Both read `.conf` and treat an absent `private/` as normal. Run the linter after filing several
+leaves and before merging a branch: zero fails, every smell fixed or reasoned. The grammar the checks
+enforce is written out in [rules/](./rules/.index.md).
