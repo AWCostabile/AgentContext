@@ -221,7 +221,8 @@ line carries `landed-since-retro=<n>`. Ids are stable; a missing number is a ret
 ### S12 — duplicate leaf basename
 
 - **Signal:** the same leaf filename in two branches. `glossary.md` and the per-product
-  `features.<area>.md` leaves are ignored, and moved stubs are skipped (a stub shares its name
+  `features.<area>.md` leaves and a generated tier's `codebase.*.md` leaves are ignored, and moved
+  stubs are skipped (a stub shares its name
   with the leaf it points at).
 - **Why it matters:** two `notes.md` files are indistinguishable in search results and in
   citations by filename.
