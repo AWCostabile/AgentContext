@@ -84,16 +84,19 @@ bash AgentContext-0.3.0/init.sh --target <path> --conf ./my.conf
 **Check**: the output ends with `done: <path>` followed by the adapter list. Then:
 
 ```
-grep -rl '{{' <path> | grep -v '/templates/'
+grep -rlE '\{\{[A-Za-z]' --exclude-dir=.git <path> | grep -v '/templates/'
 ```
 
-prints nothing: no placeholder is left outside the templates directory. `<path>/public/` holds one
-directory per catalog and no `catalog/`; `<path>/.agentcontext` exists and names the release;
-`<path>/<RepositoryName>.code-workspace` exists; with a private tree, `<path>/private/.git` exists.
+prints nothing: no placeholder is left outside the templates directory (the core documents mention
+the placeholder syntax itself, which is why the check looks for a brace pair followed by a letter).
+`<path>/public/` holds one directory per catalog and no `catalog/`; `<path>/.agentcontext` exists and
+its `ref=` line names the release; `<path>/<RepositoryName>.code-workspace` exists; with a private
+tree, `<path>/private/.git` exists.
 
-If the deployer refuses, it says why on its last line: a non-empty target, a missing `.conf` key, an
-adapter with no payload in this release. Fix the cause and run it again; it writes nothing when it
-refuses.
+If the deployer refuses, it exits 2 and the last line of its error output, prefixed `init.sh:`, says
+why: a non-empty target, a missing `.conf` key, a catalog name that is not lowercase letters, digits
+and hyphens, an adapter with no payload in this release. Fix the cause and run it again; it builds
+the instance in a staging directory and writes nothing to the target when it refuses.
 
 ## 4. Verify the tree
 
@@ -145,12 +148,13 @@ curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/<tag>.t
 bash AgentContext-<tag without v>/init.sh --update --target <path> --ref <tag>
 ```
 
-**Check**: the report ends with `update: N replaced, N kept, N added, N removed-upstream`, one line
-per file above it:
+**Check**: the report ends with `update: N replaced, N kept, N added, N removed-upstream` and then
+`manifest: ref=<tag>, N core files`, one line per file above them:
 
 - `replaced`: a core file the user never edited, now the new release's version;
 - `kept … (changed locally)`: a core file the user edited; it is left as it was, and the user merges
-  the release's version by hand if they want it;
+  the release's version by hand if they want it (`deleted locally` and `exists locally` are the same
+  outcome for a file the user removed, or created before the release shipped one);
 - `added`: a core file new in this release;
 - `removed-upstream`: a core file the release no longer ships; the local copy stays.
 
@@ -183,8 +187,10 @@ product is added, and the linter never reads them as part of the tree.
 
 | Message | Meaning | What to do |
 | --- | --- | --- |
-| target is not empty | the path exists and holds files other than `.conf` | choose another path, or empty it |
-| no .conf | neither `--conf` nor `<path>/.conf` was found | step 2 |
-| missing key `<KEY>` | a required `.conf` line is absent or empty | fill it and run again |
-| adapter '<name>' has no payload in this release | the adapter is a stub | leave `--adapter` out, or pick one marked `written` in the list |
-| no .agentcontext at target | `--update` on a directory that was not deployed by this tool | deploy fresh, or write the manifest by hand from a known release |
+| `target is not empty: <path> holds …` | the path exists and holds files other than `.conf` | choose another path, or empty it |
+| `no .conf: copy template/.conf.example, fill it, pass --conf` | neither `--conf` nor `<path>/.conf` was found | step 2 |
+| `missing key <KEY> in <conf>` | a required `.conf` line is absent or empty | fill it and run again |
+| `bad catalog …` | a `CATALOGS` entry is not `[a-z0-9-]`, is repeated, or is reserved (`catalog`, `misc`, `scratch-tools`) | rename it in `.conf` |
+| `adapter '<name>' has no payload in this release` | the adapter is a stub; the list printed above it says which are written | leave `--adapter` out, or pick one marked `written` |
+| `no .agentcontext at target: …` | `--update` on a directory that was not deployed by this tool | deploy fresh, or write the manifest by hand from a known release |
+| `not a template source (no template/AGENTS.md)` | `--from` points at something that is not a release | check the extracted directory's name and contents |
