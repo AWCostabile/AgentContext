@@ -220,8 +220,12 @@ for ex in "$SRC"/examples/*/; do
   ex=${ex%/}; name=${ex##*/}; nex=$((nex + 1))
   bash "$SRC/scripts/cure.sh" --root "$ex" >/dev/null 2>&1; crc=$?
   check "example $name: cure.sh reports 0 fails" '[ $crc -eq 0 ]'
-  bash "$SRC/scripts/smell.sh" --root "$ex" --quiet >/dev/null 2>&1; src=$?
-  check "example $name: smell.sh reports 0 smells" '[ $src -eq 0 ]'
+  # S01 (a design leaf not re-reviewed in 90 days) fires by the calendar alone, so it is reported, not failed
+  smells=$(bash "$SRC/scripts/smell.sh" --root "$ex" 2>/dev/null | grep '^\[SMELL ' || true)
+  stale=$(printf '%s\n' "$smells" | grep -c '^\[SMELL S01\]' || true)
+  src=$(printf '%s\n' "$smells" | grep -v '^\[SMELL S01\]' | grep -c '^\[SMELL ' || true)
+  [ "$stale" -gt 0 ] && info "example $name: $stale design leaf(s) past their review date (S01) — bump _reviewed:_ when the content is re-read"
+  check "example $name: smell.sh reports 0 smells other than S01" '[ "$src" -eq 0 ]'
   left=$(grep -rlE '\{\{[A-Za-z]' --exclude-dir=.git "$ex" | grep -v /templates/)
   check "example $name: no placeholder outside templates/${left:+ (left: $(printf '%s' "$left" | tr '\n' ' '))}" '[ -z "$left" ]'
 done
