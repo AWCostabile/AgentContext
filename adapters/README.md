@@ -8,6 +8,8 @@ without any of them.
 - **Keyed by harness, not by model.** An adapter is about the tool running the agent, not the model
   behind it.
 - **Each adapter is a `README.md` and a `payload/`.** Stubs carry the README only.
+- **An adapter may ship a `boot-check.sh`** beside its payload, never inside it: the deploy smoke
+  runs it against a deployed instance to boot the harness headless, and reads exit 3 as "not run".
 - **The payload is copied verbatim** into the instance root by the deployer's `--adapter <name>`.
 - **The deployer is the one unpack.** No adapter has its own installer.
 - **The neutral core never references an adapter.** Its entry point is `AGENTS.md`.

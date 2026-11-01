@@ -152,5 +152,64 @@ err=$(bash "$INIT" --update --target "$I5" --from "$SRC" 2>&1 >/dev/null); rc=$?
 check "--update on a directory with no .agentcontext refuses with exit 2" \
   '[ $rc -eq 2 ] && printf "%s\n" "$err" | grep -q "no .agentcontext at target"'
 
+# -- 10. the first adapter with a payload lays down, and boots -------------------------------------------
+# No harness is spelled here: the adapter is the first directory whose payload holds a file
+# other than its README, and every assertion is derived from that payload.
+ADP=""
+for d in "$SRC"/adapters/*/; do
+  [ -d "$d" ] || continue
+  [ -n "$(find "${d}payload" -type f ! -path "${d}payload/README.md" 2>/dev/null)" ] || continue
+  ADP=${d%/}; ADP=${ADP##*/}; break
+done
+if [ -z "$ADP" ]; then
+  info "no adapter has a payload: adapter step not run"
+else
+  PAY="$SRC/adapters/$ADP/payload"
+  I6="$TMP/instance6"
+  out=$(bash "$INIT" --from "$SRC" --target "$I6" --conf "$CONF" --adapter "$ADP" 2>&1); rc=$?
+  check "--adapter $ADP installs, exit 0" '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^done: $I6\$"'
+  mapfile -t pfiles < <(cd "$PAY" && find . -type f | sed 's|^\./||' | grep -v '^README\.md$' | LC_ALL=C sort)
+  missing=""
+  for f in "${pfiles[@]}"; do cmp -s "$PAY/$f" "$I6/$f" || missing+="$f "; done
+  check "all ${#pfiles[@]} payload files laid down byte for byte${missing:+ (missing or changed: $missing)}" '[ -z "$missing" ]'
+  check "the payload README is not laid down" '! cmp -s "$PAY/README.md" "$I6/README.md" 2>/dev/null'
+  imports=$(cd "$I6" && for f in *.md; do [ "$(cat "$f")" = "@AGENTS.md" ] && printf '%s ' "$f"; done)
+  check "a root instruction file is the one line @AGENTS.md (${imports:-none})" '[ -n "$imports" ]'
+  jbad="" jn=0
+  for f in "${pfiles[@]}"; do
+    case "$f" in *.json) ;; *) continue ;; esac
+    json_ok "$I6/$f"; jrc=$?
+    [ $jrc -eq 2 ] && { info "no JSON parser: $f not parsed"; continue; }
+    jn=$((jn + 1)); [ $jrc -eq 0 ] || jbad+="$f "
+  done
+  check "$jn payload JSON file(s) parse${jbad:+ (bad: $jbad)}" '[ -z "$jbad" ]'
+  mapfile -t hooks < <(cd "$I6" && for f in "${pfiles[@]}"; do case "$f" in *.json) grep -oE '[A-Za-z0-9_./-]*hooks/[A-Za-z0-9_-]+\.sh' "$f" ;; esac; done | sed 's|^.*/\([^/]*/hooks/\)|\1|' | LC_ALL=C sort -u)
+  hmiss=""
+  for h in "${hooks[@]}"; do [ -f "$I6/$h" ] || hmiss+="$h "; done
+  check "the ${#hooks[@]} hook scripts the settings register are present (expected 4)${hmiss:+ (missing: $hmiss)}" \
+    '[ ${#hooks[@]} -eq 4 ] && [ -z "$hmiss" ]'
+  mlist=$(sed '1,/^$/d' "$I6/.agentcontext" 2>/dev/null | awk '{print $2}')
+  mmiss=""
+  for f in "${pfiles[@]}"; do printf '%s\n' "$mlist" | grep -qF -- "$f" || mmiss+="$f "; done
+  check ".agentcontext carries adapter=$ADP and lists every payload file${mmiss:+ (unlisted: $mmiss)}" \
+    'grep -q "^adapter=$ADP\$" "$I6/.agentcontext" && [ -z "$mmiss" ]'
+  bash "$I6/scripts/cure.sh" --root "$I6" >/dev/null 2>&1; crc=$?
+  check "cure.sh reports 0 fails on the instance with the adapter" '[ $crc -eq 0 ]'
+
+  # the headless boot: the adapter's own boot check, when it ships one (exit 3 = not run)
+  BOOT="$SRC/adapters/$ADP/boot-check.sh"
+  if [ ! -f "$BOOT" ]; then
+    info "headless boot not run: adapter $ADP ships no boot-check.sh"
+  else
+    boot=$(bash "$BOOT" "$I6" 2>&1); brc=$?
+    if [ $brc -eq 3 ]; then
+      info "headless boot not run: $(printf '%s' "$boot" | head -n 1)"
+    else
+      printf '%s\n' "$boot" | sed 's/^/       /'
+      check "headless boot: the session start context reached the session" '[ $brc -eq 0 ]'
+    fi
+  fi
+fi
+
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL
