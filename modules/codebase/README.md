@@ -120,6 +120,14 @@ with `--write-agent`, then add its row to the product's index:
 
     | [<Product> code base](./codebase/.index.md) | the generated code map: areas, surfaces, symbols per area |
 
+## The worked example
+
+The example instance carries two generated tiers: `examples/quillfeather/public/products/Tillwright/codebase/`
+from the TypeScript repository `examples/tillwright/`, and `…/Spinecard/codebase/` from the Go
+repository `examples/spinecard/` (run with `--lang go`). Each source has its `codebase.profile.json`
+at its root, and each tier's `.agent` names the command, run from this repository's root. The deploy
+smoke runs every such command with `--check`.
+
 ## The check
 
 `bash modules/codebase/check.sh` regenerates the invented repository under `fixture/repo/`

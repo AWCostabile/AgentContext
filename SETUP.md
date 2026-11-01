@@ -162,6 +162,39 @@ the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the statu
 freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one). The
 adoption steps in `AgentContext-0.4.0/modules/constitution/README.md` walk the same ground. Commit.
 
+## 8. Adopt the codebase module (optional)
+
+The codebase module keeps a generated code map of a product's repository in the tree: its source
+areas, the surfaces it exposes and one symbols leaf per area, every location a `path:line`. An
+instance works without it. Ask the user which products have a repository worth mapping; the
+repository sits beside the instance, as the workspace sees it.
+
+**Run** (from the instance root, once per product; `<repository>` is the product's checkout beside it)
+
+```
+cp -R AgentContext-0.4.0/modules/codebase <path>/modules/codebase && cd <path>
+python modules/codebase/codebase.py --repo ../<repository> --into public/<catalog>/<Product>/codebase \
+  --profile ../<repository>/codebase.profile.json --write-agent
+```
+
+Write the profile first, at the repository's root: the product's name, its areas (a name and the
+path prefixes it claims) and the surfaces the map lists. `modules/codebase/README.md` gives the
+shape; without a profile each top-level directory is an area. Then add one row to the product's
+`.index.md`:
+
+```
+| [<Product> code base](./codebase/.index.md) | the generated code map: areas, surfaces, symbols; never hand-edited |
+```
+
+and replace the tier's scaffold `.tags` with the words a searcher would use for that code.
+
+**Check**: `public/<catalog>/<Product>/codebase/` holds `.index.md`, `.tags`, `.agent`,
+`codebase.map.md`, `codebase.surfaces.md` and one `codebase.<area>.md` per area; the command `.agent`
+names, run again with `--check`, ends with no drift; `cure.sh` still ends with 0 fails. Commit.
+
+The tier is regenerated with that command at the landing of the change that moved the source, and
+never hand-edited. Python 3.10 or later is the module's one requirement.
+
 ## How to update
 
 A release of the template changes the core files an instance received: `scripts/`, `rules/`,

@@ -191,9 +191,17 @@ commits and pull requests are shaped, how delegated agents are budgeted), the ar
 them into current law, and the process half: a kickoff guide, ground rules for the orchestrating
 session, the delegated agent and the close-out, and a code-standards template. Adopting it is one
 copy, `modules/constitution/tree/` to `<instance>/constitution/`, described in `SETUP.md`; from then
-on a change to the process is a bill first, and the owner enacts it. `examples/` holds a small
-fictional startup's filled tree, so that you can see what the indexes look like with something in
-them: start at [its reader page](./examples/quillfeather/README.md).
+on a change to the process is a bill first, and the owner enacts it.
+
+The second module is the codebase: one command reads a product's repository and writes a generated
+code map under the product's branch (its areas, the surfaces it exposes and one symbols leaf per
+area, every location a `path:line`), with a `--check` that reports drift. It is never hand-edited,
+only regenerated when the change that moved the source lands, and it needs Python 3.10 or later.
+
+`examples/` holds a small fictional startup's filled tree, so that you can see what the indexes look
+like with something in them: start at [its reader page](./examples/quillfeather/README.md). Its two
+products carry generated code maps, made by the codebase module from the two fictional source
+repositories beside it.
 
 ## What is here today
 
@@ -213,9 +221,16 @@ them: start at [its reader page](./examples/quillfeather/README.md).
   deployed by `init.sh` and filled by hand, linted by the deploy smoke.
 - The constitution module, in `modules/constitution/`: the seed rulings, the articles and the process
   half an instance adopts with one copy.
+- The codebase module, in `modules/codebase/`: the code-map generator with its TypeScript and Go
+  extractors, its drift gate and a fixture check, which the deploy smoke runs beside a `--check` of
+  every code map in the examples.
+- The example's sources, in `examples/tillwright/` (TypeScript) and `examples/spinecard/` (Go): two
+  small invented repositories the example's code maps are generated from.
 - The adapter contract, with four adapter directories whose READMEs describe them, and the Claude
   Code payload: the pre-write guard on the immutable tiers, the lint after every write, the orient
   context at session start, the kickoff detection, the skills and the agent profiles.
+
+The four adapter directories are one written adapter and three porting specs.
 
 ## Licence
 
