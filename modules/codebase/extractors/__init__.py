@@ -11,7 +11,7 @@ extractor for another language. Adding a language is one module and one line bel
 """
 import fnmatch
 
-from . import typescript
+from . import go, typescript
 
 EXTRACTORS = {}
 
@@ -30,6 +30,8 @@ def register(module, name=None, default=None, patterns=None, exclude=None):
 
 
 register(typescript)
+register(go)
+register(go, name='go-tests', default=False, patterns=('*_test.go',), exclude=())
 
 
 def claims(entry, rel):
