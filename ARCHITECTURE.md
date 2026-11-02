@@ -127,6 +127,8 @@ The core works without any adapter. The linter and convention replace pre-write 
 
 **The change-log module** is a GitHub Actions workflow that rewrites every merged pull request into one squash commit, a bubble merge and an entry in `CHANGE_LOG.md` built from the pull request's title and its commit subjects. It is the reason commit subjects take one of seven prefixes and read as product updates, and it is what makes a merged pull request citable from the tree. This repository runs the same workflow on itself.
 
+**The graphify module** keeps one [Graphify](https://github.com/Graphify-Labs/graphify) knowledge graph per repository in a generated `graphs/` tier at the instance root, so an agent asks the graph who calls what before it greps. The graph lives in the tree, not in the repository it describes: the repository's `graphify-out/` is a link (a directory junction on Windows, a symlink elsewhere) into the tree's git-ignored working layer, so graphify's own commit hooks rebuild there without dirtying the tree, and one script rebuilds every graph offline, from scratch, and commits one snapshot per repository. The repositories are named in `.conf`, a version pin makes the graphs reproducible across machines, and `check` reports a stale snapshot or a drifted index.
+
 ## The worked example
 
 `examples/quillfeather/` is a small fictional startup's filled tree, deployed by the deployer and then filled by hand, so that you can see what the indexes look like with something in them: start at [its reader page](./examples/quillfeather/README.md). Its two products carry generated code maps, made by the codebase module from the two fictional source repositories beside it, `examples/tillwright/` and `examples/spinecard/`.
