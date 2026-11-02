@@ -1,3 +1,13 @@
+## Feature | Worked Example [ _2026-11-02 09:58:17 UTC_ ]
+
+- docs: skeleton wording that reads correctly once deployed
+- fix: the smoke reports a stale example design leaf instead of failing on the calendar
+- test: the deploy smoke lints every example
+- docs: the examples index and the example's reader page
+- feat: the example's private tree — a plan, its kickoff, a pull-request record and the journal
+- feat: the example's public tree — two products and a site, designed, ruled and logged
+- feat: a worked example, a fictional bookshop-tools startup deployed by the template
+
 ## Feature | Process Module and Adapter [ _2026-11-02 09:55:25 UTC_ ]
 
 - docs: the run-sheet's module step prunes the seed rulings and sets their status
