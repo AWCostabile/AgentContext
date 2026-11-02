@@ -22,4 +22,5 @@ Do not add a `.gitignore` directly under `template/`: ignoring `private/` there 
 repository ignore `template/private/`. An instance's own `.gitignore` is written when it is deployed.
 
 Commit subjects use exactly one of `chore:` `docs:` `feat:` `fix:` `refactor:` `style:` `test:`, with
-no scope. There is no generated change log.
+no scope; each becomes one bullet of `CHANGE_LOG.md`, which the post-merge workflow generates from a
+pull request's title and its commit subjects. Never edit that file by hand.
