@@ -1,3 +1,18 @@
+## Feature | Process Module and Adapter [ _2026-11-02 09:55:25 UTC_ ]
+
+- docs: the run-sheet's module step prunes the seed rulings and sets their status
+- docs: the modules index names the constitution and how to adopt it
+- feat: the process half — kickoff guide, ground rules by reader, a code-standards template
+- feat: the constitution's articles as current law over the seed rulings
+- fix: the tier guard lets a seed ruling be pruned until it is adopted
+- test: the deploy smoke lays the adapter down and boots it headless
+- docs: the adapter READMEs, the written one and three porting specs
+- feat: the orchestration ground rules for Claude Code
+- feat: the Claude Code payload — hooks, skills, profiles and output styles for an instance
+- feat: the constitution module's seed rulings, starting law an instance adopts or deletes
+- docs: the README describes the constitution module and the written adapter
+- docs: the run-sheet adopts the constitution module and pins the next release
+
 ## Feature | Deployer [ _2026-11-02 09:50:35 UTC_ ]
 
 - docs: catalog branches read correctly inside a deployed instance
