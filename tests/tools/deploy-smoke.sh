@@ -1,6 +1,8 @@
 #!/bin/bash
 # deploy-smoke.sh — this repository's gate for the deployer: it deploys throwaway
-# instances from the COMMITTED tree, lints them, updates one, and proves the refusals.
+# instances from the COMMITTED tree, lints them, updates one, proves the refusals, lints
+# every worked example as of its snapshot date, and runs tests/check.sh, the scripts' own
+# check over the fixture tree.
 #
 # Usage: bash tests/tools/deploy-smoke.sh   (from anywhere; no arguments)
 #
@@ -90,6 +92,10 @@ check ".gitignore names /private/ and /.conf" \
   'grep -q "^/private/$" "$I1/.gitignore" && grep -q "^/\.conf$" "$I1/.gitignore"'
 check ".conf gained the derived PRIVATE_SCOPES and ORCH_BUDGET" \
   'grep -q "^PRIVATE_SCOPES=\"products projects journal\"$" "$I1/.conf" && grep -q "^ORCH_BUDGET=full$" "$I1/.conf"'
+check "README.md is the reader page, named after the instance, with no placeholder left" \
+  '[ -f "$I1/README.md" ] && [ "$(head -n 1 "$I1/README.md")" = "# Example" ] && ! grep -q "{{" "$I1/README.md"'
+check "README.md is listed in the manifest as a core file" 'grep -q "  README.md$" "$I1/.agentcontext"'
+check "no tests/ directory is laid into an instance" '[ ! -e "$I1/tests" ]'
 
 # -- 4. the instance lints clean ----------------------------------------------------------------
 cure=$(bash "$I1/scripts/cure.sh" --root "$I1" 2>&1); crc=$?
@@ -222,12 +228,12 @@ for ex in "$SRC"/examples/*/; do
   ex=${ex%/}; name=${ex##*/}; nex=$((nex + 1))
   bash "$SRC/scripts/cure.sh" --root "$ex" >/dev/null 2>&1; crc=$?
   check "example $name: cure.sh reports 0 fails" '[ $crc -eq 0 ]'
-  # S01 (a design leaf not re-reviewed in 90 days) fires by the calendar alone, so it is reported, not failed
-  smells=$(bash "$SRC/scripts/smell.sh" --root "$ex" 2>/dev/null | grep '^\[SMELL ' || true)
-  stale=$(printf '%s\n' "$smells" | grep -c '^\[SMELL S01\]' || true)
-  src=$(printf '%s\n' "$smells" | grep -v '^\[SMELL S01\]' | grep -c '^\[SMELL ' || true)
-  [ "$stale" -gt 0 ] && info "example $name: $stale design leaf(s) past their review date (S01) — bump _reviewed:_ when the content is re-read"
-  check "example $name: smell.sh reports 0 smells other than S01" '[ "$src" -eq 0 ]'
+  # An example is a snapshot: the calendar smells (S01, S21) are judged as of the day its
+  # manifest was last written, so the lint is the same on any day.
+  asof=$(sed -n 's/^updated=//p' "$ex/.agentcontext" | head -n 1)
+  [ -n "$asof" ] || asof=$(sed -n 's/^installed=//p' "$ex/.agentcontext" | head -n 1)
+  smells=$(bash "$SRC/scripts/smell.sh" --root "$ex" ${asof:+--today "$asof"} 2>/dev/null | grep '^\[SMELL ' || true)
+  check "example $name: smell.sh reports 0 smells as of its snapshot date ${asof:-today}${smells:+ ($(printf '%s\n' "$smells" | head -n 1))}" '[ -z "$smells" ]'
   left=$(grep -rlE '\{\{[A-Za-z]' --exclude-dir=.git "$ex" | grep -v /templates/)
   check "example $name: no placeholder outside templates/${left:+ (left: $(printf '%s' "$left" | tr '\n' ' '))}" '[ -z "$left" ]'
 done
@@ -327,6 +333,15 @@ for p in $(grep -ohE "AgentContext-${PIN#v}/[A-Za-z0-9_./-]+" SETUP.md | sed "s|
   git ls-tree -r --name-only "$REL" -- "$p" | grep -q . || missing="$missing $p"
 done
 check "every path the run-sheet names under the pinned release exists in $REL${missing:+ (missing:$missing)}" '[ -z "$missing" ]'
+
+# -- 17. the scripts against the fixture tree ----------------------------------------------------------------
+# tests/check.sh runs cure.sh, smell.sh, find.sh and review.sh over tests/fixture/ and asserts
+# every check fires on the file planted for it and nowhere else; a change to a check cannot
+# land without the fixture that proves it. It runs from the archive, so HEAD is what is proved.
+out=$(bash "$SRC/tests/check.sh" 2>&1); rc=$?
+check "tests/check.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
+check "the fixture's CRLF leaf kept its bytes through git archive" \
+  '[ "$(awk -v BINMODE=3 "/\r$/" "$SRC/tests/fixture/public/misc/leaves/crlf.md" | wc -l | tr -d " ")" = 6 ]'
 
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL
