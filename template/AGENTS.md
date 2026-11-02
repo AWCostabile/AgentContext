@@ -36,7 +36,8 @@ one leaf per area, each opening with a **State today** paragraph. Follow its lin
 
 Write in the deepest matching branch. **Leaf + Contents row + tags is one action**; in the private
 tree it ends with one commit. Copy new branches from `templates/branch`, and new products from
-`templates/product`, replacing every `{{ }}`.
+`templates/product` (its private mirror from `templates/product-mirror`), filling in every
+placeholder.
 
 ## The laws
 
@@ -80,3 +81,10 @@ The tree checks itself in two layers, and [HYGIENE.md](./HYGIENE.md) is the cont
 Both read `.conf` and treat an absent `private/` as normal. Run the linter after filing several
 leaves and before merging a branch: zero fails, every smell fixed or reasoned. The grammar the checks
 enforce is written out in [rules/](./rules/.index.md).
+
+The core files this tree received from the template (`scripts/`, `rules/`, `templates/`, `.vscode/`,
+this file, `HYGIENE.md`, `.conf.example`) are listed with their hashes in `.agentcontext` at the root,
+with the release they came from. A later release is pulled in with the template's deployer in update
+mode, which replaces what was never edited here and reports what was; the procedure is the "How to
+update" section of the template's `SETUP.md`, at the `upstream=` address the manifest names. Nothing
+filed in `public/` or `private/` is ever touched by it.
