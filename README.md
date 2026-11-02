@@ -2,7 +2,9 @@
 
 A template for keeping what your organisation knows in one git repository, in a shape that coding agents and new hires can both read. It ships a method and an empty structure: you deploy it once and fill it with your own products, decisions and designs. Written for a founder or a small team. MIT licensed.
 
-The short version: a tree of small indexed Markdown files, two trees (what is true, and how the work was run on one machine), a linter that keeps the shape honest, a search tool, and a deployer an agent can drive. [ARCHITECTURE.md](./ARCHITECTURE.md) is the long version.
+> **_TL;DR:_** Yet another system of small indexed Markdown files, with two trees (one for what is true, and the other for how the work was run on a given machine), a tool for searching the trees, a linter that keeps their shapes honest, and a deployer which an agent can drive.
+
+_see [ARCHITECTURE.md](./ARCHITECTURE.md) for the full explaination version._
 
 ## Get it
 
