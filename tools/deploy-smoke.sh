@@ -310,5 +310,23 @@ check "the deployed workspace hides **/.agents/.id.meta" 'grep -q "\"\*\*/.agent
 check "no identity file anywhere in the committed tree, and the deployer wrote none into a fresh instance" \
   '! git ls-files | grep -q "\.id\.meta$" && [ -z "$(find "$SRC" -name .id.meta)" ] && [ ! -e "$I6/.agents/.id.meta" ]'
 
+
+# -- 16. the run-sheet's pinned release ships every path it names -------------------------------------------
+# SETUP.md names one release and reads every file out of that release's archive; README.md's
+# prompt fetches the same release's SETUP.md. A path the sheet names must exist in the release
+# it pins: in the tag when it has been cut, in HEAD before it is (the tag is cut from HEAD).
+PIN=$(sed -n 's/^The pinned release is `\(v[0-9][0-9.]*\)`.*/\1/p' SETUP.md | head -n 1)
+check "SETUP.md declares one pinned release${PIN:+ ($PIN)}" '[ -n "$PIN" ]'
+others=$(grep -ohE 'AgentContext-[0-9]+\.[0-9]+\.[0-9]+|AgentContext/v[0-9]+\.[0-9]+\.[0-9]+|tags/v[0-9]+\.[0-9]+\.[0-9]+' README.md SETUP.md \
+  | sed -E 's/.*[-/]v?//' | sort -u | tr '\n' ' ')
+check "README.md and SETUP.md name no release but the pinned one (found: ${others:-none})" '[ "$others" = "${PIN#v} " ]'
+if git rev-parse -q --verify "refs/tags/$PIN^{commit}" >/dev/null 2>&1; then REL="$PIN"; else REL=HEAD; info "$PIN is not tagged yet: its paths are checked against HEAD"; fi
+missing=""
+for p in $(grep -ohE "AgentContext-${PIN#v}/[A-Za-z0-9_./-]+" SETUP.md | sed "s|^AgentContext-${PIN#v}/||" | sort -u) \
+         $(grep -ohE "AgentContext/$PIN/[A-Za-z0-9_./-]+" README.md | sed "s|^AgentContext/$PIN/||" | sort -u); do
+  git ls-tree -r --name-only "$REL" -- "$p" | grep -q . || missing="$missing $p"
+done
+check "every path the run-sheet names under the pinned release exists in $REL${missing:+ (missing:$missing)}" '[ -z "$missing" ]'
+
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL

@@ -2,7 +2,7 @@
 
 This is a run-sheet. It is written for a coding agent working on a user's machine, and it reads just as well for a person at a terminal. Every step has a **Run** line and a **Check** line: run the command, then confirm the check against what is now on disk before moving to the next step. Nothing here asks you to read another file and work out what to do; when a step refuses, stop and tell the user what it said.
 
-The pinned release is `v0.3.0`. Replace it everywhere below if the user names another.
+The pinned release is `v0.4.0`. Replace it everywhere below if the user names another.
 
 ## Before you start: ask the user
 
@@ -33,17 +33,17 @@ Work in a scratch directory the user is happy to delete afterwards.
 **Run**
 
 ```
-curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/v0.3.0.tar.gz | tar xz
+curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/v0.4.0.tar.gz | tar xz
 ```
 
-**Check**: a directory `AgentContext-0.3.0/` exists and holds `init.sh`, `template/AGENTS.md`, `scripts/cure.sh` and `adapters/`. (GitHub names the archive's top directory after the tag without its `v`.) Nothing else has been written anywhere.
+**Check**: a directory `AgentContext-0.4.0/` exists and holds `init.sh`, `template/AGENTS.md`, `scripts/cure.sh` and `adapters/`. (GitHub names the archive's top directory after the tag without its `v`.) Nothing else has been written anywhere.
 
 ## 2. Write the `.conf`
 
 **Run**
 
 ```
-cp AgentContext-0.3.0/template/.conf.example ./my.conf
+cp AgentContext-0.4.0/template/.conf.example ./my.conf
 ```
 
 Then edit `my.conf` from the user's answers: the `AI_` lines, the `MY_` lines and `CATALOGS`. Leave `PRIVATE_SCOPES` and `ORCH_BUDGET` as they are unless the user asked for something specific; the deployer derives `PRIVATE_SCOPES` from the catalogs when it is absent.
@@ -61,7 +61,7 @@ prints `8`, and `grep '^CATALOGS=' my.conf` shows the user's catalogs in quotes.
 **Run** (drop `--no-private` if the user wants a private tree; add `--adapter <name>` if they chose one; add `--name <RepositoryName>` if the directory's basename is not the name they want; one `--sibling <name>` per repository from the seventh answer)
 
 ```
-bash AgentContext-0.3.0/init.sh --target <path> --conf ./my.conf --sibling <name>
+bash AgentContext-0.4.0/init.sh --target <path> --conf ./my.conf --sibling <name>
 ```
 
 **Check**: the output ends with `done: <path>` followed by the adapter list. Then:
@@ -117,7 +117,7 @@ cd <path> && for f in ../*/CLAUDE.md ../*/AGENTS.md; do [ -f "$f" ] && wc -c < "
 **Run** (from the instance root; `--yes` or `--no` carries the first answer when the user is not at the terminal)
 
 ```
-cp -R AgentContext-0.3.0/modules/context-retention <path>/modules/context-retention && cd <path>
+cp -R AgentContext-0.4.0/modules/context-retention <path>/modules/context-retention && cd <path>
 bash modules/context-retention/meta.sh init
 ```
 
@@ -128,7 +128,7 @@ Pass the folders from the second answer as paths after `init` when the user name
 **With the Claude Code adapter, measure the prompt-cache lifetime too.** An orchestrating session that waits on a delegated job for longer than the cache lives pays a cold write of its whole prompt on its next turn; the harness caches for five minutes by default on an API key or a cloud provider, and for an hour on a subscription within its plan.
 
 ```
-bash AgentContext-0.3.0/adapters/claude-code/cache-ttl.sh <path>
+bash AgentContext-0.4.0/adapters/claude-code/cache-ttl.sh <path>
 ```
 
 **Check**: the second line reads `prompt cache: 1h …` or `prompt cache: 5m …`. On `5m`, ask the user whether to try for the hour: `… cache-ttl.sh <path> --apply` writes `promptCacheTtl` and `subagentPromptCacheTtl` as `"1h"` into `<path>/.claude/settings.local.json` (this machine's file; add `.claude/settings.local.json` to the instance's `.gitignore` if `git check-ignore` does not already ignore it) and probes again. If the second probe still says `5m`, the account does not grant the hour or the build predates the setting (Claude Code 2.1.242): tell the user to ask their account's administrator, and keep `ORCH_BUDGET=lean` in `.conf`, which keeps an orchestrator's waits short.
@@ -140,7 +140,7 @@ The constitution is the tree's law about itself: starting rulings, the articles 
 **Run**
 
 ```
-cp -R AgentContext-0.3.0/modules/constitution/tree <path>/constitution && cd <path> && bash scripts/cure.sh
+cp -R AgentContext-0.4.0/modules/constitution/tree <path>/constitution && cd <path> && bash scripts/cure.sh
 ```
 
 Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
@@ -151,7 +151,7 @@ Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
 
 **Check**: `<path>/constitution/.index.md`, `constitution/history/rulings/`, `constitution/articles/` and `constitution/process/` exist; `cure.sh` still ends with 0 fails; `constitution/README.md` does not exist (the module's README stays in the release, only `tree/` is copied).
 
-Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1, and the user keeps what applies and strikes the rest before the first commit. When a leaf is as the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one). The adoption steps in `AgentContext-0.3.0/modules/constitution/README.md` walk the same ground. Commit.
+Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1, and the user keeps what applies and strikes the rest before the first commit. When a leaf is as the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one). The adoption steps in `AgentContext-0.4.0/modules/constitution/README.md` walk the same ground. Commit.
 
 ## 9. Adopt the change-log module (optional)
 
@@ -160,7 +160,7 @@ The change-log module is a GitHub Actions workflow for any repository the user k
 **Run** (in each such repository, on `main`)
 
 ```
-mkdir -p .github/workflows && cp AgentContext-0.3.0/modules/change-log/post-merge.yml .github/workflows/post-merge.yml
+mkdir -p .github/workflows && cp AgentContext-0.4.0/modules/change-log/post-merge.yml .github/workflows/post-merge.yml
 git add .github/workflows/post-merge.yml && git commit -m "chore: the post-merge workflow squashes, bubble-merges and logs each pull request"
 ```
 
@@ -175,7 +175,7 @@ The codebase module keeps a generated code map of a product's repository in the 
 **Run** (from the instance root, once per product; `<repository>` is the product's checkout beside it)
 
 ```
-cp -R AgentContext-0.3.0/modules/codebase <path>/modules/codebase && cd <path>
+cp -R AgentContext-0.4.0/modules/codebase <path>/modules/codebase && cd <path>
 python modules/codebase/codebase.py --repo ../<repository> --into public/<catalog>/<Product>/codebase \
   --profile ../<repository>/codebase.profile.json --write-agent
 ```
@@ -199,7 +199,7 @@ The graphify module keeps one Graphify knowledge graph per repository in the tre
 **Run** (from the instance root; `<slug>` a short lowercase name per repository)
 
 ```
-cp -R AgentContext-0.3.0/modules/graphify <path>/modules/graphify && cd <path>
+cp -R AgentContext-0.4.0/modules/graphify <path>/modules/graphify && cd <path>
 printf 'GRAPHS="<slug>=../<repository>"\n' >> .conf
 bash modules/graphify/graphs.sh home <slug>
 uv tool install "graphifyy[mcp]" && graphify install
