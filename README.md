@@ -30,6 +30,10 @@ git clone https://github.com/AWCostabile/AgentContext.git
 - **Adapters**, keyed by harness: Claude Code written (a pre-write guard on the immutable tiers, a lint after every write, orientation at session start, skills and agent profiles); Codex, Cursor and Gemini CLI as porting specs.
 - **A worked example**, `examples/quillfeather/`, a fictional startup's filled tree with generated code maps, so you can see the indexes with something in them.
 
+## If Claude Code is your agent
+
+The Claude Code adapter gives an instance its guard on the immutable tiers, its lint after every write and its orientation at session start. For the machine itself, [AWCostabile/claude-memory-setup](https://github.com/AWCostabile/claude-memory-setup) is the complement: a four-system persistent memory for Claude Code, set up once system-wide with one pasted prompt, so every session starts where the last one left off. The two fit together: the tree holds what the organisation knows, the memory holds what your own sessions learned.
+
 ## Read next
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md): the method in full, section by section.
