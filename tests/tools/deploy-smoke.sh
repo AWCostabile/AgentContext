@@ -2,13 +2,13 @@
 # deploy-smoke.sh — this repository's gate for the deployer: it deploys throwaway
 # instances from the COMMITTED tree, lints them, updates one, and proves the refusals.
 #
-# Usage: bash tools/deploy-smoke.sh   (from anywhere; no arguments)
+# Usage: bash tests/tools/deploy-smoke.sh   (from anywhere; no arguments)
 #
 # Prints one [ OK ] / [FAIL] line per assertion ([WARN] and [INFO] never count) and
 # exits with the number of fails. Never copied into an instance. Its temporary
 # directories are removed on exit.
 
-REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$REPO" || exit 1
 
 FAIL=0
