@@ -17,8 +17,10 @@ instance.
   write into the trees, `templates/`, `AGENTS.md` or `README.md`, and hands the FAIL lines back
   to the session to fix in the same action.
 - **Orientation at session start.** A `SessionStart` hook hands the session the tree's lint
-  verdict, the journal's status page, the retro pressure, and every repository's branch, sync
-  state and unpushed branches.
+  verdict, the one-line brief of `scripts/review.sh` when the instance has it (the smell count,
+  the inbox, the stale and uncited leaves, the retro pressure, the unpushed branches, the newest
+  journal entry), the journal's status page, the retro pressure, and every repository's branch,
+  sync state and unpushed branches, in at most 45 lines.
 - **Kickoff detection.** A `UserPromptSubmit` hook recognises a kickoff on a session's first
   prompt and injects `KICKOFF.md`; the output style switches from `scoping` to `orchestrated`.
 - **Skills.** `/file` files a leaf with its row and tags as one action; `/find` searches by tag,
