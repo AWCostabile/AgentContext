@@ -27,8 +27,8 @@
 #   --dry-run         print every file it would write, and write nothing
 #
 # Update (the second form) brings the core files of an instance up to another release:
-# scripts/, rules/, templates/, .vscode/, AGENTS.md, HYGIENE.md, .conf.example and the
-# adapter's payload. A core file edited locally is kept and reported, never overwritten;
+# scripts/, rules/, templates/, .vscode/, AGENTS.md, HYGIENE.md, README.md, .conf.example
+# and the adapter's payload. A core file edited locally is kept and reported, never overwritten;
 # public/, private/, .conf, .gitignore, .gitattributes and the workspace file are never
 # touched.
 #   --ref <tag>       fetch that release of the upstream repository
@@ -161,8 +161,16 @@ adapter_list() {
 
 # -- the core -------------------------------------------------------------------------
 CORE_DIRS="scripts rules templates .vscode"
-CORE_FILES="AGENTS.md HYGIENE.md .conf.example"
-# lay_core <dest> <adapter>: the core files exactly as install places them
+CORE_FILES="AGENTS.md HYGIENE.md README.md .conf.example"
+# The reader page README.md names the instance: the one core file carrying a placeholder,
+# resolved wherever the core is laid, so install and update hash the same bytes.
+resolve_tree_name() {   # resolve_tree_name <file> <name>
+  local content
+  [ -f "$1" ] || return 0
+  content=$(<"$1")
+  printf '%s\n' "${content//\{\{TREE_NAME\}\}/$2}" > "$1"
+}
+# lay_core <dest> <adapter> <name>: the core files exactly as install places them
 lay_core() {
   local dest=$1 d f
   for d in $CORE_DIRS; do
@@ -171,6 +179,7 @@ lay_core() {
   for f in $CORE_FILES; do
     [ -f "$SRC/template/$f" ] && { cp "$SRC/template/$f" "$dest/$f" || return 1; }
   done
+  resolve_tree_name "$dest/README.md" "$3" || return 1
   mkdir -p "$dest/scripts" && cp -R "$SRC/scripts/." "$dest/scripts/" || return 1
   [ -n "$2" ] && { lay_payload "$2" "$dest" || return 1; }
   return 0
@@ -221,9 +230,15 @@ if [ "$MODE" = update ]; then
     fi
   done < "$TARGET/.agentcontext"
   INST_ADAPTER=${HEADER[adapter]:-}
+  # the instance's name: its workspace file's, else the directory's
+  INST_NAME=""
+  for w in "$TARGET"/*.code-workspace; do
+    [ -f "$w" ] && { INST_NAME=$(basename "$w" .code-workspace); break; }
+  done
+  [ -n "$INST_NAME" ] || INST_NAME=$(basename "$TARGET")
 
   UPDIR=$(mktmp)
-  lay_core "$UPDIR" "$INST_ADAPTER" || die "cannot lay out the release's core files (nothing written)"
+  lay_core "$UPDIR" "$INST_ADAPTER" "$INST_NAME" || die "cannot lay out the release's core files (nothing written)"
   while IFS= read -r l; do UP[${l:66}]=${l:0:64}; done < <(core_list "$UPDIR" "$INST_ADAPTER" | hashes "$UPDIR")
   present=()
   for p in "${!RECORDED[@]}" "${!UP[@]}"; do [ -f "$TARGET/$p" ] && present+=("$p"); done
@@ -332,6 +347,7 @@ fi
 # -- copy ---------------------------------------------------------------------------
 cp -R "$SRC/template/." "$STAGE/" || die "copying the skeleton (nothing written)"
 cp "$CONF" "$STAGE/.conf" || die "cannot read $CONF"   # a .conf.example never shadows it
+resolve_tree_name "$STAGE/README.md" "$NAME" || die "naming the reader page (nothing written)"
 [ $NO_PRIVATE -eq 1 ] && rm -rf "$STAGE/private"
 mkdir -p "$STAGE/scripts" && cp -R "$SRC/scripts/." "$STAGE/scripts/" || die "copying scripts/ (nothing written)"
 COPIED=$(cd "$STAGE" && find . -type f ! -name .conf ! -name workspace.code-workspace | wc -l | tr -d ' ')
