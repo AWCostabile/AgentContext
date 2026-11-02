@@ -1,3 +1,7 @@
+## Docs | Banner [ _2026-11-02 15:31:55 UTC_ ]
+
+- docs: the README opens with a banner of the two trees
+
 ## Fix | Run Sheet [ _2026-11-02 13:02:30 UTC_ ]
 
 - docs: the repository instruction states when a thing is core and when it is a module
