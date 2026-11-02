@@ -1,3 +1,20 @@
+## Feature | Codebase Module [ _2026-11-02 10:00:31 UTC_ ]
+
+- chore: clean up line spacing of non template files
+- docs: the run-sheet pins the release that ships the example and the codebase module
+- docs: the run-sheet, the README and the example page describe the codebase module
+- chore: the worked example's core files match the template
+- test: the deploy smoke regenerates every example code map and proves no drift
+- feat: the example's products carry generated code maps
+- feat: the example's two fictional source repositories
+- docs: a product made from the template lints with no smell
+- fix: the duplicate-name smell ignores a generated tier's fixed leaf names
+- docs: the modules index names the codebase module
+- test: the codebase module's fixture and its reproducibility check
+- feat: the Go extractor
+- feat: the TypeScript extractor
+- feat: the codebase module — a generic code-map generator and its tier contract
+
 ## Feature | Worked Example [ _2026-11-02 09:58:17 UTC_ ]
 
 - docs: skeleton wording that reads correctly once deployed
