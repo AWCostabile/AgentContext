@@ -1,3 +1,11 @@
+## Feature | Graphify Module [ _2026-11-02 11:17:13 UTC_ ]
+
+- docs: the graphify module in the modules index, the run-sheet, the README and the architecture
+- chore: the workspace hides graphify tooling and .conf.example names the module's keys
+- test: the graphify module proves itself over a stand-in graphify, inside the deploy smoke
+- feat: the graphify module keeps one knowledge graph per repository, linked back into it
+- chore: ensure quick start in \README\ is spaced for readability
+
 ## Docs | README and Architecture [ _2026-11-02 10:22:08 UTC_ ]
 
 - chore: re-order "Read Next" contents to be alphabetic
