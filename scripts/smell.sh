@@ -15,8 +15,10 @@
 # Contents row or cell carrying a {{ }} placeholder is skipped, and S09 (template
 # residue) is not evaluated at all.
 #
-#   S01 stale design leaf          _reviewed:_ older than 90 days
-#   S02 design leaf w/o provenance  missing _source:_ or _reviewed:_
+#   S01 stale leaf                  _reviewed:_ past its tier's window: design/ 90 days,
+#                                   features/ 90, research/ 180
+#   S02 leaf without provenance     a design/ leaf missing _source:_ or _reviewed:_; a
+#                                   features/ leaf missing _reviewed:_
 #   S03 dead tag                    .tags entry never occurring in its branch
 #   S04 tag fragmentation           singleton tag with a near-neighbour
 #   S05 index row drift             Contents link text != target leaf's H1
@@ -32,12 +34,17 @@
 #   S16 archive marker mismatch     _status:_ archived vs _(archived)_ row
 #   S17 retrospective overdue       >= 3 manifest rows landed since the last retro
 #   S18 process vocabulary          epic/sprint/retro, numbered plan/wave/phase, in public/
+#   S20 uncited leaf                a public design/ or history/ leaf no file cites beyond
+#                                   its own branch index (the citation rule of find.sh -b)
+#   S21 inbox item overdue          a private/journal/inbox.md item older than 14 days
 # Ids are stable; a missing number is a retired check.
 #
-# Usage: bash scripts/smell.sh [--root <dir>] [--quiet]
+# Usage: bash scripts/smell.sh [--root <dir>] [--quiet] [--today <YYYY-MM-DD>]
 #   --root <dir>  the tree root to scan (the directory holding public/ and .conf);
 #                 default the current directory
 #   --quiet       print only the summary
+#   --today <d>   judge the calendar smells (S01, S21) as of that date instead of today,
+#                 so a fixture or a snapshot is judged as of its own date
 # Exit code: the number of smells found, capped at 255 (0 = clean). The summary line
 # also carries landed-since-retro=<n> (S17's count, fired or not).
 #
@@ -48,6 +55,7 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(pwd)"
 QUIET=0
+TODAY=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -55,7 +63,11 @@ while [ $# -gt 0 ]; do
             ROOT="$(cd "$2" 2>/dev/null && pwd)" || { echo "no such directory: $2" >&2; exit 2; }
             shift 2 ;;
     --quiet) QUIET=1; shift ;;
-    -h|--help) sed -n '2,45p' "$0" | sed 's/^#//; s/^ //'; exit 0 ;;
+    --today) [ $# -ge 2 ] || { echo "--today needs a date" >&2; exit 2; }
+             case "$2" in [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) TODAY=$2 ;;
+               *) echo "--today: not a YYYY-MM-DD date: $2" >&2; exit 2 ;; esac
+             shift 2 ;;
+    -h|--help) sed -n '2,/^set -u/p' "$0" | sed '$d' | sed 's/^#//; s/^ //'; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -70,7 +82,7 @@ TMPL=0; template_mode && TMPL=1
 TERMS="$ROOT/scripts/retired-terms.txt"
 [ -f "$TERMS" ] || TERMS="$SCRIPT_DIR/retired-terms.txt"
 
-IDS="S01 S02 S03 S04 S05 S06 S07 S08 S09 S10 S11 S12 S13 S14 S16 S17 S18"
+IDS="S01 S02 S03 S04 S05 S06 S07 S08 S09 S10 S11 S12 S13 S14 S16 S17 S18 S20 S21"
 declare -A COUNT
 for id in $IDS; do COUNT[$id]=0; done
 TOTAL=0 LANDED=0
@@ -118,13 +130,14 @@ verbatim() {
 NONVERBATIM=()
 for f in "${ALL_MD[@]}"; do verbatim "$f" || NONVERBATIM+=("$f"); done
 
-# -- S01 / S02: design-leaf provenance -----------------------------------------
-DESIGN=()
-for f in "${LEAVES[@]}"; do
-  case "$f" in */design/*) moved "$f" || DESIGN+=("$f") ;; esac
-done
-if [ ${#DESIGN[@]} -gt 0 ]; then
-  emit < <(awk '
+# -- S01 / S02: provenance and freshness, per tier ------------------------------
+# design/ leaves carry _source:_ and _reviewed:_ (both required: S02), features/ leaves
+# _reviewed:_ (required: S02), research/ leaves may carry _reviewed:_ (never required).
+# S01 judges every _reviewed:_ against its tier's window, as of today or --today.
+freshness() {   # freshness <tier> <window-days> <need-source 0|1> <need-reviewed 0|1> <leaves...>
+  local tier=$1 window=$2 needsrc=$3 needrev=$4; shift 4
+  [ $# -gt 0 ] || return 0
+  awk -v tier="$tier" -v window="$window" -v needsrc="$needsrc" -v needrev="$needrev" -v today="$TODAY" '
     { sub(/\r$/, "") }
     /^_source:_/ { src[FILENAME] = 1 }
     /^_reviewed:_/ {
@@ -132,21 +145,33 @@ if [ ${#DESIGN[@]} -gt 0 ]; then
         rev[FILENAME] = substr($0, RSTART, RLENGTH)
     }
     END {
-      now = systime()
+      if (today != "") { split(today, t, "-"); now = mktime(t[1] " " t[2] " " t[3] " 0 0 0") } else now = systime()
       for (i = 1; i < ARGC; i++) {
         f = ARGV[i]
-        if (!(f in src) || !(f in rev)) {
-          miss = (f in src) ? "_reviewed:_" : ((f in rev) ? "_source:_" : "_source:_ and _reviewed:_")
-          print "S02\t" f ": design leaf without provenance — missing " miss
-          continue
-        }
+        miss = ""
+        if (needsrc && !(f in src)) miss = "_source:_"
+        if (needrev && !(f in rev)) miss = miss (miss == "" ? "" : " and ") "_reviewed:_"
+        if (miss != "") { print "S02\t" f ": " tier " leaf without provenance — missing " miss; continue }
+        if (!(f in rev)) continue
         split(rev[f], d, "-")
         age = int((now - mktime(d[1] " " d[2] " " d[3] " 0 0 0")) / 86400)
-        if (age > 90)
-          print "S01\t" f ": design leaf last reviewed " rev[f] " (" age " days ago) — re-verify against history/"
+        if (age > window)
+          print "S01\t" f ": " tier " leaf last reviewed " rev[f] " (" age " days ago; the window is " window ") — re-verify it and bump _reviewed:_, or archive it"
       }
-    }' "${DESIGN[@]}")
-fi
+    }' "$@"
+}
+DESIGN=() FEATURES=() RESEARCH=()
+for f in "${LEAVES[@]}"; do
+  moved "$f" && continue
+  case "$f" in
+    */design/*)   DESIGN+=("$f") ;;
+    */features/*) FEATURES+=("$f") ;;
+    */research/*) RESEARCH+=("$f") ;;
+  esac
+done
+emit < <(freshness design 90 1 1 "${DESIGN[@]+"${DESIGN[@]}"}")
+emit < <(freshness features 90 0 1 "${FEATURES[@]+"${FEATURES[@]}"}")
+emit < <(freshness research 180 0 0 "${RESEARCH[@]+"${RESEARCH[@]}"}")
 
 # -- S03: dead tags (one awk per branch; corpus = index + leaves + child indexes)
 for tf in "${TAGFILES[@]}"; do
@@ -455,16 +480,71 @@ if [ ${#S18_SCOPE[@]} -gt 0 ]; then
     | awk -F: '{ print "S18\t" $1 ": " $2 " line" ($2 == 1 ? "" : "s") " of process vocabulary (epic/sprint/retro/numbered plan, wave or phase) — public/ describes what is, not how the work was run" }')
 fi
 
+# -- S20: the uncited design or history leaf -----------------------------------------
+# A public design/ leaf is current law; a history/ leaf is provenance. One that no file
+# cites beyond its own branch index is law nothing reads, or provenance nothing rests on.
+# The citation rule is find.sh -b's: the basename anywhere in another file's text, a link
+# or a bare path alike (S12 keeps these basenames unique). Citers are every scanned *.md
+# of both trees except moved stubs (pointers, not readers). features/, research/ and the
+# private tree are not judged: a feature-log leaf is an entry point. Archived leaves and
+# moved stubs are expected to go uncited and are skipped.
+S20_LEAVES=()
+for f in "${LEAVES[@]}"; do
+  case "$f" in public/*/design/*|public/*/history/*) ;; *) continue ;; esac
+  moved "$f" && continue
+  S20_LEAVES+=("$f")
+done
+if [ ${#S20_LEAVES[@]} -gt 0 ]; then
+  mapfile -t S20_LIVE < <(grep -LE '^_status:_[ \t]*archived' "${S20_LEAVES[@]}" /dev/null 2>/dev/null | grep -v '^/dev/null$')
+  if [ ${#S20_LIVE[@]} -gt 0 ]; then
+    mapfile -t S20_CITERS < <(for f in "${ALL_MD[@]}"; do moved "$f" || printf '%s\n' "$f"; done)
+    emit < <(grep -oHF -f <(printf '%s\n' "${S20_LIVE[@]##*/}") "${S20_CITERS[@]}" /dev/null 2>/dev/null \
+      | awk -v leaves="$(printf '%s\n' "${S20_LIVE[@]}")" '
+          function dir(p) { sub(/\/[^\/]*$/, "", p); return p }
+          BEGIN { n = split(leaves, L, "\n"); for (i = 1; i <= n; i++) { b = L[i]; sub(/^.*\//, "", b); of[b] = L[i] } }
+          { i = index($0, ":"); f = substr($0, 1, i - 1); b = substr($0, i + 1)
+            if (!(b in of)) next
+            if (f == of[b] || f == dir(of[b]) "/.index.md") next
+            cited[b] = 1 }
+          END {
+            for (i = 1; i <= n; i++) {
+              b = L[i]; sub(/^.*\//, "", b)
+              if (b in cited) continue
+              tier = (index(L[i], "/design/") > 0) ? "design" : "history"
+              print "S20\t" L[i] ": uncited " tier " leaf — no file beyond its own index row names it (find.sh -b); " \
+                    ((tier == "design") ? "law nothing reads: cite it from the feature log or a design leaf, or archive it" : "provenance nothing rests on: a design leaf should name it in _source:_, or the ruling was never distilled")
+            }
+          }')
+  fi
+fi
+
+# -- S21: an inbox item past its window ------------------------------------------------
+# private/journal/inbox.md is the one cheap landing for a thought mid-session: append-only,
+# `- YYYY-MM-DD — <text>` under ## Mine and ## Candidates. An item is promoted (filed) or
+# dropped when triaged; one older than 14 days has been neither. Private tree only.
+INBOX=private/journal/inbox.md
+if has_mirror && [ -f "$INBOX" ]; then
+  emit < <(awk -v today="$TODAY" -v file="$INBOX" '
+    BEGIN { if (today != "") { split(today, t, "-"); now = mktime(t[1] " " t[2] " " t[3] " 0 0 0") } else now = systime() }
+    { sub(/\r$/, "") }
+    /^- [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] / {
+      split(substr($0, 3, 10), d, "-")
+      age = int((now - mktime(d[1] " " d[2] " " d[3] " 0 0 0")) / 86400)
+      if (age > 14) print "S21\t" file ":" FNR ": inbox item of " substr($0, 3, 10) " (" age " days old; the window is 14) — promote it to a leaf, a ruling or a feature-log line, or drop it"
+    }' "$INBOX")
+fi
+
 # -- summary --------------------------------------------------------------------
 echo "== SUMMARY: $TOTAL smell(s) — landed-since-retro=$LANDED =="
-printf '   S01 stale design leaf %3d   S02 design leaf w/o provenance %3d   S03 dead tag         %3d   S04 tag fragmentation  %3d\n' \
+printf '   S01 stale leaf         %3d   S02 leaf w/o provenance  %3d   S03 dead tag           %3d   S04 tag fragmentation  %3d\n' \
   "${COUNT[S01]}" "${COUNT[S02]}" "${COUNT[S03]}" "${COUNT[S04]}"
-printf '   S05 index row drift   %3d   S06 manifest gaps              %3d   S07 CRLF             %3d   S08 empty/shell leaf   %3d\n' \
+printf '   S05 index row drift    %3d   S06 manifest gaps        %3d   S07 CRLF               %3d   S08 empty/shell leaf   %3d\n' \
   "${COUNT[S05]}" "${COUNT[S06]}" "${COUNT[S07]}" "${COUNT[S08]}"
-printf '   S09 template residue  %3d   S10 unindexed .agent           %3d   S11 cross-branch row %3d   S12 duplicate basename %3d\n' \
+printf '   S09 template residue   %3d   S10 unindexed .agent     %3d   S11 cross-branch row   %3d   S12 duplicate basename %3d\n' \
   "${COUNT[S09]}" "${COUNT[S10]}" "${COUNT[S11]}" "${COUNT[S12]}"
-printf '   S13 retired vocab     %3d   S14 oversized index context    %3d   S16 archive mismatch %3d   S17 retro overdue      %3d\n' \
+printf '   S13 retired vocab      %3d   S14 oversized index ctx  %3d   S16 archive mismatch   %3d   S17 retro overdue      %3d\n' \
   "${COUNT[S13]}" "${COUNT[S14]}" "${COUNT[S16]}" "${COUNT[S17]}"
-printf '   S18 process vocabulary %2d   (rows landed since last retro: %d)\n' "${COUNT[S18]}" "$LANDED"
+printf '   S18 process vocabulary %3d   S20 uncited leaf         %3d   S21 inbox item overdue %3d   (rows landed since last retro: %d)\n' \
+  "${COUNT[S18]}" "${COUNT[S20]}" "${COUNT[S21]}" "$LANDED"
 [ "$TOTAL" -gt 255 ] && exit 255
 exit "$TOTAL"
