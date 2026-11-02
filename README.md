@@ -132,6 +132,8 @@ The manifest, `.agentcontext` at the instance root, is what makes updates safe. 
 
 The second module is the codebase: one command reads a product's repository and writes a generated code map under the product's branch (its areas, the surfaces it exposes and one symbols leaf per area, every location a `path:line`), with a `--check` that reports drift. It is never hand-edited, only regenerated when the change that moved the source lands, and it needs Python 3.10 or later.
 
+The third module is the change log: a GitHub Actions workflow that rewrites every merged pull request into one squash commit, a bubble merge and an entry in `CHANGE_LOG.md` built from the pull request's title and its commit subjects. It is the reason commit subjects here take one of seven prefixes and read as product updates, and it is what makes a merged pull request citable from the tree. This repository runs the same workflow on itself.
+
 `examples/` holds a small fictional startup's filled tree, so that you can see what the indexes look like with something in them: start at [its reader page](./examples/quillfeather/README.md). Its two products carry generated code maps, made by the codebase module from the two fictional source repositories beside it.
 
 ## What is here today
@@ -145,6 +147,7 @@ The second module is the codebase: one command reads a product's repository and 
 - The constitution module, in `modules/constitution/`: the seed rulings, the articles and the process half an instance adopts with one copy.
 - The codebase module, in `modules/codebase/`: the code-map generator with its TypeScript and Go extractors, its drift gate and a fixture check, which the deploy smoke runs beside a `--check` of every code map in the examples.
 - The example's sources, in `examples/tillwright/` (TypeScript) and `examples/spinecard/` (Go): two small invented repositories the example's code maps are generated from.
+- The change-log module, in `modules/change-log/`: the post-merge workflow this repository runs on itself, which any repository adopts with one copy and one secret; `CHANGE_LOG.md` at the root is its output.
 - The adapter contract, with four adapter directories whose READMEs describe them, and the Claude Code payload: the pre-write guard on the immutable tiers, the lint after every write, the orient context at session start, the kickoff detection, the skills and the agent profiles.
 
 The four adapter directories are one written adapter and three porting specs.
