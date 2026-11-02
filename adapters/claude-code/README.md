@@ -35,6 +35,33 @@ instance.
   harness's mechanics (routing, background jobs, the lean budget, the prompt-cache keep-alive,
   the attribution setting, the non-interactive fold) to the neutral process documents.
 - **A one-line `CLAUDE.md`** that imports the core's instruction with `@AGENTS.md`.
+- **The start prompt is the instance's own instruction.** The settings set
+  `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD` to `0`: on this harness a directory added to the
+  session (a workspace folder, `--add-dir`) otherwise has its instruction file loaded at session
+  start, flag or no flag — measured here at about 13k tokens for a 45 KB instruction, every
+  session, whether or not the session enters that repository. With the flag at `0` the harness
+  loads nothing of a sibling, at start or later.
+- **A sibling's instruction on first touch.** A `PostToolUse` hook on the file tools and Bash
+  watches for a path under a workspace sibling (the folders the instance's workspace file names)
+  and, the first time one is touched in a session, hands the session that sibling's
+  `.agents/.id.meta` line and its `CLAUDE.md` (or `AGENTS.md`, when `CLAUDE.md` is the one-line
+  import of it) as additional context. Once per session per sibling; a sibling never entered costs
+  nothing. This is `AGENTS.md`'s first-touch rule, done for the agent.
+- **A moved project's history re-attached.** With the context-retention module adopted, a
+  `SessionStart` hook runs its check over the instance and the workspace folders. This harness
+  files a project's transcripts and auto memory under `<config>/projects/<encoded path>/`, so a
+  moved folder loses its resume list and its `MEMORY.md`; the hook derives the old and the new
+  directory names (every character outside `[A-Za-z0-9]` becomes a hyphen, a rule it first checks
+  against its own transcript path), and moves the old directory's files into the new one — a
+  rename when the new one does not exist yet, a merge that never overwrites otherwise — then says
+  in one line what it re-attached. When the rule does not reproduce the session's own directory it
+  only says where the old material sits. It also hands the session the instance's own identity
+  line. Without the module the hook is silent.
+- **The prompt-cache lifetime, measured.** `cache-ttl.sh`, beside the payload and never in it,
+  runs one cheap probe and reads the usage block: an hour, or five minutes. The run-sheet's
+  retention step runs it; with `--apply` on a five-minute result it writes `promptCacheTtl` and
+  `subagentPromptCacheTtl` as `1h` into the instance's `.claude/settings.local.json` and probes
+  again, so the user knows whether the account grants the hour.
 
 ## 2. What the core degrades to without it
 
@@ -42,49 +69,19 @@ The linter and convention stand in for the pre-write guard: a tier violation is 
 `scripts/cure.sh` and `scripts/smell.sh` run, not when the write is attempted. Orientation is
 reading `private/journal/latest.md` by hand, as `AGENTS.md` instructs. Search and filing are
 run by hand from `AGENTS.md` and `rules/`. Kickoffs carry their ground rules by pointer line
-alone. No data is lost: every leaf, index and tag is the same with or without the adapter.
+alone. A sibling's instruction is read by the agent itself on first touch, as `AGENTS.md` asks;
+a moved project is reported by the module's `check` and repaired by hand from its README. No
+data is lost: every leaf, index and tag is the same with or without the adapter.
 
 ## 3. What a port must reproduce
 
-A port to another harness counts as one when it matches each of these:
-
-1. **The entry point.** The harness's own instruction file loads the core's `AGENTS.md`
-   (an import, or a one-line pointer), and adds nothing of its own to the method.
-2. **The pre-write guard.** A write or edit into `public/**/history/`, `constitution/history/`,
-   or the private tree's `prs/`, `appendices/` and `journal/retros/` is refused before it
-   lands, with one line naming the path and the rule. `.index.md`, `.tags` and `.agent` are
-   never refused; a PR body whose `_landed as:_` line reads `—` is never refused; an
-   environment variable lets a deliberate exception through. Plans and kickoffs are not
-   refused by path.
-3. **The lint after write.** After a write into `public/`, `private/`, `templates/`,
-   `constitution/`, `AGENTS.md` or `README.md`, `scripts/cure.sh --fast` runs and its FAIL lines
-   and verdict reach the agent; nothing is reported when the tree is sound.
-4. **The orient context.** At session start the agent receives, in at most about 45 lines: the
-   `cure.sh --fast` verdict; `private/journal/latest.md` when it exists; with a private tree,
-   the count of manifest rows landed since the newest retro (`scripts/lib-manifest.sh`); one line
-   per repository (this one, its private tree, each sibling with a `.git`) with branch and
-   ahead/behind; and the local branches with no upstream.
-5. **Kickoff detection.** On a session's first prompt only, a first line of `Mode: orchestrated`,
-   or two of the markers WORKING DIRECTORIES, HARD RULE, VERIFY RATHER THAN ASSUME, CLOSE-OUT,
-   SETTLE WITH, puts `KICKOFF.md` in the agent's context and switches it to the orchestrated
-   posture; `Mode: scoping` keeps the default.
-6. **Two postures.** A scoping posture by default, whose register follows `.conf`'s `AI_TONE`
-   and `AI_TECHNICALITY`, and an orchestrated posture for kickoff sessions that honours
-   `ORCH_BUDGET`.
-7. **The five procedures** as commands or equivalents: file (leaf, row and tags as one action,
-   routed by kind, ending with `cure.sh --fast` and one private commit), find (tags, then
-   keywords, then expand and descend), cure (both linters, repairs per `HYGIENE.md`, standing
-   smells reported with reasons), kickoff (from a plan and its bill with the constitution
-   module's kickoff template, degrading to a hand-written kickoff without it), and retro (a
-   window of landed work assembled, then a retrospective leaf with computed numbers).
-8. **The delegated roles**: a read-only lookup, a filer, a read-only leaf reviewer, a read-only
-   code reviewer whose findings cite `path:line`, a retrospective writer, and three
-   implementation tiers (design-sensitive, standard, mechanical), each ending its report with
-   an `## Insights` block.
-9. **Rules loaded by path.** Touching a governed path brings the matching `rules/<name>.md`
-   into the agent's attention, by pointer, never by copy.
-10. **The orchestration ground rules**, one file per reader (orchestrator at the start, every
-    delegated agent, orchestrator at the close), saying only what the harness adds to the
-    neutral process documents, with each rule's source named.
-11. **Every hook fails open.** A missing interpreter, a slow repository or a malformed input
-    degrades to silence or to "?"; no hook ever wedges a session.
+A port is held to the checklist in [Contributing](../README.md#contributing), item by item; this
+adapter is its reference, and nothing of the list is restated here. What meets each item in this
+payload: the entry point is `CLAUDE.md`; orientation is the `orient` hook; the reading order is
+left to `AGENTS.md` and prompted by the orient context; the start prompt and the first-touch read
+are the settings' `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=0` and the `sibling-instruction`
+hook; a moved project is the `retention` hook over the module's `check`; the pre-write guard is
+`guard-tiers`; the lint after write is `lint-on-write`; kickoff detection is `classify-mode`; the
+two postures are the output styles; the five procedures are the skills; the delegated roles are
+the agent profiles; the rules by path are the six loaders under `.claude/rules/`; the ground rules
+are `KICKOFF.md`, `WORKER.md` and `CLOSEOUT.md`; and every hook exits 0 on any failure of its own.
