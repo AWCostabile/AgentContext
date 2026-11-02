@@ -10,7 +10,10 @@ Hand the job to your coding agent. Paste this into a fresh session, with your ow
 
 ```
 Set up a knowledge tree for <organisation> at <path>, from the AgentContext template.
-Fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/v0.3.0/SETUP.md and follow it as a run-sheet: ask me its questions first, then run each step's command and confirm its check before moving on. If a step refuses, stop and show me what it said.
+Fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/v0.3.0/SETUP.md
+and follow it as a run-sheet: ask me its questions first, then run each step's
+command and confirm its check before moving on. If a step refuses, stop and
+show me what it said.
 ```
 
 [SETUP.md](./SETUP.md) is written for exactly that reader: every step is one command and one check, and it ends with how to pull a later release into your tree without touching what you have filed. To read the template itself:
