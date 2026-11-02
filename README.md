@@ -37,11 +37,11 @@ The Claude Code adapter gives an instance its guard on the immutable tiers, its 
 ## Read next
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md): the method in full, section by section.
+- [CHANGE_LOG.md](./CHANGE_LOG.md): what each release landed, generated from the pull requests.
 - [SETUP.md](./SETUP.md): the run-sheet, deploying and updating.
-- [The example's reader page](./examples/quillfeather/README.md): a filled tree, and what to open first.
 - [template/AGENTS.md](./template/AGENTS.md): what an instance tells an agent.
 - [template/HYGIENE.md](./template/HYGIENE.md): every check, what it means and how to fix it.
-- [CHANGE_LOG.md](./CHANGE_LOG.md): what each release landed, generated from the pull requests.
+- [The example's reader page](./examples/quillfeather/README.md): a filled tree, and what to open first.
 
 ## Licence
 
