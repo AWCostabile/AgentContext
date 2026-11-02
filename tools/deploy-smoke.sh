@@ -188,8 +188,8 @@ else
   mapfile -t hooks < <(cd "$I6" && for f in "${pfiles[@]}"; do case "$f" in *.json) grep -oE '[A-Za-z0-9_./-]*hooks/[A-Za-z0-9_-]+\.sh' "$f" ;; esac; done | sed 's|^.*/\([^/]*/hooks/\)|\1|' | LC_ALL=C sort -u)
   hmiss=""
   for h in "${hooks[@]}"; do [ -f "$I6/$h" ] || hmiss+="$h "; done
-  check "the ${#hooks[@]} hook scripts the settings register are present (expected 4)${hmiss:+ (missing: $hmiss)}" \
-    '[ ${#hooks[@]} -eq 4 ] && [ -z "$hmiss" ]'
+  check "the ${#hooks[@]} hook scripts the settings register are present (expected 6)${hmiss:+ (missing: $hmiss)}" \
+    '[ ${#hooks[@]} -eq 6 ] && [ -z "$hmiss" ]'
   mlist=$(sed '1,/^$/d' "$I6/.agentcontext" 2>/dev/null | awk '{print $2}')
   mmiss=""
   for f in "${pfiles[@]}"; do printf '%s\n' "$mlist" | grep -qF -- "$f" || mmiss+="$f "; done
@@ -283,6 +283,32 @@ out=$(cd "$I1" && bash scripts/cure.sh --fast 2>&1); rc=$?
 check "the homed instance lints with 0 fails${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
 check "the deployed workspace hides graphify-out and .graphifyignore" \
   'grep -q "\"\*\*/graphify-out\": true" "$I1/Example.code-workspace" && grep -q "\"\*\*/.graphifyignore\": true" "$I1/Example.code-workspace"'
+
+# -- 15. the context-retention module: its own check, and init on a deployed instance with a throwaway HOME --
+# The module's check proves the script in a throwaway HOME with two fake projects. Here, on the first
+# instance, init with the excludes question answered no writes the identity and the map and nothing
+# to git; the instance still lints; the workspace hides the file; and no identity file is anywhere in
+# the committed tree, which the deployer never writes one into.
+out=$(bash "$SRC/modules/context-retention/check.sh" 2>&1); rc=$?
+check "modules/context-retention/check.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | tail -n 1))}" '[ $rc -eq 0 ]'
+mkdir -p "$I1/modules" && cp -R "$SRC/modules/context-retention" "$I1/modules/context-retention"
+H="$TMP/home"; mkdir -p "$H"
+out=$(cd "$I1" && HOME="$H" XDG_CONFIG_HOME= bash modules/context-retention/meta.sh init --no 2>&1 < /dev/null); rc=$?
+check "retention init on the instance exits 0 and writes .agents/.id.meta there${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]|^refused|^usage' | head -n 1))}" \
+  '[ $rc -eq 0 ] && [ -f "$I1/.agents/.id.meta" ]'
+check "the identity is the closed shape, id=<slug>-<6 hex>, name= and created=, with no path" \
+  '[ "$(cut -d= -f1 "$I1/.agents/.id.meta" | tr "\n" " ")" = "id name created " ] && grep -qE "^id=[a-z0-9-]+-[0-9a-f]{6}$" "$I1/.agents/.id.meta" && ! grep -q "/" "$I1/.agents/.id.meta"'
+check "the no answer wrote nothing to git: no global configuration, no excludes file in the throwaway HOME" \
+  '[ ! -f "$H/.gitconfig" ] && [ ! -e "$H/.config/git" ]'
+check "the map in the throwaway HOME records the instance by id and path" \
+  '[ -f "$H/.config/agentcontext/projects" ] && grep -q "^$(sed -n "s/^id=//p" "$I1/.agents/.id.meta")	" "$H/.config/agentcontext/projects"'
+out=$(cd "$I1" && HOME="$H" XDG_CONFIG_HOME= bash modules/context-retention/meta.sh check 2>&1 < /dev/null); rc=$?
+check "retention check on the instance: 0 fails, the instance current" '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^\[ OK \] .*: .* at "'
+out=$(cd "$I1" && bash scripts/cure.sh --fast 2>&1); rc=$?
+check "the instance with an identity lints with 0 fails${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
+check "the deployed workspace hides **/.agents/.id.meta" 'grep -q "\"\*\*/.agents/.id.meta\": true" "$I1/Example.code-workspace"'
+check "no identity file anywhere in the committed tree, and the deployer wrote none into a fresh instance" \
+  '! git ls-files | grep -q "\.id\.meta$" && [ -z "$(find "$SRC" -name .id.meta)" ] && [ ! -e "$I6/.agents/.id.meta" ]'
 
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL

@@ -14,6 +14,7 @@ Ask these questions first and keep the answers; several steps use them.
 4. **A private tree on this machine, or not?** Yes for the person who runs the work (plans, kickoffs, pull-request records, the journal); no for a reader-only clone.
 5. **An adapter, or none?** An adapter adds what one agent harness can enforce on top of the plain tree. With none, the tree works on convention and the linter. The deployer prints the list of adapters it ships; pick one of those names or leave it out.
 6. **How the agent should speak**: how technical (`beginner`, `junior`, `mid`, `senior`) and in what tone (`casual`, `direct`, `friendly`, `reserved`). These fill the `AI_` lines.
+7. **Which repositories sit beside the tree?** The folder names of the product repositories the tree will describe, each a sibling directory of the instance. They become the workspace file's folders at deploy (step 3), and every later step that reads "the repository beside the instance, as the workspace sees it" reads that file.
 
 ## 0. Requirements
 
@@ -57,10 +58,10 @@ prints `8`, and `grep '^CATALOGS=' my.conf` shows the user's catalogs in quotes.
 
 ## 3. Deploy
 
-**Run** (drop `--no-private` if the user wants a private tree; add `--adapter <name>` if they chose one; add `--name <RepositoryName>` if the directory's basename is not the name they want)
+**Run** (drop `--no-private` if the user wants a private tree; add `--adapter <name>` if they chose one; add `--name <RepositoryName>` if the directory's basename is not the name they want; one `--sibling <name>` per repository from the seventh answer)
 
 ```
-bash AgentContext-0.3.0/init.sh --target <path> --conf ./my.conf
+bash AgentContext-0.3.0/init.sh --target <path> --conf ./my.conf --sibling <name>
 ```
 
 **Check**: the output ends with `done: <path>` followed by the adapter list. Then:
@@ -69,7 +70,7 @@ bash AgentContext-0.3.0/init.sh --target <path> --conf ./my.conf
 grep -rlE '\{\{[A-Za-z]' --exclude-dir=.git <path> | grep -v '/templates/'
 ```
 
-prints nothing: no placeholder is left outside the templates directory (the core documents mention the placeholder syntax itself, which is why the check looks for a brace pair followed by a letter). `<path>/public/` holds one directory per catalog and no `catalog/`; `<path>/.agentcontext` exists and its `ref=` line names the release; `<path>/<RepositoryName>.code-workspace` exists; with a private tree, `<path>/private/.git` exists.
+prints nothing: no placeholder is left outside the templates directory (the core documents mention the placeholder syntax itself, which is why the check looks for a brace pair followed by a letter). `<path>/public/` holds one directory per catalog and no `catalog/`; `<path>/.agentcontext` exists and its `ref=` line names the release; `<path>/<RepositoryName>.code-workspace` exists and its `folders` name the tree, the private tree when there is one, and each `--sibling`; with a private tree, `<path>/private/.git` exists.
 
 If the deployer refuses, it exits 2 and the last line of its error output, prefixed `init.sh:`, says why: a non-empty target, a missing `.conf` key, a catalog name that is not lowercase letters, digits and hyphens, an adapter with no payload in this release. Fix the cause and run it again; it builds the instance in a staging directory and writes nothing to the target when it refuses.
 
@@ -97,9 +98,42 @@ cd <path> && git init -b main && git add -A && git commit -m "chore: a knowledge
 
 **Run**: open `<path>/<RepositoryName>.code-workspace` in the editor. It holds the tree and, when present, the private tree as two folders; `.vscode/` carries the recommended extensions and the settings for Markdown and search.
 
-**Check**: the editor shows `AGENTS.md` at the root. That file is the instruction every agent session in this tree reads first, and the user's next step is to copy `templates/product` into a catalog for their first product.
+**Check**: the editor shows `AGENTS.md` at the root. That file is the instruction every agent session in this tree reads first. The tree is usable from here: the user's first product is `templates/product` copied into a catalog. The steps below are optional modules, in the order they are best adopted: what concerns the instance and this machine first, then the process law, then the repository's workflow, then the two generated tiers with their installs.
 
-## 7. Adopt the constitution module (optional)
+## 7. Project context retention (optional)
+
+The context-retention module gives every project in the workspace a per-clone identity, `.agents/.id.meta` (an id, a name and a date, never a path), so an agent can keep a project's memory and history when the folder is renamed or moved, and the instance's `AGENTS.md` keeps a session's start prompt to this tree's own instruction, reading a sibling's on first touch. An instance works without it. This step asks the user for each setting rather than taking it; ask these three and keep the answers:
+
+1. **Ignore `.agents/.id.meta` in git's global excludes?** Recommended: yes. The file is one user's identity for the folder and must never be committed; in a clone it would hand the same identity to everyone. Git's global excludes ignore it everywhere for this user alone, without touching any repository's `.gitignore`. `init` prints this reason again and asks before it writes; a no leaves the file visible to git in every project that does not ignore it itself.
+2. **Which folders get an identity?** By default the instance and every folder its workspace file names (the siblings from the seventh opening answer). The user may name fewer; a folder they skip is reported by `check` as having none, never failed.
+3. **Keep the start prompt to this tree's own instruction?** Measure first, and quote the number:
+
+```
+cd <path> && for f in ../*/CLAUDE.md ../*/AGENTS.md; do [ -f "$f" ] && wc -c < "$f"; done | awk '{ s += $1 } END { printf "%d bytes, about %d tokens of sibling instruction per session\n", s, s / 4 }'
+```
+
+   That is what every session would pay to load the siblings' instruction files at start, whether or not it enters those repositories (a `CLAUDE.md` that only imports its `AGENTS.md` is counted twice, so the figure is an upper bound). With the Claude Code adapter the deployed settings already keep them out (`CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD` at `0`) and a hook hands a sibling's instruction over the first time the session touches it; a user who wants everything loaded at start removes that `env` line from `.claude/settings.json`. Without an adapter the rule stands in `AGENTS.md` alone.
+
+**Run** (from the instance root; `--yes` or `--no` carries the first answer when the user is not at the terminal)
+
+```
+cp -R AgentContext-0.3.0/modules/context-retention <path>/modules/context-retention && cd <path>
+bash modules/context-retention/meta.sh init
+```
+
+Pass the folders from the second answer as paths after `init` when the user named fewer than the workspace file does.
+
+**Check**: `<path>/.agents/.id.meta` exists and is exactly three lines, `id=`, `name=` and `created=`, with no path in it; each named folder has one too; `bash modules/context-retention/meta.sh check` ends with `0 fail(s)` and one `[ OK ]` line per project; `bash modules/context-retention/meta.sh list` prints one row per project with its path; with a yes to the first question, `git -C <path> status --short` does not list `.agents/`, and `git config --global core.excludesFile` names a file containing the line `.agents/.id.meta`. Nothing of this is committed: the identity is this user's, and the map is this machine's.
+
+**With the Claude Code adapter, measure the prompt-cache lifetime too.** An orchestrating session that waits on a delegated job for longer than the cache lives pays a cold write of its whole prompt on its next turn; the harness caches for five minutes by default on an API key or a cloud provider, and for an hour on a subscription within its plan.
+
+```
+bash AgentContext-0.3.0/adapters/claude-code/cache-ttl.sh <path>
+```
+
+**Check**: the second line reads `prompt cache: 1h …` or `prompt cache: 5m …`. On `5m`, ask the user whether to try for the hour: `… cache-ttl.sh <path> --apply` writes `promptCacheTtl` and `subagentPromptCacheTtl` as `"1h"` into `<path>/.claude/settings.local.json` (this machine's file; add `.claude/settings.local.json` to the instance's `.gitignore` if `git check-ignore` does not already ignore it) and probes again. If the second probe still says `5m`, the account does not grant the hour or the build predates the setting (Claude Code 2.1.242): tell the user to ask their account's administrator, and keep `ORCH_BUDGET=lean` in `.conf`, which keeps an orchestrator's waits short.
+
+## 8. Adopt the constitution module (optional)
 
 The constitution is the tree's law about itself: starting rulings, the articles that distil them, and the process half (a kickoff guide, ground rules by reader, a code-standards template). An instance works without it; with it, every later change to the process starts as a bill. Ask the user; a team that will run agent-led work wants it.
 
@@ -119,7 +153,22 @@ Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
 
 Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1, and the user keeps what applies and strikes the rest before the first commit. When a leaf is as the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one). The adoption steps in `AgentContext-0.3.0/modules/constitution/README.md` walk the same ground. Commit.
 
-## 8. Adopt the codebase module (optional)
+## 9. Adopt the change-log module (optional)
+
+The change-log module is a GitHub Actions workflow for any repository the user keeps on GitHub, the instance itself or a product's: every merged pull request becomes one squash commit, a bubble merge and an entry in `CHANGE_LOG.md` built from the pull request's title and its commit subjects. It is what makes a merged pull request citable from the tree. Ask the user which repositories should carry it.
+
+**Run** (in each such repository, on `main`)
+
+```
+mkdir -p .github/workflows && cp AgentContext-0.3.0/modules/change-log/post-merge.yml .github/workflows/post-merge.yml
+git add .github/workflows/post-merge.yml && git commit -m "chore: the post-merge workflow squashes, bubble-merges and logs each pull request"
+```
+
+Then the user adds a repository secret named `ACTION_TOKEN` (a fine-grained personal access token with Contents: read and write on that repository) under Settings, Secrets and variables, Actions, and checks three settings: "Allow merge commits" on, "Automatically delete head branches" off, and force pushes to `main` allowed for their account if the branch is protected. The agent cannot do these; say exactly what to click.
+
+**Check**: `.github/workflows/post-merge.yml` is on `main` and is identical to the module's file (`cmp` prints nothing); the secret exists; the next merged pull request leaves `main` with a `merge: pull request #<n>` bubble and a `CHANGE_LOG.md` whose first heading is that pull request's title. Every clone then re-syncs with `git fetch && git reset --hard origin/main`, never a pull. `modules/change-log/README.md` says what the workflow asks of commit subjects.
+
+## 10. Adopt the codebase module (optional)
 
 The codebase module keeps a generated code map of a product's repository in the tree: its source areas, the surfaces it exposes and one symbols leaf per area, every location a `path:line`. An instance works without it. Ask the user which products have a repository worth mapping; the repository sits beside the instance, as the workspace sees it.
 
@@ -143,22 +192,7 @@ and replace the tier's scaffold `.tags` with the words a searcher would use for 
 
 The tier is regenerated with that command at the landing of the change that moved the source, and never hand-edited. Python 3.10 or later is the module's one requirement.
 
-## 9. Adopt the change-log module (optional)
-
-The change-log module is a GitHub Actions workflow for any repository the user keeps on GitHub, the instance itself or a product's: every merged pull request becomes one squash commit, a bubble merge and an entry in `CHANGE_LOG.md` built from the pull request's title and its commit subjects. It is what makes a merged pull request citable from the tree. Ask the user which repositories should carry it.
-
-**Run** (in each such repository, on `main`)
-
-```
-mkdir -p .github/workflows && cp AgentContext-0.3.0/modules/change-log/post-merge.yml .github/workflows/post-merge.yml
-git add .github/workflows/post-merge.yml && git commit -m "chore: the post-merge workflow squashes, bubble-merges and logs each pull request"
-```
-
-Then the user adds a repository secret named `ACTION_TOKEN` (a fine-grained personal access token with Contents: read and write on that repository) under Settings, Secrets and variables, Actions, and checks three settings: "Allow merge commits" on, "Automatically delete head branches" off, and force pushes to `main` allowed for their account if the branch is protected. The agent cannot do these; say exactly what to click.
-
-**Check**: `.github/workflows/post-merge.yml` is on `main` and is identical to the module's file (`cmp` prints nothing); the secret exists; the next merged pull request leaves `main` with a `merge: pull request #<n>` bubble and a `CHANGE_LOG.md` whose first heading is that pull request's title. Every clone then re-syncs with `git fetch && git reset --hard origin/main`, never a pull. `modules/change-log/README.md` says what the workflow asks of commit subjects.
-
-## 10. Adopt the graphify module (optional)
+## 11. Adopt the graphify module (optional)
 
 The graphify module keeps one Graphify knowledge graph per repository in the tree, under `graphs/<slug>/`, and links each repository's `graphify-out/` back into it, so an agent asks the graph who calls what before it greps and the repository's own graphify hooks never dirty the tree. An instance works without it. Ask the user which repositories to graph; each sits beside the instance, as the workspace sees it.
 
