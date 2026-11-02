@@ -1,3 +1,19 @@
+## Feature | Context Retention Module [ _2026-11-02 12:18:26 UTC_ ]
+
+- docs: the run-sheet asks for the sibling repositories up front and adopts the modules in dependency order
+- test: the deploy smoke runs the context-retention check and inits a deployed instance
+- docs: the run-sheet's step 11, the modules index and the architecture page describe context retention
+- docs: the adapters' Contributing checklist, cited by every adapter's section 3
+- feat: the Claude Code adapter measures the prompt-cache lifetime at setup
+- chore: make hiding `private/` a false option on the workspace
+- feat: the Claude Code adapter re-attaches a moved project's history and loads a sibling's instruction on first touch
+- docs: small rework of the second passage to make it a 'tl;dr'
+- feat: the instance instruction reads a workspace project on first touch; the workspace hides the identity file
+- chore: re-align readme quick install snippet
+- docs: the context-retention module's README — the two concerns, the identity file, the verbs, the map, what an adapter adds
+- test: the context-retention module proves itself in a throwaway HOME with two fake projects
+- feat: the context-retention module mints a per-clone identity and reports a moved project
+
 ## Feature | Graphify Module [ _2026-11-02 11:17:13 UTC_ ]
 
 - docs: the graphify module in the modules index, the run-sheet, the README and the architecture
