@@ -1,0 +1,81 @@
+# Post-merge: squash, bubble-merge and log each pull request.
+#
+# When a pull request into main is merged, this workflow rewrites the merge GitHub made into
+# the shape the repository keeps: the branch squashed to one commit titled after the pull
+# request, bubble-merged into main with `merge: pull request #N`, and a change-log commit on
+# top that prepends `## <title> [ _<UTC time>_ ]` and one bullet per commit subject to
+# CHANGE_LOG.md. Commit subjects are therefore the change-log bullets, which is why they take
+# one of the seven prefixes and read as product updates. The rewritten main is force-pushed,
+# so the repository needs one secret: ACTION_TOKEN, a token with write access to contents
+# (the default GITHUB_TOKEN may not force-push to the default branch). Keep "Allow merge
+# commits" on in the repository settings: the rewrite reads the two parents of the merge
+# commit GitHub creates. Leave "Automatically delete head branches" off: the workflow deletes
+# the branch itself after replacing it with its squashed form.
+#
+# The merge and change-log commits are authored as the pull request's author, through the
+# account's noreply address, so GitHub attributes them like an ordinary squash merge.
+
+name: Post-merge (squash, bubble merge, change log)
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  rewrite_history:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.ACTION_TOKEN }}
+
+      - name: Rewrite the merge and prepend the change-log entry
+        env:
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          GIT_USER_EMAIL: ${{ format('{0}+{1}@users.noreply.github.com', github.event.pull_request.user.id, github.event.pull_request.user.login) }}
+          GIT_USER_NAME: ${{ github.event.pull_request.user.login }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          git config user.name "$GIT_USER_NAME"
+          git config user.email "$GIT_USER_EMAIL"
+
+          # The change-log entry: the pull request's title, the merge time, one bullet per commit
+          TIMESTAMP=$(date -u +"_%Y-%m-%d %H:%M:%S UTC_")
+          COMMIT_LOG=$(git log HEAD^1..HEAD^2 --pretty=format:"- %s")
+          NEW_ENTRY="## $PR_TITLE [ $TIMESTAMP ]\n\n$COMMIT_LOG\n\n"
+
+          # Undo the merge GitHub made
+          git checkout "$BASE_BRANCH"
+          git reset --hard HEAD~1
+
+          # The branch squashed to one commit, titled after the pull request
+          git checkout -b "temp-$PR_BRANCH" "$(git merge-base HEAD "origin/$PR_BRANCH")"
+          git merge --squash "origin/$PR_BRANCH"
+          git commit -m "$PR_TITLE (#$PR_NUMBER)"
+
+          # The bubble merge back into main
+          git checkout "$BASE_BRANCH"
+          git merge --no-ff "temp-$PR_BRANCH" -m "merge: pull request #$PR_NUMBER"
+
+          # The change-log commit after the bubble
+          touch CHANGE_LOG.md
+          printf "$NEW_ENTRY$(cat CHANGE_LOG.md)" > CHANGE_LOG.md
+          git add CHANGE_LOG.md
+          git commit -m "docs: update change log for pull request #$PR_NUMBER"
+
+          # Force-push the rewritten main
+          git push origin "$BASE_BRANCH" --force
+
+          # Replace the remote branch with its squashed form, then delete it
+          git push origin --delete "$PR_BRANCH"
+          git push origin "temp-$PR_BRANCH":"$PR_BRANCH"
+          git push origin --delete "$PR_BRANCH"
