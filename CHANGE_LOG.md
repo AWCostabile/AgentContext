@@ -1,3 +1,9 @@
+## Fix | Run Sheet [ _2026-11-02 13:02:30 UTC_ ]
+
+- docs: the repository instruction states when a thing is core and when it is a module
+- fix: the run-sheet and the README pin v0.4.0
+- test: the deploy smoke proves the run-sheet's pinned release ships every path it names
+
 ## Feature | Context Retention Module [ _2026-11-02 12:18:26 UTC_ ]
 
 - docs: the run-sheet asks for the sibling repositories up front and adopts the modules in dependency order
