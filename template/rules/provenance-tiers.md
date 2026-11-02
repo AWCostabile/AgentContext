@@ -7,12 +7,12 @@ These branches hold records added verbatim. They are immutable, in both trees, b
 
 | Tier | Tree | Holds |
 | ---- | ---- | ----- |
-| `public/**/history/` | public | rulings: the decisions as they were made |
-| `private/**/plans/` | private mirror | implementation briefs, grouped by month |
-| `private/**/kickoffs/` | private mirror | the prompts that launched them; append-only |
-| `private/**/prs/` | private mirror | one record per pull request: how a change was delivered |
-| `private/**/appendices/` | private mirror | the audit tables behind a PR body |
 | `private/journal/retros/` | private journal | retrospectives, grouped by the month of the run |
+| `private/**/appendices/` | private mirror | the audit tables behind a PR body |
+| `private/**/kickoffs/` | private mirror | the prompts that launched them; append-only |
+| `private/**/plans/` | private mirror | implementation briefs, grouped by month |
+| `private/**/prs/` | private mirror | one record per pull request: how a change was delivered |
+| `public/**/history/` | public | rulings: the decisions as they were made |
 
 - Never edit a record's body. Only ADD a record (copy it verbatim, add its manifest row in the
   same action) or correct a manifest row.

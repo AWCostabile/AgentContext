@@ -1,7 +1,6 @@
 # Modules
 
-Optional additions, adopted or deleted per instance. The core never depends on one, and no module
-names an agent harness.
+Optional additions, adopted or deleted per instance. The core never depends on one, and no module names an agent harness.
 
 | Module | What it adds |
 | ------ | ------------ |
