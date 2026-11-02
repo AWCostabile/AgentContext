@@ -1,3 +1,8 @@
+<p align="center">
+  <img src=".github/images/banner.png" width="800"
+       alt="Two trees: public/ holds what is true, with an index, bills, design, features and history per product; private/ holds how the work was run, with the journal and its status page, notes, plans, a branch's standing orders and its tags">
+</p>
+
 # AgentContext
 
 A template for keeping what your organisation knows in one git repository, in a shape that coding agents and new hires can both read. It ships a method and an empty structure: you deploy it once and fill it with your own products, decisions and designs. Written for a founder or a small team. MIT licensed.
