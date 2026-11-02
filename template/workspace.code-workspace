@@ -9,8 +9,8 @@
 
       // Whilst counter-intuitive, the intention of keeping the private folder
       // hidden from the main AgentContext repository is for the mental model
-      // of the two remaining separated.
-      "private/": true,
+      // of the two remaining separated. This is `false` by default though.
+      "private/": false,
 
       // A project's identity from the context-retention module: one user's,
       // never committed, read by agents on first touch; hidden here.
