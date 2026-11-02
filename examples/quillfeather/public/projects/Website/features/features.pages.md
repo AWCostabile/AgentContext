@@ -1,5 +1,7 @@
 # Website: Pages
 
+_reviewed:_ 2026-11-02
+
 **State today.** The site is five static pages (home, one per product, pricing, trial) built from
 Markdown and deployed on every merge. Every price is read from one price file, and the trial form
 sends a single email and stores nothing. How it works:

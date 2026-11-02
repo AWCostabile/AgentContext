@@ -35,6 +35,10 @@ The core files (`AGENTS.md`, `HYGIENE.md`, `rules/`, `scripts/`, `templates/`, `
 4. **The state of the work**: [private/journal/latest.md](./private/journal/latest.md), then the plan,
    kickoff and pull-request record it points to, and the journal entry where the next feature-log
    entry waits, drafted, for its merge.
+5. **The lookups**: [Tillwright's glossary](./public/products/Tillwright/glossary.md), one line per
+   settled term pointing at the leaf that holds its law, and the
+   [inbox](./private/journal/inbox.md), where a thought waits on one dated line until it is filed
+   or dropped.
 
 Run the tree's own tools from this directory: `bash scripts/find.sh -l` lists the tag vocabulary,
 `bash scripts/find.sh offline` finds the branches about the offline till, and `bash scripts/cure.sh`

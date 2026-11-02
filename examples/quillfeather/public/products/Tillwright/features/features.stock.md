@@ -1,5 +1,7 @@
 # Tillwright: Stock
 
+_reviewed:_ 2026-11-02
+
 **State today.** A shop's stock is a ledger of movements (receipts, sales, returns, transfers
 and adjustments), and every count Tillwright shows is computed from it; nothing stores a count.
 New titles are keyed by ISBN, secondhand copies by a shop-local code printed on their label.
