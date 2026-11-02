@@ -257,5 +257,10 @@ else
   check "modules/codebase/check.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | tail -n 1))}" '[ $rc -eq 0 ]'
 fi
 
+# -- 13. the change-log module is the workflow this repository runs ---------------------------------------
+# modules/change-log/post-merge.yml is the one source; .github/workflows/post-merge.yml is its copy.
+if cmp -s "$SRC/modules/change-log/post-merge.yml" "$SRC/.github/workflows/post-merge.yml"; then same=1; else same=0; fi
+check "the change-log module's workflow and .github/workflows/post-merge.yml are identical" '[ $same -eq 1 ]'
+
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL
