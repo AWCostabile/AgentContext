@@ -35,11 +35,13 @@ residue() {
 }
 # a digest of every file under a directory, to prove a run wrote nothing
 tree_digest() { (cd "$1" && find . -type f ! -path './private/.git/*' -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum); }
+# The editor reads its workspace and settings files as JSON with comments, so a full-line
+# // comment is stripped before the strict parse.
 json_ok() {
   if python -c pass >/dev/null 2>&1; then
-    python -I -c 'import json,sys; json.load(open(sys.argv[1], encoding="utf-8"))' "$1"
+    python -I -c 'import json,re,sys; json.loads(re.sub(r"^[ \t]*//.*$", "", open(sys.argv[1], encoding="utf-8").read(), flags=re.M))' "$1"
   elif command -v node >/dev/null 2>&1; then
-    node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "$1"
+    node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8").replace(/^[ \t]*\/\/.*$/mg, ""))' "$1"
   else
     return 2
   fi
@@ -256,6 +258,11 @@ else
   out=$(PYTHON=$PY bash "$SRC/modules/codebase/check.sh" 2>&1); rc=$?
   check "modules/codebase/check.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | tail -n 1))}" '[ $rc -eq 0 ]'
 fi
+
+# -- 13. the change-log module is the workflow this repository runs ---------------------------------------
+# modules/change-log/post-merge.yml is the one source; .github/workflows/post-merge.yml is its copy.
+if cmp -s "$SRC/modules/change-log/post-merge.yml" "$SRC/.github/workflows/post-merge.yml"; then same=1; else same=0; fi
+check "the change-log module's workflow and .github/workflows/post-merge.yml are identical" '[ $same -eq 1 ]'
 
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL

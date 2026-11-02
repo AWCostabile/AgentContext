@@ -143,6 +143,21 @@ and replace the tier's scaffold `.tags` with the words a searcher would use for 
 
 The tier is regenerated with that command at the landing of the change that moved the source, and never hand-edited. Python 3.10 or later is the module's one requirement.
 
+## 9. Adopt the change-log module (optional)
+
+The change-log module is a GitHub Actions workflow for any repository the user keeps on GitHub, the instance itself or a product's: every merged pull request becomes one squash commit, a bubble merge and an entry in `CHANGE_LOG.md` built from the pull request's title and its commit subjects. It is what makes a merged pull request citable from the tree. Ask the user which repositories should carry it.
+
+**Run** (in each such repository, on `main`)
+
+```
+mkdir -p .github/workflows && cp AgentContext-0.6.0/modules/change-log/post-merge.yml .github/workflows/post-merge.yml
+git add .github/workflows/post-merge.yml && git commit -m "chore: the post-merge workflow squashes, bubble-merges and logs each pull request"
+```
+
+Then the user adds a repository secret named `ACTION_TOKEN` (a fine-grained personal access token with Contents: read and write on that repository) under Settings, Secrets and variables, Actions, and checks three settings: "Allow merge commits" on, "Automatically delete head branches" off, and force pushes to `main` allowed for their account if the branch is protected. The agent cannot do these; say exactly what to click.
+
+**Check**: `.github/workflows/post-merge.yml` is on `main` and is identical to the module's file (`cmp` prints nothing); the secret exists; the next merged pull request leaves `main` with a `merge: pull request #<n>` bubble and a `CHANGE_LOG.md` whose first heading is that pull request's title. Every clone then re-syncs with `git fetch && git reset --hard origin/main`, never a pull. `modules/change-log/README.md` says what the workflow asks of commit subjects.
+
 ## How to update
 
 A release of the template changes the core files an instance received: `scripts/`, `rules/`, `templates/`, `.vscode/`, `AGENTS.md`, `HYGIENE.md`, `.conf.example` and an adapter's payload. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `.agentcontext` at the instance root records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone.
