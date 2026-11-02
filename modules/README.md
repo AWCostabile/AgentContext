@@ -1,7 +1,8 @@
 # Modules
 
-Optional additions, adopted or deleted per instance. The core never depends on one.
+Optional additions, adopted or deleted per instance. The core never depends on one, and no module
+names an agent harness.
 
-Not in this repository yet. This directory will hold one module, `constitution`: starting law about
-how a knowledge tree governs itself, as starting articles, with no bills or rulings history. Adopt it
-if you want written law about the tree; delete it if the core's rules are enough.
+| Module | What it adds |
+| ------ | ------------ |
+| [Constitution](./constitution/README.md) | the tree's law about itself: seed rulings, articles that cite them, a place for bills, and the process half (a kickoff guide, ground rules for each reader of an orchestrated piece of work, a code-standards template). Adopt it by copying `constitution/tree/` to an instance's `constitution/` and pruning it; delete it if the core's `rules/` are enough. |

@@ -1,13 +1,14 @@
 # Claude Code payload
 
-Not in this repository yet. The deployer's `--adapter claude-code` will copy this directory verbatim
-into the instance root. It will hold:
-
-- the pre-write tier guard hook;
-- the orient hook that prints the journal at session start;
-- the skills `/file`, `/find`, `/cure`, `/kickoff` and `/retro`;
-- the subagents;
-- the output styles;
-- the grammar and tier rules, set up to load by path;
-- the orchestration documents `KICKOFF.md`, `CLOSEOUT.md` and `WORKER.md`;
-- a one-line `CLAUDE.md` that imports `AGENTS.md` with `@AGENTS.md`.
+Everything in this directory except this README is copied verbatim onto an instance's root by
+the deployer's `--adapter claude-code`, and listed with its hash in the instance's manifest so
+an update can replace what was never edited: a one-line `CLAUDE.md` importing `AGENTS.md`; the
+orchestration ground rules `KICKOFF.md`, `WORKER.md` and `CLOSEOUT.md`, each saying only what
+this harness adds to the constitution module's neutral process documents; and `.claude/`, which
+holds `settings.json` (the default output style, the hook registrations and a read-only
+permission allow-list), the four hooks (`orient`, `classify-mode`, `guard-tiers`,
+`lint-on-write`) with their path helper, the skills `/file`, `/find`, `/cure`, `/kickoff` and
+`/retro` with the retro's window script under `tools/`, the subagent profiles (`librarian`,
+`filer`, `scrutinizer`, `skeptic`, `brainiac`, and the three implementer tiers), the `scoping`
+and `orchestrated` output styles, and six rule loaders that point a session at `rules/<name>.md`
+when it touches the paths that rule governs.
