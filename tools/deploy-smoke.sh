@@ -231,5 +231,31 @@ for ex in "$SRC"/examples/*/; do
 done
 [ $nex -eq 0 ] && info "no example holds a .conf: example step not run"
 
+# -- 12. every example code map regenerates without drift ------------------------------------------------
+# A generated code map's .agent names the command that wrote it, as run from the repository
+# root; that command with --check, run from the source's root, must report no drift. The
+# module's own reproducibility check runs beside it.
+PY=""
+for p in python3 python py; do
+  if "$p" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1; then PY=$p; break; fi
+done
+if [ -z "$PY" ]; then
+  info "no Python 3.10+: code-map step not run"
+else
+  ncb=0
+  for agent in "$SRC"/examples/*/public/*/*/codebase/.agent; do
+    [ -f "$agent" ] || continue
+    tier=${agent#"$SRC"/}; tier=${tier%/.agent}; ncb=$((ncb + 1))
+    cmd=$(sed -n 's|^ *python[0-9]* \(modules/codebase/codebase\.py .*\)$|\1|p' "$agent" | head -n 1)
+    if [ -z "$cmd" ]; then fail "code map $tier: its .agent names a codebase.py command"; continue; fi
+    out=$(cd "$SRC" && "$PY" $cmd --check 2>&1); rc=$?
+    drift=$(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 3 | tr '\n' ' ')
+    check "code map $tier: --check reports no drift${drift:+ ($drift)}" '[ $rc -eq 0 ]'
+  done
+  [ $ncb -eq 0 ] && info "no example carries a code map: code-map drift not checked"
+  out=$(PYTHON=$PY bash "$SRC/modules/codebase/check.sh" 2>&1); rc=$?
+  check "modules/codebase/check.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | tail -n 1))}" '[ $rc -eq 0 ]'
+fi
+
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL

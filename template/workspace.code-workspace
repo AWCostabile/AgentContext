@@ -1,11 +1,18 @@
 {
   "settings": {
     "files.exclude": {
-      "**/.git": true,
-      "**/.svn": true,
-      "**/.hg": true,
       "**/.DS_Store": true,
-      "**/Thumbs.db": true
+      "**/.git": true,
+      "**/.hg": true,
+      "**/.svn": true,
+      "**/Thumbs.db": true,
+
+      // The following three may be toggled to `true` in order to hide them
+      // from within VSCode, since they are effectively "system files", though
+      // they'll still be tracked and committed via git.
+      "**/.agent": false,
+      "**/.index.md": false,
+      "**/.tags": false
     }
   },
   "folders": [

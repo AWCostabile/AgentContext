@@ -1,0 +1,13 @@
+{
+  "name": "Spinecard",
+  "areas": [
+    {"name": "cards", "paths": ["internal/cards/"]},
+    {"name": "command", "paths": ["cmd/"]},
+    {"name": "print", "paths": ["internal/print/"]}
+  ],
+  "surfaces": {
+    "entry-points": true,
+    "exports-per-area": true,
+    "env-keys": true
+  }
+}

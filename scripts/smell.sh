@@ -407,7 +407,7 @@ emit < <(
 # with the leaf it points at by construction, and is skipped.
 emit < <(printf '%s\n' "${LEAVES[@]}" | awk -v moved="$MOVED" '
   { if (index(moved, " " $0 " ")) next                     # a moved stub, not a second leaf
-    n = split($0, p, "/"); b = p[n]; if (b == "glossary.md" || b ~ /^features[.]/) next   # per-product by design
+    n = split($0, p, "/"); b = p[n]; if (b == "glossary.md" || b ~ /^features[.]/ || b ~ /^codebase[.]/) next   # per-product by design; a generated tier keeps fixed names
     cnt[b]++; paths[b] = (b in paths) ? paths[b] ", " $0 : $0 }
   END { for (b in cnt) if (cnt[b] > 1) print "S12\t" b ": same leaf name in " cnt[b] " branches — " paths[b] }')
 
