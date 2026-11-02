@@ -1,3 +1,10 @@
+## Feature | Change-Log Module [ _2026-11-02 10:02:13 UTC_ ]
+
+- fix: the smoke reads the editor's files as JSON with comments
+- docs: the run-sheet and the README describe the change-log module
+- test: the deploy smoke proves the repository's workflow is the change-log module's file
+- feat: the change-log module — the post-merge workflow any repository adopts with one copy
+
 ## Feature | Codebase Module [ _2026-11-02 10:00:31 UTC_ ]
 
 - chore: clean up line spacing of non template files
