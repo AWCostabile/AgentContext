@@ -158,6 +158,32 @@ Then the user adds a repository secret named `ACTION_TOKEN` (a fine-grained pers
 
 **Check**: `.github/workflows/post-merge.yml` is on `main` and is identical to the module's file (`cmp` prints nothing); the secret exists; the next merged pull request leaves `main` with a `merge: pull request #<n>` bubble and a `CHANGE_LOG.md` whose first heading is that pull request's title. Every clone then re-syncs with `git fetch && git reset --hard origin/main`, never a pull. `modules/change-log/README.md` says what the workflow asks of commit subjects.
 
+## 10. Adopt the graphify module (optional)
+
+The graphify module keeps one Graphify knowledge graph per repository in the tree, under `graphs/<slug>/`, and links each repository's `graphify-out/` back into it, so an agent asks the graph who calls what before it greps and the repository's own graphify hooks never dirty the tree. An instance works without it. Ask the user which repositories to graph; each sits beside the instance, as the workspace sees it.
+
+**Run** (from the instance root; `<slug>` a short lowercase name per repository)
+
+```
+cp -R AgentContext-0.3.0/modules/graphify <path>/modules/graphify && cd <path>
+printf 'GRAPHS="<slug>=../<repository>"\n' >> .conf
+bash modules/graphify/graphs.sh home <slug>
+uv tool install "graphifyy[mcp]" && graphify install
+bash modules/graphify/graphs.sh scan
+```
+
+`home` seeds the repository's `.graphifyignore` and its `graphify-out/` ignore line, links `graphify-out` into `graphs/<slug>/live/` (a junction on Windows, a symlink elsewhere), scaffolds `graphs/` and appends the `graphs/` block to the instance's `.gitignore`. The user edits the seeded `.graphifyignore` (dependencies, build output, generated code; `graphify-out/` stays). Then add one row to the table in `AGENTS.md`:
+
+```
+| [Graphs](./graphs/.index.md) | one Graphify knowledge graph per repository: query it before grepping |
+```
+
+The install line is the user's: `graphify install` registers the `/graphify` skill with their assistant (`--platform <name>` for one other than its default), and the query server is registered once over `~/.graphify/global-graph.json`, which `scan` keeps current; `modules/graphify/README.md` says how. Pin the version `scan` reports with `GRAPHIFY_VERSION=` in `.conf` so every machine builds the same graph.
+
+**Check**: `bash modules/graphify/graphs.sh check` ends with 0 fails and the snapshot current; `graphs/.index.md` carries one row per repository with its counts and commit; in each repository `git status` shows only `.graphifyignore` and the `.gitignore` line as new, never `graphify-out/`; `cure.sh` still ends with 0 fails. Commit `graphs/` here and the two files there.
+
+The snapshot is regenerated with `scan` at the landing of the change that moved the source, never hand-edited; the live layer may run ahead through the repository's hooks, and `check` says when it does.
+
 ## How to update
 
 A release of the template changes the core files an instance received: `scripts/`, `rules/`, `templates/`, `.vscode/`, `AGENTS.md`, `HYGIENE.md`, `.conf.example` and an adapter's payload. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `.agentcontext` at the instance root records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone.
