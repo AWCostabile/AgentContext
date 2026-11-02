@@ -1,0 +1,14 @@
+{
+  "name": "Tillwright",
+  "areas": [
+    {"name": "server", "paths": ["src/server/"]},
+    {"name": "stock", "paths": ["src/stock/"]},
+    {"name": "till", "paths": ["src/till/"]}
+  ],
+  "surfaces": {
+    "entry-points": true,
+    "exports-per-area": true,
+    "exports-of": ["src/server/index.ts"],
+    "env-keys": true
+  }
+}

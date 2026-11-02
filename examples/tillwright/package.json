@@ -1,0 +1,12 @@
+{
+  "name": "tillwright",
+  "version": "0.4.0",
+  "description": "Point of sale and stock for independent bookshops",
+  "private": true,
+  "main": "src/server/index.ts",
+  "scripts": {
+    "start": "node --experimental-strip-types src/server/index.ts",
+    "test": "node --test",
+    "typecheck": "tsc --noEmit"
+  }
+}

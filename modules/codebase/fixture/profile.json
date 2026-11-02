@@ -1,0 +1,14 @@
+{
+  "name": "Lantern",
+  "areas": [
+    {"name": "web", "paths": ["src/"]},
+    {"name": "cli", "paths": ["cmd/"]},
+    {"name": "core", "paths": ["internal/"]}
+  ],
+  "surfaces": {
+    "entry-points": true,
+    "exports-per-area": true,
+    "exports-of": ["src/index.ts"],
+    "env-keys": true
+  }
+}
