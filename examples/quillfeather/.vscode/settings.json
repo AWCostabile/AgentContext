@@ -1,0 +1,20 @@
+{
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "files.associations": {
+    ".tags": "plaintext",
+    ".agent": "markdown",
+    ".conf": "ini",
+    ".conf.example": "ini"
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "private/temp": true
+  },
+  "search.exclude": {
+    "**/.git": true,
+    "private/temp": true
+  },
+  "markdown.preview.breaks": false
+}

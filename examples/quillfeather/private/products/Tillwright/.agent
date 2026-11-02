@@ -1,0 +1,6 @@
+# Agent Conduct — Tillwright mirror
+
+The conduct of `private/.agent` applies here whole. In particular: `plans/`, `kickoffs/`, `prs/` and
+`appendices/` are immutable provenance (added verbatim, never edited once landed), and a PR body filed
+here has its feature-log entry drafted at close-out and appended to the product's public feature log
+when the pull request merges: what the change achieved, in no process vocabulary.
