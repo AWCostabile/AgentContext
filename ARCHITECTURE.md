@@ -36,7 +36,7 @@ public/products/Invoicer/design/
 
 Two habits keep this cheap:
 
-- **Reading means descending.** Start at the root file and follow `.index.md` files down. When you do not know where something lives, resolve its tags with the search tool rather than crawling directories.
+- **Reading means descending.** Start at the root file and follow `.index.md` files down. When you do not know where something lives, resolve its tags with the search tool rather than crawling directories. The same tool answers what cites a leaf (its backlinks) and which leaves carry a marker line, such as every review date older than a given day.
 - **Writing is one action.** A leaf, its Contents row and any new tags land together, in the deepest branch that fits. A leaf with no row cannot be found; a row with no leaf is a lie.
 
 The grammar is written out as plain documents an instance carries under `rules/`, and `HYGIENE.md` lists every check the linter makes against it.
@@ -66,7 +66,7 @@ There is one sanctioned crossing. **What a change achieved crosses into the feat
 
 > **2026-03-04** — Invoices can be split across two payment methods. See the billing design leaf.
 
-It never mentions the plan, the sprint or who asked. So `public/` stays a reflection of what is, and the feature log is the way in: to learn the state of a product, start there and follow its links. The one citable trace of delivery is a merged pull request, or the heading it leaves in a generated change log.
+It never mentions the plan, the sprint or who asked. So `public/` stays a reflection of what is, and the feature log is the way in: to learn the state of a product, start there and follow its links. The one citable trace of delivery is a merged pull request, or the heading it leaves in a generated change log. Each area leaf carries the date it was last read against the product, as a design leaf does, so both go stale by the same clock; and a design or history leaf that nothing cites is reported, because law nothing reads is not law. Beside the feature log, each product keeps a glossary: one line per settled term, pointing at the design leaf that holds its law, so the lookup and the law never drift apart.
 
 ## The private mirror
 
@@ -81,10 +81,11 @@ private/
     appendices/   the audit tables behind those records
   journal/
     latest.md     what is in flux, last landed, next open
+    inbox.md      one dated line per thought that has no home yet
     entries/  epics/  ledgers/  retros/  reflections/
 ```
 
-`plans/`, `kickoffs/`, `prs/`, `appendices/` and `journal/retros/` are the immutable tiers of the private tree. Records in them group by month (`2026-03/`). `latest.md` is rewritten as work moves, and a session reads it before anything else. The repository runs on one trunk, with one commit per filing action, and is pushed to a private remote as a backup if one exists.
+`plans/`, `kickoffs/`, `prs/`, `appendices/` and `journal/retros/` are the immutable tiers of the private tree. Records in them group by month (`2026-03/`). `latest.md` is rewritten as work moves, and a session reads it before anything else. `inbox.md` is the one cheap landing for a thought mid-session, append-only, each line promoted into a proper leaf or dropped within a fortnight. The repository runs on one trunk, with one commit per filing action, and is pushed to a private remote as a backup if one exists. A weekly `review.sh` prints what the linters, the inbox and the journal imply should be looked at, in a screen, and writes nothing.
 
 ## Catalogs
 
@@ -98,13 +99,13 @@ A software shop might use `apps sites`; a consultancy might use `clients`. Each 
 
 ## What an instance tells an agent
 
-`AGENTS.md` at an instance's root is the one instruction every agent session reads first: read `.conf`, read the journal's status page if this machine has one, descend indexes and never crawl, resolve tags with the search tool, obey a branch's standing orders, route a new document by its kind, write a leaf with its row and its tags as one action, and the laws above. It stays short because the law lives in `rules/` and the checks in `HYGIENE.md`. The core never names an agent harness; an adapter adds what one harness can enforce.
+An instance's root carries two short pages for two readers. `README.md` is for a person who has never seen the method: what the tree is, where to start (a product's feature log), how to search, how to file, the two trees. The deployer names it after the instance, and it is a core file, so an update keeps the owner's edits to it. `AGENTS.md` is the one instruction every agent session reads first: read `.conf`, read the journal's status page if this machine has one, descend indexes and never crawl, resolve tags with the search tool, obey a branch's standing orders, route a new document by its kind, write a leaf with its row and its tags as one action, and the laws above. It stays short because the law lives in `rules/` and the checks in `HYGIENE.md`. The core never names an agent harness; an adapter adds what one harness can enforce.
 
 ## Deploying and updating
 
 `init.sh`, at the root of a release, is the one deployer and the one unpack. Given a target directory and a `.conf`, it copies the skeleton, resolves every placeholder from your catalogs and your details, runs `git init` inside the private mirror, writes the workspace file and the editor settings, and records a manifest. It is bash, because the agent that runs it has bash wherever it runs. `--adapter <name>` lays one adapter's payload onto the tree; with no flag it lays down the neutral core and prints the list of adapters, never picking one. `SETUP.md` is the run-sheet an agent follows to do all of this: one command and one check per step, and the questions to ask first.
 
-The manifest, `.agentcontext` at the instance root, is what makes updates safe. It names the release installed and hashes every core file: the scripts, the rules, the templates, the editor settings, the instruction and the hygiene document. `init.sh --update --ref <tag>` fetches a later release and, file by file, replaces what you never edited, keeps what you did and tells you so, adds what is new, and reports what the release dropped. It never touches `public/`, `private/`, `.conf` or the workspace file.
+The manifest, `.agentcontext` at the instance root, is what makes updates safe. It names the release installed and hashes every core file: the scripts, the rules, the templates, the editor settings, the instruction, the hygiene document and the reader page. `init.sh --update --ref <tag>` fetches a later release and, file by file, replaces what you never edited, keeps what you did and tells you so, adds what is new, and reports what the release dropped. It never touches `public/`, `private/`, `.conf` or the workspace file.
 
 ## Adapters
 
