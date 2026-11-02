@@ -184,6 +184,39 @@ The install line is the user's: `graphify install` registers the `/graphify` ski
 
 The snapshot is regenerated with `scan` at the landing of the change that moved the source, never hand-edited; the live layer may run ahead through the repository's hooks, and `check` says when it does.
 
+## 11. Project context retention (optional)
+
+The context-retention module gives every project in the workspace a per-clone identity, `.agents/.id.meta` (an id, a name and a date, never a path), so an agent can keep a project's memory and history when the folder is renamed or moved, and the instance's `AGENTS.md` keeps a session's start prompt to this tree's own instruction, reading a sibling's on first touch. An instance works without it. This step asks the user for each setting rather than taking it; ask these three and keep the answers:
+
+1. **Ignore `.agents/.id.meta` in git's global excludes?** Recommended: yes. The file is one user's identity for the folder and must never be committed; in a clone it would hand the same identity to everyone. Git's global excludes ignore it everywhere for this user alone, without touching any repository's `.gitignore`. `init` prints this reason again and asks before it writes; a no leaves the file visible to git in every project that does not ignore it itself.
+2. **Which folders get an identity?** By default the instance and every folder its workspace file names. The user may name fewer; a folder they skip is reported by `check` as having none, never failed.
+3. **Keep the start prompt to this tree's own instruction?** Measure first, and quote the number:
+
+```
+cd <path> && for f in ../*/CLAUDE.md ../*/AGENTS.md; do [ -f "$f" ] && wc -c < "$f"; done | awk '{ s += $1 } END { printf "%d bytes, about %d tokens of sibling instruction per session\n", s, s / 4 }'
+```
+
+   That is what every session would pay to load the siblings' instruction files at start, whether or not it enters those repositories (a `CLAUDE.md` that only imports its `AGENTS.md` is counted twice, so the figure is an upper bound). With the Claude Code adapter the deployed settings already keep them out (`CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD` at `0`) and a hook hands a sibling's instruction over the first time the session touches it; a user who wants everything loaded at start removes that `env` line from `.claude/settings.json`. Without an adapter the rule stands in `AGENTS.md` alone.
+
+**Run** (from the instance root; `--yes` or `--no` carries the first answer when the user is not at the terminal)
+
+```
+cp -R AgentContext-0.3.0/modules/context-retention <path>/modules/context-retention && cd <path>
+bash modules/context-retention/meta.sh init
+```
+
+Pass the folders from the second answer as paths after `init` when the user named fewer than the workspace file does.
+
+**Check**: `<path>/.agents/.id.meta` exists and is exactly three lines, `id=`, `name=` and `created=`, with no path in it; each named folder has one too; `bash modules/context-retention/meta.sh check` ends with `0 fail(s)` and one `[ OK ]` line per project; `bash modules/context-retention/meta.sh list` prints one row per project with its path; with a yes to the first question, `git -C <path> status --short` does not list `.agents/`, and `git config --global core.excludesFile` names a file containing the line `.agents/.id.meta`. Nothing of this is committed: the identity is this user's, and the map is this machine's.
+
+**With the Claude Code adapter, measure the prompt-cache lifetime too.** An orchestrating session that waits on a delegated job for longer than the cache lives pays a cold write of its whole prompt on its next turn; the harness caches for five minutes by default on an API key or a cloud provider, and for an hour on a subscription within its plan.
+
+```
+bash AgentContext-0.3.0/adapters/claude-code/cache-ttl.sh <path>
+```
+
+**Check**: the second line reads `prompt cache: 1h …` or `prompt cache: 5m …`. On `5m`, ask the user whether to try for the hour: `… cache-ttl.sh <path> --apply` writes `promptCacheTtl` and `subagentPromptCacheTtl` as `"1h"` into `<path>/.claude/settings.local.json` (this machine's file; add `.claude/settings.local.json` to the instance's `.gitignore` if `git check-ignore` does not already ignore it) and probes again. If the second probe still says `5m`, the account does not grant the hour or the build predates the setting (Claude Code 2.1.242): tell the user to ask their account's administrator, and keep `ORCH_BUDGET=lean` in `.conf`, which keeps an orchestrator's waits short.
+
 ## How to update
 
 A release of the template changes the core files an instance received: `scripts/`, `rules/`, `templates/`, `.vscode/`, `AGENTS.md`, `HYGIENE.md`, `.conf.example` and an adapter's payload. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `.agentcontext` at the instance root records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone.
