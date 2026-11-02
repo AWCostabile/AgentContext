@@ -7,6 +7,15 @@
       "**/.svn": true,
       "**/Thumbs.db": true,
 
+      // Whilst counter-intuitive, the intention of keeping the private folder
+      // hidden from the main AgentContext repository is for the mental model
+      // of the two remaining separated.
+      "private/": true,
+
+      // A project's identity from the context-retention module: one user's,
+      // never committed, read by agents on first touch; hidden here.
+      "**/.agents/.id.meta": true,
+
       // A repository homed by the graphify module carries a .graphifyignore
       // and a graphify-out link into the tree's graphs/<slug>/live/; both are
       // tooling, hidden here.
