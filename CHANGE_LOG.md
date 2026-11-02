@@ -1,3 +1,10 @@
+## Docs | README and Architecture [ _2026-11-02 10:22:08 UTC_ ]
+
+- chore: re-order "Read Next" contents to be alphabetic
+- docs: the README recommends a persistent-memory setup for Claude Code users
+- docs: the run-sheet and the paste block pin v0.3.0, the first release
+- docs: the README is the short version and ARCHITECTURE.md the method in full
+
 ## Feature | Change-Log Module [ _2026-11-02 10:02:13 UTC_ ]
 
 - fix: the smoke reads the editor's files as JSON with comments
