@@ -2,7 +2,7 @@
 
 This is a run-sheet. It is written for a coding agent working on a user's machine, and it reads just as well for a person at a terminal. Every step has a **Run** line and a **Check** line: run the command, then confirm the check against what is now on disk before moving to the next step. Nothing here asks you to read another file and work out what to do; when a step refuses, stop and tell the user what it said.
 
-The pinned release is `v0.6.0`. Replace it everywhere below if the user names another.
+The pinned release is `v0.3.0`. Replace it everywhere below if the user names another.
 
 ## Before you start: ask the user
 
@@ -32,17 +32,17 @@ Work in a scratch directory the user is happy to delete afterwards.
 **Run**
 
 ```
-curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/v0.6.0.tar.gz | tar xz
+curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/v0.3.0.tar.gz | tar xz
 ```
 
-**Check**: a directory `AgentContext-0.6.0/` exists and holds `init.sh`, `template/AGENTS.md`, `scripts/cure.sh` and `adapters/`. (GitHub names the archive's top directory after the tag without its `v`.) Nothing else has been written anywhere.
+**Check**: a directory `AgentContext-0.3.0/` exists and holds `init.sh`, `template/AGENTS.md`, `scripts/cure.sh` and `adapters/`. (GitHub names the archive's top directory after the tag without its `v`.) Nothing else has been written anywhere.
 
 ## 2. Write the `.conf`
 
 **Run**
 
 ```
-cp AgentContext-0.6.0/template/.conf.example ./my.conf
+cp AgentContext-0.3.0/template/.conf.example ./my.conf
 ```
 
 Then edit `my.conf` from the user's answers: the `AI_` lines, the `MY_` lines and `CATALOGS`. Leave `PRIVATE_SCOPES` and `ORCH_BUDGET` as they are unless the user asked for something specific; the deployer derives `PRIVATE_SCOPES` from the catalogs when it is absent.
@@ -60,7 +60,7 @@ prints `8`, and `grep '^CATALOGS=' my.conf` shows the user's catalogs in quotes.
 **Run** (drop `--no-private` if the user wants a private tree; add `--adapter <name>` if they chose one; add `--name <RepositoryName>` if the directory's basename is not the name they want)
 
 ```
-bash AgentContext-0.6.0/init.sh --target <path> --conf ./my.conf
+bash AgentContext-0.3.0/init.sh --target <path> --conf ./my.conf
 ```
 
 **Check**: the output ends with `done: <path>` followed by the adapter list. Then:
@@ -106,7 +106,7 @@ The constitution is the tree's law about itself: starting rulings, the articles 
 **Run**
 
 ```
-cp -R AgentContext-0.6.0/modules/constitution/tree <path>/constitution && cd <path> && bash scripts/cure.sh
+cp -R AgentContext-0.3.0/modules/constitution/tree <path>/constitution && cd <path> && bash scripts/cure.sh
 ```
 
 Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
@@ -117,7 +117,7 @@ Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
 
 **Check**: `<path>/constitution/.index.md`, `constitution/history/rulings/`, `constitution/articles/` and `constitution/process/` exist; `cure.sh` still ends with 0 fails; `constitution/README.md` does not exist (the module's README stays in the release, only `tree/` is copied).
 
-Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1, and the user keeps what applies and strikes the rest before the first commit. When a leaf is as the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one). The adoption steps in `AgentContext-0.6.0/modules/constitution/README.md` walk the same ground. Commit.
+Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1, and the user keeps what applies and strikes the rest before the first commit. When a leaf is as the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one). The adoption steps in `AgentContext-0.3.0/modules/constitution/README.md` walk the same ground. Commit.
 
 ## 8. Adopt the codebase module (optional)
 
@@ -126,7 +126,7 @@ The codebase module keeps a generated code map of a product's repository in the 
 **Run** (from the instance root, once per product; `<repository>` is the product's checkout beside it)
 
 ```
-cp -R AgentContext-0.6.0/modules/codebase <path>/modules/codebase && cd <path>
+cp -R AgentContext-0.3.0/modules/codebase <path>/modules/codebase && cd <path>
 python modules/codebase/codebase.py --repo ../<repository> --into public/<catalog>/<Product>/codebase \
   --profile ../<repository>/codebase.profile.json --write-agent
 ```
@@ -150,7 +150,7 @@ The change-log module is a GitHub Actions workflow for any repository the user k
 **Run** (in each such repository, on `main`)
 
 ```
-mkdir -p .github/workflows && cp AgentContext-0.6.0/modules/change-log/post-merge.yml .github/workflows/post-merge.yml
+mkdir -p .github/workflows && cp AgentContext-0.3.0/modules/change-log/post-merge.yml .github/workflows/post-merge.yml
 git add .github/workflows/post-merge.yml && git commit -m "chore: the post-merge workflow squashes, bubble-merges and logs each pull request"
 ```
 
