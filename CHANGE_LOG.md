@@ -1,3 +1,15 @@
+## Feature | Deployer [ _2026-11-02 09:50:35 UTC_ ]
+
+- docs: catalog branches read correctly inside a deployed instance
+- docs: the run-sheet matches the deployer as built
+- test: the deploy smoke proves install, update and the refusals
+- feat: init.sh deploys an instance from the skeleton and a .conf, and updates its core files through a manifest
+- feat: editor settings for a deployed instance, and a workspace file that is strict JSON
+- refactor: the per-product mirror template moves beside the other templates
+- docs: the instance instruction names its manifest and the update path
+- docs: the README hands setup to a coding agent and describes the deployer as built
+- docs: SETUP.md, the run-sheet an agent follows to deploy and update a tree
+
 ## Feature | Core Scripts [ _2026-11-01 14:34:54 UTC_ ]
 
 - docs: every skeleton tag occurs where it points
