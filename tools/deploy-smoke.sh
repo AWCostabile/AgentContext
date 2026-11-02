@@ -264,5 +264,25 @@ fi
 if cmp -s "$SRC/modules/change-log/post-merge.yml" "$SRC/.github/workflows/post-merge.yml"; then same=1; else same=0; fi
 check "the change-log module's workflow and .github/workflows/post-merge.yml are identical" '[ $same -eq 1 ]'
 
+# -- 14. the graphify module: its own check, and homing a repository beside a deployed instance -----------
+# The module's check proves the script end to end over a stand-in graphify. Here, on the first
+# instance, home links a copy of the example repository into graphs/<slug>/live/, the instance
+# still lints, and the workspace the deployer wrote hides the two tooling paths.
+out=$(bash "$SRC/modules/graphify/check.sh" 2>&1); rc=$?
+check "modules/graphify/check.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | tail -n 1))}" '[ $rc -eq 0 ]'
+cp -R "$SRC/examples/tillwright" "$TMP/tillwright"
+mkdir -p "$I1/modules" && cp -R "$SRC/modules/graphify" "$I1/modules/graphify"
+printf '%s\n' 'GRAPHS="tillwright=../tillwright"' >> "$I1/.conf"
+out=$(cd "$I1" && bash modules/graphify/graphs.sh home tillwright 2>&1); rc=$?
+check "graphify home on the instance exits 0${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]|^refused' | head -n 1))}" '[ $rc -eq 0 ]'
+check "graphify-out in the repository links into the instance's graphs/tillwright/live/" \
+  '[ -L "$TMP/tillwright/graphify-out" ] && [ "$(cd "$TMP/tillwright/graphify-out" && pwd -P)" = "$(cd "$I1/graphs/tillwright/live" && pwd -P)" ]'
+check "the instance's .gitignore keeps graphs/*/graph.json and ignores the rest" \
+  'grep -qx "graphs/\*/\*" "$I1/.gitignore" && grep -qx "!graphs/\*/graph.json" "$I1/.gitignore" && grep -qx "/private/" "$I1/.gitignore"'
+out=$(cd "$I1" && bash scripts/cure.sh --fast 2>&1); rc=$?
+check "the homed instance lints with 0 fails${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
+check "the deployed workspace hides graphify-out and .graphifyignore" \
+  'grep -q "\"\*\*/graphify-out\": true" "$I1/Example.code-workspace" && grep -q "\"\*\*/.graphifyignore\": true" "$I1/Example.code-workspace"'
+
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL
