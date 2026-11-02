@@ -19,6 +19,20 @@ replaced it.
 
 ## Getting it
 
+The quickest way is to hand the job to your coding agent. Paste this into it, with your own path
+and organisation filled in:
+
+```
+Set up a knowledge tree for <organisation> at <path>, from the AgentContext template.
+Fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/v0.3.0/SETUP.md and follow it
+as a run-sheet: ask me its questions first, then run each step's command and confirm its check
+before moving on. If a step refuses, stop and show me what it said.
+```
+
+`SETUP.md` is written for exactly that reader: every step is one command and one check, and it
+ends with how to pull a later release into your tree without touching what you have filed. To
+read the template itself:
+
 ```
 git clone https://github.com/AWCostabile/AgentContext.git
 ```
@@ -151,17 +165,21 @@ The core works without any adapter. The linter and convention replace pre-write 
 violation is caught at lint time rather than at write time, and search and filing are run by hand.
 No data is lost.
 
-## The deployer's promise
+## Deploying
 
-Not in this repository yet. It will be one `init` script, in both `sh` and `ps1`, that will:
+`init.sh`, at the root of a release, is the one deployer and the one unpack. Given a target
+directory and a `.conf`, it copies the skeleton, resolves every placeholder from your catalogs and
+your details, runs `git init` inside the private mirror, writes the workspace file and the editor
+settings, and records a manifest. It is bash, because the agent that runs it has bash wherever it
+runs. `--adapter <name>` lays one adapter's payload onto the tree; with no flag it lays down the
+neutral core and prints the list of adapters, never picking one.
 
-1. copy the skeleton to a target directory;
-2. substitute the placeholders from a `.conf`;
-3. run `git init` inside the private mirror;
-4. write the workspace file.
-
-`--adapter <name>` is the one unpack. With no flag, it lays down the neutral core only and prints the
-list of adapters; it never silently picks one.
+The manifest, `.agentcontext` at the instance root, is what makes updates safe. It names the release
+installed and hashes every core file: the scripts, the rules, the templates, the editor settings,
+the instruction and the hygiene document. `init.sh --update --ref <tag>` fetches a later release and,
+file by file, replaces what you never edited, keeps what you did and tells you so, adds what is new,
+and reports what the release dropped. It never touches `public/`, `private/`, `.conf` or the
+workspace file. The full procedure is the last section of `SETUP.md`.
 
 ## Modules and examples
 
@@ -180,11 +198,13 @@ filled tree, so that you can see what the indexes look like with something in th
   `bash scripts/cure.sh --root template`.
 - The contract of every check, in `template/HYGIENE.md`, and the grammar and tier rules as plain
   documents, in `template/rules/`.
+- The deployer, `init.sh`, with its update mode and the manifest it keeps; the run-sheet `SETUP.md`
+  that drives it; and `tools/deploy-smoke.sh`, which deploys a throwaway instance, lints it, updates
+  it and proves the refusals, as this repository's gate.
 - The adapter contract, with four adapter directories whose READMEs describe them.
 
-Not in this repository yet: the deployer, the adapter payloads (the tier guard among them), the
-constitution module and the worked example. Until the deployer exists, deploying is copying
-`template/` to your target, copying `scripts/` beside it, and filling in a `.conf`.
+Not in this repository yet: the adapter payloads (the tier guard among them), the constitution
+module and the worked example.
 
 ## Licence
 
