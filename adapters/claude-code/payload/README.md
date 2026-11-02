@@ -5,9 +5,10 @@ the deployer's `--adapter claude-code`, and listed with its hash in the instance
 an update can replace what was never edited: a one-line `CLAUDE.md` importing `AGENTS.md`; the
 orchestration ground rules `KICKOFF.md`, `WORKER.md` and `CLOSEOUT.md`, each saying only what
 this harness adds to the constitution module's neutral process documents; and `.claude/`, which
-holds `settings.json` (the default output style, the hook registrations and a read-only
-permission allow-list), the four hooks (`orient`, `classify-mode`, `guard-tiers`,
-`lint-on-write`) with their path helper, the skills `/file`, `/find`, `/cure`, `/kickoff` and
+holds `settings.json` (the default output style, the hook registrations, a read-only
+permission allow-list, and the environment line that keeps a sibling's instruction out of the
+start prompt), the six hooks (`orient`, `classify-mode`, `guard-tiers`, `lint-on-write`,
+`retention`, `sibling-instruction`) with their path helper and the two Python bodies, the skills `/file`, `/find`, `/cure`, `/kickoff` and
 `/retro` with the retro's window script under `tools/`, the subagent profiles (`librarian`,
 `filer`, `scrutinizer`, `skeptic`, `brainiac`, and the three implementer tiers), the `scoping`
 and `orchestrated` output styles, and six rule loaders that point a session at `rules/<name>.md`

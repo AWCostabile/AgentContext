@@ -1,5 +1,8 @@
 {
   "outputStyle": "scoping",
+  "env": {
+    "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "0"
+  },
   "permissions": {
     "allow": [
       "Bash(bash scripts/find.sh:*)",
@@ -20,6 +23,12 @@
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/orient.sh\"",
             "timeout": 60,
             "statusMessage": "Orienting in the knowledge tree..."
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/retention.sh\"",
+            "timeout": 30,
+            "statusMessage": "Checking the workspace's project identities..."
           }
         ]
       }
@@ -55,6 +64,16 @@
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/lint-on-write.sh\"",
             "timeout": 40
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Edit|Write|MultiEdit|Glob|Grep|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/sibling-instruction.sh\"",
+            "timeout": 15
           }
         ]
       }

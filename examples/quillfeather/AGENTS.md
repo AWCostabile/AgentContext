@@ -14,6 +14,12 @@ align to from the first prompt, at low token cost. `public/` is what is true and
 3. Descend `.index.md` files from the table below. Never glob-crawl the tree.
 4. Resolve tags with `bash scripts/find.sh <tag...>`, then expand and descend.
 5. If a branch has a `.agent`, read it before reading from or writing to that branch.
+6. **Read a project on first touch, and not before.** The workspace holds this tree and its
+   repositories side by side. Your session opens with this tree's instruction alone. The first
+   time you touch another project of the workspace, read its `.agents/.id.meta` when it has one
+   (its identity: an id, a name, a date, never a path), then that project's own instruction file,
+   then nothing more of it until you work there. A project you never enter costs the session
+   nothing.
 
 **To learn the state of a product, start at its feature log**: `public/<catalog>/<Product>/features/`,
 one leaf per area, each opening with a **State today** paragraph. Follow its links into `design/` and

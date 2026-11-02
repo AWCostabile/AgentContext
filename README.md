@@ -2,7 +2,9 @@
 
 A template for keeping what your organisation knows in one git repository, in a shape that coding agents and new hires can both read. It ships a method and an empty structure: you deploy it once and fill it with your own products, decisions and designs. Written for a founder or a small team. MIT licensed.
 
-The short version: a tree of small indexed Markdown files, two trees (what is true, and how the work was run on one machine), a linter that keeps the shape honest, a search tool, and a deployer an agent can drive. [ARCHITECTURE.md](./ARCHITECTURE.md) is the long version.
+> **_TL;DR:_** Yet another system of small indexed Markdown files, with two trees (one for what is true, and the other for how the work was run on a given machine), a tool for searching the trees, a linter that keeps their shapes honest, and a deployer which an agent can drive.
+
+_see [ARCHITECTURE.md](./ARCHITECTURE.md) for the full explaination version._
 
 ## Get it
 
@@ -10,10 +12,9 @@ Hand the job to your coding agent. Paste this into a fresh session, with your ow
 
 ```
 Set up a knowledge tree for <organisation> at <path>, from the AgentContext template.
-Fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/v0.3.0/SETUP.md
-and follow it as a run-sheet: ask me its questions first, then run each step's
-command and confirm its check before moving on. If a step refuses, stop and
-show me what it said.
+Fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/v0.3.0/SETUP.md and follow
+it as a run-sheet: ask me its questions first, then run each step's command and confirm its
+check before moving on. If a step refuses, stop and show me what it said.
 ```
 
 [SETUP.md](./SETUP.md) is written for exactly that reader: every step is one command and one check, and it ends with how to pull a later release into your tree without touching what you have filed. To read the template itself:
