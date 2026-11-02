@@ -24,7 +24,7 @@ and organisation filled in:
 
 ```
 Set up a knowledge tree for <organisation> at <path>, from the AgentContext template.
-Fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/v0.3.0/SETUP.md and follow it
+Fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/v0.4.0/SETUP.md and follow it
 as a run-sheet: ask me its questions first, then run each step's command and confirm its check
 before moving on. If a step refuses, stop and show me what it said.
 ```
@@ -183,9 +183,17 @@ workspace file. The full procedure is the last section of `SETUP.md`.
 
 ## Modules and examples
 
-`modules/` holds optional additions. It will hold a constitution: starting law about how the tree
-governs itself, which you may adopt or delete. `examples/` will hold a small fictional startup's
-filled tree, so that you can see what the indexes look like with something in them.
+`modules/` holds optional additions. The one shipped today is the constitution: the tree's law
+about itself, as starting law you adopt or delete. It carries a seed set of generic rulings (how a
+tree is structured, what is immutable, how the private and shared trees relate, how a decision
+becomes law, how a piece of agent-led work is briefed, run and closed, what hygiene means, how
+commits and pull requests are shaped, how delegated agents are budgeted), the articles that distil
+them into current law, and the process half: a kickoff guide, ground rules for the orchestrating
+session, the delegated agent and the close-out, and a code-standards template. Adopting it is one
+copy, `modules/constitution/tree/` to `<instance>/constitution/`, described in `SETUP.md`; from then
+on a change to the process is a bill first, and the owner enacts it. `examples/` will hold a small
+fictional startup's filled tree, so that you can see what the indexes look like with something in
+them.
 
 ## What is here today
 
@@ -201,10 +209,13 @@ filled tree, so that you can see what the indexes look like with something in th
 - The deployer, `init.sh`, with its update mode and the manifest it keeps; the run-sheet `SETUP.md`
   that drives it; and `tools/deploy-smoke.sh`, which deploys a throwaway instance, lints it, updates
   it and proves the refusals, as this repository's gate.
-- The adapter contract, with four adapter directories whose READMEs describe them.
+- The constitution module, in `modules/constitution/`: the seed rulings, the articles and the process
+  half an instance adopts with one copy.
+- The adapter contract, with four adapter directories whose READMEs describe them, and the Claude
+  Code payload: the pre-write guard on the immutable tiers, the lint after every write, the orient
+  context at session start, the kickoff detection, the skills and the agent profiles.
 
-Not in this repository yet: the adapter payloads (the tier guard among them), the constitution
-module and the worked example.
+Not in this repository yet: the worked example.
 
 ## Licence
 
