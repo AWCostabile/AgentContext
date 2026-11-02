@@ -191,9 +191,9 @@ commits and pull requests are shaped, how delegated agents are budgeted), the ar
 them into current law, and the process half: a kickoff guide, ground rules for the orchestrating
 session, the delegated agent and the close-out, and a code-standards template. Adopting it is one
 copy, `modules/constitution/tree/` to `<instance>/constitution/`, described in `SETUP.md`; from then
-on a change to the process is a bill first, and the owner enacts it. `examples/` will hold a small
+on a change to the process is a bill first, and the owner enacts it. `examples/` holds a small
 fictional startup's filled tree, so that you can see what the indexes look like with something in
-them.
+them: start at [its reader page](./examples/quillfeather/README.md).
 
 ## What is here today
 
@@ -209,13 +209,13 @@ them.
 - The deployer, `init.sh`, with its update mode and the manifest it keeps; the run-sheet `SETUP.md`
   that drives it; and `tools/deploy-smoke.sh`, which deploys a throwaway instance, lints it, updates
   it and proves the refusals, as this repository's gate.
+- The worked example, in `examples/quillfeather/`: an invented bookshop-software company's tree,
+  deployed by `init.sh` and filled by hand, linted by the deploy smoke.
 - The constitution module, in `modules/constitution/`: the seed rulings, the articles and the process
   half an instance adopts with one copy.
 - The adapter contract, with four adapter directories whose READMEs describe them, and the Claude
   Code payload: the pre-write guard on the immutable tiers, the lint after every write, the orient
   context at session start, the kickoff detection, the skills and the agent profiles.
-
-Not in this repository yet: the worked example.
 
 ## Licence
 
