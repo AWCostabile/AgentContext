@@ -6,7 +6,7 @@ _reviewed:_ 2026-11-02
 A generated tier is a branch whose leaves a program writes from a source: a map of a codebase's
 public names, a graph of who calls what, a catalogue extracted from a schema. The core ships no
 generator. The contract any module that adds one obeys is
-[rules/generated-tiers.md](../../rules/generated-tiers.md); this article says why it holds, and
+[common/rules/generated-tiers.md](../../common/rules/generated-tiers.md); this article says why it holds, and
 what it adds.
 
 ## One writer

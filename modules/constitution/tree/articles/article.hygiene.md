@@ -5,7 +5,7 @@ _reviewed:_ 2026-11-02
 
 The tree lints itself in two layers (HG1). An **invariant** is a structural fact that is either
 true or broken, and breaking one fails the tree. A **smell** is a heuristic that something is
-probably wrong, which a person judges. [HYGIENE.md](../../HYGIENE.md) is the single reference
+probably wrong, which a person judges. [HYGIENE.md](../../common/HYGIENE.md) is the single reference
 for both: every check's id, what it reports and how to rectify it (HG2). The scripts are
 report-only: nothing edits the tree but a person or an agent following a rectification. This
 article holds the reasoning; the catalogue is HYGIENE's alone.

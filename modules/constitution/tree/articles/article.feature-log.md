@@ -7,7 +7,7 @@ Each product has `public/<catalog>/<Product>/features/`, one leaf per area of th
 answers "what is the state of billing?" before "what happened in March?", which is why it is
 the way in: a reader learning a product starts here and follows its links into `design/` and
 `history/`. The leaf shape and what an entry may say are instructions in
-[rules/feature-log.md](../../rules/feature-log.md); this article says why they are so.
+[common/rules/feature-log.md](../../common/rules/feature-log.md); this article says why they are so.
 
 ## Areas belong to the owner
 

@@ -6,7 +6,7 @@ _reviewed:_ 2026-11-02
 What is in flux is a fact about one machine, so it lives in the private tree, in
 `private/journal/`. On a machine with no private tree there is no active-work state, and nothing
 pretends there is (SP13). The journal's layout, its two moments' filings and its commit rules
-are instructions in [rules/active-work.md](../../rules/active-work.md); this article holds why.
+are instructions in [common/rules/active-work.md](../../common/rules/active-work.md); this article holds why.
 
 ## The layout
 
