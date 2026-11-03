@@ -2,13 +2,13 @@
 # find.sh — search the knowledge tree by tag, keyword, backlink or marker field.
 #
 # Modes:
-#   bash scripts/find.sh <tag...>          resolve tags -> ranked branch paths
-#   bash scripts/find.sh -x <dir>          expand: show a branch's tags + index head
-#   bash scripts/find.sh -l                list the tag vocabulary with usage counts
-#   bash scripts/find.sh -k <keyword...>   grep index lines (keywords ANDed, case-insensitive)
-#   bash scripts/find.sh -b <leaf>         backlinks: every file in scope that cites the leaf;
+#   bash common/scripts/find.sh <tag...>          resolve tags -> ranked branch paths
+#   bash common/scripts/find.sh -x <dir>          expand: show a branch's tags + index head
+#   bash common/scripts/find.sh -l                list the tag vocabulary with usage counts
+#   bash common/scripts/find.sh -k <keyword...>   grep index lines (keywords ANDed, case-insensitive)
+#   bash common/scripts/find.sh -b <leaf>         backlinks: every file in scope that cites the leaf;
 #                                          its own branch index is marked "(index row)"
-#   bash scripts/find.sh -f <key>          fields: every file whose marker line `_<key>:_ <value>`
+#   bash common/scripts/find.sh -f <key>          fields: every file whose marker line `_<key>:_ <value>`
 #                                          sits under its H1, with the value (path TAB value);
 #                                          -f '<key>=<value>' those equal to it, -f '<key><<value>'
 #                                          and -f '<key>><value>' compare the value as text, which
@@ -20,8 +20,8 @@
 #                 default the current directory. -r <dir> is a synonym.
 #
 # -x takes a branch path relative to the root (`-x public/misc`); a path from the
-# current directory that lies inside the root is accepted too (`--root template
-# -x template/public`). -b takes a leaf the same two ways, or a bare basename when one
+# current directory that lies inside the root is accepted too (`--root blueprint
+# -x blueprint/public`). -b takes a leaf the same two ways, or a bare basename when one
 # leaf in scope carries it (an ambiguous basename lists the candidates and asks for a path).
 #
 # Scope: public/ always, plus the private branches .conf's PRIVATE_SCOPES opts in to

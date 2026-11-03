@@ -4,9 +4,9 @@ The tree checks itself in two layers, and this file is the single reference for 
 
 | Layer | Script | Verdict | Meaning |
 | ----- | ------ | ------- | ------- |
-| Invariants | `bash scripts/cure.sh` | FAIL | the structure is broken: fix it mechanically, no judgement needed |
-| Invariants, advisory | `bash scripts/cure.sh` | WARN | probably wrong: judge it, fix it, or record why it stands |
-| Smells | `bash scripts/smell.sh` | WARN | probably wrong: judge it, fix it, or record why it stands |
+| Invariants | `bash common/scripts/cure.sh` | FAIL | the structure is broken: fix it mechanically, no judgement needed |
+| Invariants, advisory | `bash common/scripts/cure.sh` | WARN | probably wrong: judge it, fix it, or record why it stands |
+| Smells | `bash common/scripts/smell.sh` | WARN | probably wrong: judge it, fix it, or record why it stands |
 | Either | either | INFO | a fact worth knowing, not a finding |
 
 Run `cure.sh` first, then `smell.sh`. Both are report-only: nothing edits the tree but a person
@@ -14,10 +14,10 @@ or an agent following the rectifications below. Both take `--root <dir>` (the di
 `public/` and `.conf`; default the current directory). `cure.sh --fast` skips the advisory scans
 and keeps every FAIL; `smell.sh --quiet` prints the summary only, and `smell.sh --today YYYY-MM-DD`
 judges the calendar smells (S01, S21) as of that date. `cure.sh` exits with its FAIL count,
-`smell.sh` with its smell count (capped at 255). `bash scripts/review.sh` prints both verdicts and
+`smell.sh` with its smell count (capped at 255). `bash common/scripts/review.sh` prints both verdicts and
 the agenda they imply in about thirty lines (`--brief` one line of counts); it writes nothing, makes
 no check of its own, and exits with the FAIL count. The conventions the checks enforce are
-stated in [AGENTS.md](AGENTS.md) and the grammar documents under `rules/`:
+stated in [AGENTS.md](../AGENTS.md) and the grammar documents under `common/rules/`:
 [branch grammar](rules/branch-grammar.md), [provenance tiers](rules/provenance-tiers.md),
 [design tier](rules/design-tier.md) and [feature log](rules/feature-log.md).
 
@@ -26,8 +26,8 @@ stated in [AGENTS.md](AGENTS.md) and the grammar documents under `rules/`:
 top-level private branch except the freeform `local/`, `mod/` and `temp/`. An absent `private/`
 is never an error, so `public/` must lint clean on a fresh clone. A fix inside `private/` ends
 with one commit of the private repository. Besides the trees, `cure.sh` reads the root documents
-for dead links only: every `*.md` at the root, `rules/*.md`, `scripts/.index.md` and
-`templates/.index.md`. `templates/` is never linted as a branch, because it carries `{{ }}`
+for dead links only: every `*.md` at the root, `common/rules/*.md`, `common/scripts/.index.md` and
+`common/templates/.index.md`. `common/templates/` is never linted as a branch, because it carries `{{ }}`
 placeholders for good.
 
 **Template mode.** With no `.conf` at the root, the root is the skeleton itself, and both
@@ -51,7 +51,7 @@ archived leaf.
 
 ## Invariants
 
-Owned by `scripts/cure.sh`. Ids are stable; a missing number is a retired check.
+Owned by `common/scripts/cure.sh`. Ids are stable; a missing number is a retired check.
 
 | Id | Invariant | Verdict |
 | --- | --------- | ------- |
@@ -76,7 +76,7 @@ decision recorded in the private record, lift that decision verbatim into a publ
 and cite that; if the citation only narrates how the work was run, drop it. Naming the private
 tree structurally (`private/`, `private/journal/`) is legal; a path to a record is not.
 
-**Rectifying C14.** Create the branch from `templates/branch`, or remove the entry from
+**Rectifying C14.** Create the branch from `common/templates/branch`, or remove the entry from
 `CATALOGS` if the catalog was dropped.
 
 ## Smells
@@ -112,7 +112,7 @@ line carries `landed-since-retro=<n>`. Ids are stable; a missing number is a ret
   ([feature log](rules/feature-log.md)).
 - **Detection:** lines starting `_source:_` and `_reviewed:_`.
 - **Rectification:**
-  1. A design leaf: find the ruling it distils (`bash scripts/find.sh -k <topic>`) and add
+  1. A design leaf: find the ruling it distils (`bash common/scripts/find.sh -k <topic>`) and add
      `_source:_ <rulings path and ids>` and `_reviewed:_ YYYY-MM-DD` directly under the H1,
      after any `_status:_` line. If no ruling exists, the content is opinion, not law: move it
      to `research/`.
@@ -145,7 +145,7 @@ line carries `landed-since-retro=<n>`. Ids are stable; a missing number is a ret
 - **Why it matters:** two spellings of one concept split search results in half.
 - **Detection:** Levenshtein distance over the whole vocabulary; exact singular/plural pairs
   belong to C07 and are skipped.
-- **Rectification:** `bash scripts/find.sh -l`, keep the form with more uses, rewrite the
+- **Rectification:** `bash common/scripts/find.sh -l`, keep the form with more uses, rewrite the
   minority `.tags` files to it.
 - **Deliberate exceptions:** two genuinely different concepts that happen to look alike; leave
   them standing with a one-line reason.
@@ -177,7 +177,7 @@ line carries `landed-since-retro=<n>`. Ids are stable; a missing number is a ret
 
 ### S07 — CRLF
 
-- **Signal:** a `\r` in an authored `*.md` of either tree, under `templates/`, or at the root.
+- **Signal:** a `\r` in an authored `*.md` of either tree, under `common/templates/`, or at the root.
 - **Why it matters:** CRLF files diff as whole-file rewrites and break anchored searches.
 - **Detection:** awk in binary mode, because the Windows ports of gawk and grep strip `\r`
   unless told not to. Verbatim copies are excluded: CRLF there is source fidelity.
@@ -245,14 +245,14 @@ line carries `landed-since-retro=<n>`. Ids are stable; a missing number is a ret
 
 ### S13 — retired vocabulary
 
-- **Signal:** a term from `scripts/retired-terms.txt` in a live document: a `design/` leaf, a
-  `glossary.md`, or the root `AGENTS.md`, `HYGIENE.md` or `README.md`.
+- **Signal:** a term from `common/scripts/retired-terms.txt` in a live document: a `design/` leaf, a
+  `glossary.md`, or the root `AGENTS.md`, `common/HYGIENE.md` or `README.md`.
 - **Why it matters:** law written in a retired spelling teaches every reader to produce the
   refused form.
 - **Detection:** a fixed, case-sensitive substring per line; verbatim copies are never scanned,
   since they legitimately record the old names. The file is `term<TAB>replacement<TAB>source`,
   one entry per line; a line starting `# ` is a comment. When the tree has no
-  `scripts/retired-terms.txt` of its own, the list beside `smell.sh` is used.
+  `common/scripts/retired-terms.txt` of its own, the list beside `smell.sh` is used.
 - **Rectification:** replace the term with the listed spelling; the source column names what to
   read first. If the old term must be mentioned (a migration note), quote it in backticks with
   the word "retired" on the same line, and leave it standing.
@@ -371,15 +371,15 @@ silently; a merge or a promotion leaves an archived pointer behind.
 ## Adding a smell
 
 A convention written in one place and checked nowhere drifts. When a convention is decided (in a
-`design/` leaf, in `AGENTS.md` or in a `rules/` document), the same change:
+`design/` leaf, in `AGENTS.md` or in a `common/rules/` document), the same change:
 
 1. adds a section here with the next free id, all five headings filled;
-2. adds the check to `scripts/smell.sh`, emitting `Sxx<TAB>message`, as a single awk or grep pass
+2. adds the check to `common/scripts/smell.sh`, emitting `Sxx<TAB>message`, as a single awk or grep pass
    over the file set (the script runs on every review and must stay fast on a large tree);
 3. confirms on a scratch copy of the tree that the new check fires exactly once on one seeded
    case, and stays silent on the skeleton in template mode;
 4. for a vocabulary decision, adds a `term<TAB>replacement<TAB>source` line to
-   `scripts/retired-terms.txt` instead of a new id: S13 already carries it.
+   `common/scripts/retired-terms.txt` instead of a new id: S13 already carries it.
 
 A smell that turns out to be an invariant (never legitimately standing) moves to `cure.sh` as the
 next free `C` id and is retired here, never silently dropped.
@@ -388,10 +388,10 @@ next free `C` id and is retired here, never silently dropped.
 
 | When | Run | Who |
 | ---- | --- | --- |
-| after any filing session | `bash scripts/cure.sh --fast` | the filing agent |
-| before merging a branch | `bash scripts/cure.sh`, then `bash scripts/smell.sh`: zero FAILs, every smell fixed or reasoned | whoever raises the merge |
+| after any filing session | `bash common/scripts/cure.sh --fast` | the filing agent |
+| before merging a branch | `bash common/scripts/cure.sh`, then `bash common/scripts/smell.sh`: zero FAILs, every smell fixed or reasoned | whoever raises the merge |
 | after every landing | the `landed-since-retro` count in the summary; a retrospective at three | whoever records the landing |
-| weekly | `bash scripts/review.sh`: the agenda; each line acted on or reasoned | the user |
+| weekly | `bash common/scripts/review.sh`: the agenda; each line acted on or reasoned | the user |
 | quarterly | S01: every `design/` and `features/` leaf's `_reviewed:_` re-verified or archived; research at its longer window | the tree's maintainer |
 | whenever a branch's smell count grew since the last report | a re-verification pass over that branch | the tree's maintainer |
 
