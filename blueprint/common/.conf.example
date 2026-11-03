@@ -49,7 +49,7 @@ ORCH_BUDGET=full
 
 # Keys a module reads; the core ignores them. Set them when the module is adopted.
 #
-# The graphify module (modules/graphify/): the repositories to graph, one word per
+# The graphify module (common/modules/graphify/): the repositories to graph, one word per
 # repository as <slug>=<path>, the path relative to this root (`../<name>` for a sibling
 # in the workspace, `.` for this tree); and an optional pin, which makes a scan refuse
 # any other graphify version so every machine builds the same graph.

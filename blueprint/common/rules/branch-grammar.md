@@ -1,6 +1,6 @@
 # Branch grammar
 
-_applies to:_ every `.index.md` and `.tags`, and everything under `templates/`
+_applies to:_ every `.index.md` and `.tags`, and everything under `common/templates/`
 
 One grammar at every depth, in both trees. `public/` is indexed by `public/.index.md`, the
 private mirror by `private/.index.md`.
@@ -32,10 +32,10 @@ private mirror by `private/.index.md`.
   roots, the journal's ledgers) `| File | Kind | Created | Dates | Landed as |`, with `—` in
   "Landed as" while unlanded.
 - Read by descending `.index.md` files from the root; never glob-crawl. Resolve tags with
-  `bash scripts/find.sh <tag...>`, then expand and descend.
+  `bash common/scripts/find.sh <tag...>`, then expand and descend.
 - Write a leaf in the deepest matching branch. Leaf, Contents row and `.tags` are ONE action; in
   the private tree the action ends with one commit of the private repository. Copy new branches
-  from `templates/branch`, new products from `templates/product`, and replace every `{{ }}`
+  from `common/templates/branch`, new products from `common/templates/product`, and replace every `{{ }}`
   placeholder, the template comment included.
 - Group `plans/`, `kickoffs/`, `prs/` and `appendices/` by month (`YYYY-MM/`, keyed on the
   Created date); a month's first filing creates its branch.
@@ -58,7 +58,7 @@ private mirror by `private/.index.md`.
 - Every branch below a tree root has `.tags`: one lowercase `[a-z0-9-]` tag per line, no commas.
 - Never put the `private` tag under `public/`. Mirror branches reuse the public vocabulary.
 - Write three to six tags in the searcher's vocabulary: the asker's own phrasing and the synonyms
-  the text does not use. Run `bash scripts/find.sh -l` and reuse a tag before inventing a variant.
+  the text does not use. Run `bash common/scripts/find.sh -l` and reuse a tag before inventing a variant.
 - When a branch's new material keeps using a word its tags lack, add it in the same action.
 
 ## `.agent` standing orders

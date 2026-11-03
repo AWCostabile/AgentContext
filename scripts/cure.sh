@@ -4,7 +4,7 @@
 # Two trees, one grammar. public/ is always linted. The private mirror (private/, a
 # nested repository the parent ignores) is linted when it exists: every top-level
 # private branch except the freeform local/, mod/ and temp/ (lib-scopes.sh). An absent
-# private/ is never an error: public/ must lint clean on a fresh clone. HYGIENE.md
+# private/ is never an error: public/ must lint clean on a fresh clone. common/HYGIENE.md
 # describes every check, its verdict and how to rectify it.
 #
 # Template mode: with no .conf at the root, the root is the skeleton itself. Every
@@ -18,7 +18,7 @@
 #        [a-z0-9-] tag per line, no commas (a malformed line is a WARN)
 #   C03  every leaf file and child directory is referenced by its branch index
 #   C04  every relative link in *.md resolves, in both trees and in the root documents
-#        (*.md at the root, rules/*.md, scripts/.index.md, templates/.index.md). Links
+#        (*.md at the root, common/HYGIENE.md, common/rules/*.md, common/scripts/.index.md, common/templates/.index.md). Links
 #        into private/ from the root documents are conditional on the machine and are
 #        skipped; {{ }} targets are skipped. Verbatim provenance (lib-scopes.sh
 #        verbatim_path, and every leaf listed in a manifest, an index whose Contents
@@ -35,7 +35,7 @@
 #   C14  every CATALOGS entry in .conf has its public/<catalog>/ branch (not checked in
 #        template mode; one INFO line when .conf has no CATALOGS key)
 #
-# Usage: bash scripts/cure.sh [--root <dir>] [--fast]
+# Usage: bash common/scripts/cure.sh [--root <dir>] [--fast]
 #   --root <dir>  the tree root to lint (the directory holding public/ and .conf);
 #                 default the current directory
 #   --fast        skip the advisory scans (C05, C06, C07: WARN-only); every FAIL-class
@@ -96,10 +96,10 @@ md_files() {   # NUL-separated, for xargs -0
   fi
   return 0
 }
-# The root documents: dead links only, never linted as branches. templates/ carries
+# The root documents: dead links only, never linted as branches. common/templates/ carries
 # {{ }} forever, so only its index is read.
 ROOT_DOCS=()
-for f in *.md rules/*.md scripts/.index.md templates/.index.md; do
+for f in *.md common/HYGIENE.md common/rules/*.md common/scripts/.index.md common/templates/.index.md; do
   [ -f "$f" ] && ROOT_DOCS+=("$f")
 done
 

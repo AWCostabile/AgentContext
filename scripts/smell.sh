@@ -2,7 +2,7 @@
 # smell.sh — hunt the knowledge tree's heuristic smells. Report-only.
 #
 # cure.sh checks structural INVARIANTS and FAILs; this script hunts SMELLS, things
-# that are probably wrong but need judgement, and only warns. HYGIENE.md holds the
+# that are probably wrong but need judgement, and only warns. common/HYGIENE.md holds the
 # catalog: each smell's signal, why it matters, its rectification and its deliberate
 # exceptions.
 #
@@ -39,7 +39,7 @@
 #   S21 inbox item overdue          a private/journal/inbox.md item older than 14 days
 # Ids are stable; a missing number is a retired check.
 #
-# Usage: bash scripts/smell.sh [--root <dir>] [--quiet] [--today <YYYY-MM-DD>]
+# Usage: bash common/scripts/smell.sh [--root <dir>] [--quiet] [--today <YYYY-MM-DD>]
 #   --root <dir>  the tree root to scan (the directory holding public/ and .conf);
 #                 default the current directory
 #   --quiet       print only the summary
@@ -79,7 +79,7 @@ MIRROR_ROOT=(); has_mirror && MIRROR_ROOT=(private/.index.md)
 TMPL=0; template_mode && TMPL=1
 
 # The tree's own retired vocabulary when it has one, else the list beside this script
-TERMS="$ROOT/scripts/retired-terms.txt"
+TERMS="$ROOT/common/scripts/retired-terms.txt"
 [ -f "$TERMS" ] || TERMS="$SCRIPT_DIR/retired-terms.txt"
 
 IDS="S01 S02 S03 S04 S05 S06 S07 S08 S09 S10 S11 S12 S13 S14 S16 S17 S18 S20 S21"
@@ -114,7 +114,7 @@ MOVED=" $(grep -lE '^_status:_[ \t]*archived .*moved to ' "${LEAVES[@]}" /dev/nu
 moved() { case "$MOVED" in *" $1 "*) return 0 ;; esac; return 1; }
 mapfile -t TAGFILES < <(find public "${MIRROR[@]}" -type f -name '.tags' | sort)
 ROOT_DOCS=()
-for f in AGENTS.md HYGIENE.md README.md; do [ -f "$f" ] && ROOT_DOCS+=("$f"); done
+for f in AGENTS.md common/HYGIENE.md README.md; do [ -f "$f" ] && ROOT_DOCS+=("$f"); done
 
 # Verbatim provenance copies keep their source bytes (CRLF, {{ }} and all): leaves
 # under an immutable root (lib-scopes.sh verbatim_path), and leaves listed in a
