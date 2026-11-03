@@ -1,0 +1,43 @@
+{
+  "settings": {
+    "files.exclude": {
+      "**/.DS_Store": true,
+      "**/.git": true,
+      "**/.hg": true,
+      "**/.svn": true,
+      "**/Thumbs.db": true,
+
+      // Whilst counter-intuitive, the intention of keeping the private folder
+      // hidden from the main AgentContext repository is for the mental model
+      // of the two remaining separated. This is `false` by default though.
+      "private/": false,
+
+      // A project's identity from the context-retention module: one user's,
+      // never committed, read by agents on first touch; hidden here.
+      "**/.agents/.id.meta": true,
+
+      // A repository homed by the graphify module carries a .graphifyignore
+      // and a graphify-out link into the tree's graphs/<slug>/live/; both are
+      // tooling, hidden here.
+      "**/.graphifyignore": true,
+      "**/graphify-out": true,
+
+      // The following three may be toggled to `true` in order to hide them
+      // from within VSCode, since they are effectively "system files", though
+      // they'll still be tracked and committed via git.
+      "**/.agent": false,
+      "**/.index.md": false,
+      "**/.tags": false
+    }
+  },
+  "folders": [
+    {
+      "name": "Knowledge Tree",
+      "path": "."
+    },
+    {
+      "name": "Knowledge Tree (Private)",
+      "path": "./private"
+    }
+  ]
+}
