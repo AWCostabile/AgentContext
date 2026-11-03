@@ -1,6 +1,6 @@
 {
   "recommendations": [
-    "yzhang.markdown-all-in-one",
-    "editorconfig.editorconfig"
+    "editorconfig.editorconfig",
+    "yzhang.markdown-all-in-one"
   ]
 }

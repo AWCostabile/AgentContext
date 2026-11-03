@@ -12,8 +12,11 @@ The tree checks itself in two layers, and this file is the single reference for 
 Run `cure.sh` first, then `smell.sh`. Both are report-only: nothing edits the tree but a person
 or an agent following the rectifications below. Both take `--root <dir>` (the directory holding
 `public/` and `.conf`; default the current directory). `cure.sh --fast` skips the advisory scans
-and keeps every FAIL; `smell.sh --quiet` prints the summary only. `cure.sh` exits with its FAIL
-count, `smell.sh` with its smell count (capped at 255). The conventions the checks enforce are
+and keeps every FAIL; `smell.sh --quiet` prints the summary only, and `smell.sh --today YYYY-MM-DD`
+judges the calendar smells (S01, S21) as of that date. `cure.sh` exits with its FAIL count,
+`smell.sh` with its smell count (capped at 255). `bash scripts/review.sh` prints both verdicts and
+the agenda they imply in about thirty lines (`--brief` one line of counts); it writes nothing, makes
+no check of its own, and exits with the FAIL count. The conventions the checks enforce are
 stated in [AGENTS.md](AGENTS.md) and the grammar documents under `rules/`:
 [branch grammar](rules/branch-grammar.md), [provenance tiers](rules/provenance-tiers.md),
 [design tier](rules/design-tier.md) and [feature log](rules/feature-log.md).
@@ -81,32 +84,40 @@ tree structurally (`private/`, `private/journal/`) is legal; a path to a record 
 `smell.sh` prints `[SMELL Sxx] <path>: <signal>` per finding, then a per-id summary whose first
 line carries `landed-since-retro=<n>`. Ids are stable; a missing number is a retired check.
 
-### S01 — stale design leaf
+### S01 — stale leaf
 
-- **Signal:** a `design/` leaf whose `_reviewed:_ YYYY-MM-DD` is older than 90 days.
-- **Why it matters:** `design/` is current law; a leaf nobody has re-checked against later
-  rulings may be quietly wrong.
-- **Detection:** the `_reviewed:_` date against today.
+- **Signal:** a `_reviewed:_ YYYY-MM-DD` older than its tier's window: `design/` 90 days,
+  `features/` 90 days, `research/` 180 days.
+- **Why it matters:** `design/` is current law and a feature-log leaf's State today is the way
+  in; one nobody has re-read against later rulings or the product may be quietly wrong. A
+  research leaf is a study and only ages out of relevance, so its window is longer.
+- **Detection:** the `_reviewed:_` date against today, or against `--today`.
 - **Rectification:**
-  1. Re-verify it: read the ruling its `_source:_` names, then every later ruling on the same
-     subject, then the product it describes. Is it contradicted, duplicated elsewhere, in the
-     wrong tier, or describing code that no longer has that shape?
+  1. Re-verify it. A design leaf: read the ruling its `_source:_` names, then every later ruling
+     on the same subject, then the product it describes. Is it contradicted, duplicated
+     elsewhere, in the wrong tier, or describing code that no longer has that shape? A feature
+     leaf: read State today against the product. A research leaf: does its question still stand?
   2. If it still holds, bump `_reviewed:_` to today. If a newer ruling amends it, edit the law,
      cite the ruling in `_source:_`, and bump the date.
   3. If it is superseded outright, archive it ([Archiving](#archiving)).
 - **Deliberate exceptions:** none. A stale leaf is either re-verified or archived.
 
-### S02 — design leaf without provenance
+### S02 — leaf without provenance
 
-- **Signal:** a `design/` leaf missing `_source:_` or `_reviewed:_`.
+- **Signal:** a `design/` leaf missing `_source:_` or `_reviewed:_`; a `features/` leaf missing
+  `_reviewed:_`. A `research/` leaf may carry `_reviewed:_` and is never asked to.
 - **Why it matters:** a design leaf distils a ruling; an uncited one cannot be re-verified or
-  trusted ([design tier](rules/design-tier.md)).
+  trusted ([design tier](rules/design-tier.md)). A feature-log leaf with no review date can
+  never go stale, which is to say nobody is ever asked to re-read it
+  ([feature log](rules/feature-log.md)).
 - **Detection:** lines starting `_source:_` and `_reviewed:_`.
 - **Rectification:**
-  1. Find the ruling it distils (`bash scripts/find.sh -k <topic>`).
-  2. Add `_source:_ <rulings path and ids>` and `_reviewed:_ YYYY-MM-DD` directly under the H1,
-     after any `_status:_` line.
-  3. If no ruling exists, the content is opinion, not law: move it to `research/`.
+  1. A design leaf: find the ruling it distils (`bash scripts/find.sh -k <topic>`) and add
+     `_source:_ <rulings path and ids>` and `_reviewed:_ YYYY-MM-DD` directly under the H1,
+     after any `_status:_` line. If no ruling exists, the content is opinion, not law: move it
+     to `research/`.
+  2. A feature leaf: read State today against the product and add `_reviewed:_ YYYY-MM-DD`
+     directly under the H1.
 - **Deliberate exceptions:** none.
 
 ### S03 — dead tag
@@ -307,6 +318,43 @@ line carries `landed-since-retro=<n>`. Ids are stable; a missing number is a ret
   product is verified or released) is product knowledge, not a work record, but it still names no
   particular block of work.
 
+### S20 — uncited leaf
+
+- **Signal:** a `design/` or `history/` leaf under `public/` that no file cites beyond its own
+  branch index.
+- **Why it matters:** a design leaf is current law; one nothing reads is law nobody follows, or
+  a subject that belongs in another leaf. A history leaf is provenance; one nothing rests on is
+  a ruling that was never distilled into `design/`, or a record whose law has moved on without
+  saying so.
+- **Detection:** the citation rule of `find.sh -b`: the leaf's basename anywhere in another
+  file's text, a Markdown link or a bare path alike (S12 keeps these basenames unique), in every
+  authored file of both trees except moved stubs. `features/`, `research/` and the private tree
+  are never judged: a feature-log leaf is an entry point and need not be cited. Archived leaves
+  and moved stubs are skipped.
+- **Rectification:**
+  1. A design leaf: cite it where it is read, from the feature log's State today or from the
+     design leaf whose subject touches it; if nothing does, its subject may belong inside
+     another leaf, or it is superseded: archive it ([Archiving](#archiving)).
+  2. A history leaf: distil it, so the design leaf that holds the law names it in `_source:_`;
+     if the law has moved on, the design leaf that supersedes it should say what it supersedes.
+- **Deliberate exceptions:** a ruling made and then reversed by a later ruling, which the later
+  ruling cites: it is cited, and the check is quiet. A freshly filed design leaf whose
+  feature-log entry waits for a merge may stand until the landing, reasoned in the report.
+
+### S21 — inbox item overdue
+
+- **Signal:** a `- YYYY-MM-DD — <text>` item in `private/journal/inbox.md` older than 14 days.
+- **Why it matters:** the inbox is the one cheap landing for a thought mid-session, and cheap
+  only because every item leaves it soon: promoted into a leaf, a ruling, a design change or a
+  feature-log line, or dropped. An item that sits is a decision nobody made.
+- **Detection:** the date at the head of the item against today, or against `--today`; private
+  tree only, and only when the file exists.
+- **Rectification:** triage the item with the user: file it properly (leaf, row and tags as one
+  action, or the ruling, design change or feature-log line it was a candidate for) and remove
+  the line, or drop it. Nothing is filed from the inbox by an agent on its own.
+- **Deliberate exceptions:** none. An item that needs more time is a question for a ledger, not
+  an inbox line.
+
 ## Archiving
 
 Archiving marks a leaf as superseded without losing it. Both edits are one action:
@@ -343,7 +391,8 @@ next free `C` id and is retired here, never silently dropped.
 | after any filing session | `bash scripts/cure.sh --fast` | the filing agent |
 | before merging a branch | `bash scripts/cure.sh`, then `bash scripts/smell.sh`: zero FAILs, every smell fixed or reasoned | whoever raises the merge |
 | after every landing | the `landed-since-retro` count in the summary; a retrospective at three | whoever records the landing |
-| quarterly | S01: every `design/` leaf's `_reviewed:_` re-verified or archived | the tree's maintainer |
+| weekly | `bash scripts/review.sh`: the agenda; each line acted on or reasoned | the user |
+| quarterly | S01: every `design/` and `features/` leaf's `_reviewed:_` re-verified or archived; research at its longer window | the tree's maintainer |
 | whenever a branch's smell count grew since the last report | a re-verification pass over that branch | the tree's maintainer |
 
 Record each standing smell in the review report with its one-line reason. A reason repeated in

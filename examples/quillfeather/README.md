@@ -17,6 +17,9 @@ tree starts at [AGENTS.md](./AGENTS.md), as it would in yours.
 3. Everything under `public/` and `private/` was then filled by hand, following the rules the
    instance received: each product copied from `templates/product`, each private mirror from
    `templates/product-mirror`, every placeholder replaced.
+4. At each release the deployer's update mode brings its core files along, run from the template
+   repository's root: `init.sh --update --target examples/quillfeather --from .`. It rewrites
+   `.agentcontext` itself; nothing there is edited by hand.
 
 The core files (`AGENTS.md`, `HYGIENE.md`, `rules/`, `scripts/`, `templates/`, `.vscode/`,
 `.conf.example`) are the template's own, copied in by the deployer and listed with their hashes in
