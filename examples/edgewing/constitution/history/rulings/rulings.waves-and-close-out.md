@@ -1,6 +1,6 @@
 # Seed rulings: waves, kickoffs and close-out
 
-_status:_ seed — adopt, amend or delete
+_status:_ adopted 2026-11-04
 
 How a piece of orchestrated work (a wave) is launched, run and ended: the kickoff and the ground
 rules it leans on, the gate report, the owner's walkthrough, the two moments of close-out and
@@ -25,8 +25,8 @@ rest on these.
 - **WK9.** Nothing a build produced enters an immutable tier until the owner has walked the build.
   The walkthrough is on by default, sits after the proof run and before the close-out check and
   the final review round, and a wave with nothing to walk opts out in one line with its reason.
-- **WK10.** While the owner walks, the orchestrator states the running total at each rider; the
-  growth is named once, in one sentence, and the owner decides.
+- **WK10.** When the owner's walk ends, the orchestrator states the running total of its riders;
+  the growth is named once, in one sentence, and the owner decides.
 - **WK11.** A wave has two moments, close-out (the branch finished, its pull request not raised)
   and the landing (the pull request merged), each with its own filings; neither alone is the
   other.

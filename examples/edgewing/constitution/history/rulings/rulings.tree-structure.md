@@ -1,6 +1,6 @@
 # Seed rulings: tree structure and grammar
 
-_status:_ seed — adopt, amend or delete
+_status:_ adopted 2026-11-04
 
 The shape of the knowledge tree: the trees it is made of, the one grammar every branch speaks,
 how a reader finds a leaf and a writer files one, and what happens to a leaf that is retired,

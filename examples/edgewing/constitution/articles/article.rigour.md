@@ -1,13 +1,13 @@
 # Rigour: the code standard, the baseline sweep, and the review loop
 
-_source:_ history/rulings/rulings.hygiene-and-gates.md HG14–HG20; history/rulings/rulings.commits-and-pull-requests.md CP5; history/rulings/rulings.agents-and-budgets.md AG11; history/rulings/rulings.tiers-and-records.md TR17
-_reviewed:_ 2026-11-02
+_source:_ history/rulings/rulings.hygiene-and-gates.md HG14–HG20; history/rulings/rulings.commits-and-pull-requests.md CP5; bills/bill.2026-11-2.delegated-agents.md DA9 (bill — pending enactment); history/rulings/rulings.tiers-and-records.md TR17
+_reviewed:_ 2026-11-04
 
 A product's shipped source can be held to a written standard: a rule catalog per product, one
 full sweep that grounds it, a linter built from what the sweep proved, and an adversarial review
 of every orchestrated branch before its pull request is raised. This article says where each
 part lives, the shape it takes, and how the review loop runs. A product adopts as much of it as
-it needs; the [code-standards template](../process/code-standards.template.md) is where a product
+it needs; its code standards, a `design.code-standards.md` leaf in its design tier, are where a product
 records what it adopted.
 
 ## The two homes
@@ -71,7 +71,7 @@ something that already exists; is it the second copy of something that should no
 reuse claim names the existing symbol as `path:line`; no citation, no finding. Findings are
 graded **blocking** or **consider**, ranked, and capped at five by default; style a linter or
 formatter owns is never commented on. Its profile is an operative file and cites this article
-(AG11).
+(DA9).
 
 ## The loop
 
@@ -92,6 +92,6 @@ the close-out check done) and before the owner raises the pull request (HG20):
 
 ## The `ORCH_` settings
 
-Orchestration settings share the `.conf` prefix `ORCH_` (AG11). `ORCH_BUDGET` is in the core's
+Orchestration settings share the `.conf` prefix `ORCH_` (DA9). `ORCH_BUDGET` is in the core's
 `common/.conf.example`. An instance that adopts the review loop adds `ORCH_REVIEW_ROUNDS`: default `2`,
 and `0` disables the loop. Later loop settings, such as the finding cap, join the same prefix.

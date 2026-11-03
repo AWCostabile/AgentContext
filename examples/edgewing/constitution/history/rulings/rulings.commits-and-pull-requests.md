@@ -1,11 +1,11 @@
 # Seed rulings: commits and pull requests
 
-_status:_ seed — adopt, amend or delete
+_status:_ adopted 2026-11-04
 
 The shape of the history a wave leaves behind: commit subjects that read as product updates,
 fixes folded before they reach the main line, the close-out check that enforces it, and the body
 every pull request carries. The [wave ground rules](../../articles/article.wave-ground-rules.md),
-the [tiers](../../articles/article.tiers.md) and the code-standards template rest on these.
+the [tiers](../../articles/article.tiers.md) and each product's code standards rest on these.
 
 - **CP1.** A commit subject is `<prefix>: <subject>`, the prefix one of a fixed set (by default
   `chore` `docs` `feat` `fix` `refactor` `style` `test`) with no scope, and it reads as a product
@@ -32,7 +32,5 @@ the [tiers](../../articles/article.tiers.md) and the code-standards template res
   found from the branch name before it lands.
 - **CP11.** A pull-request body is amended in place while its pull request is open, and freezes
   when the landing stamps it.
-- **CP12.** A landing's own filings never raise a pull request alone; they ride the next
-  documentation branch that carries weight, under one body that names its parts.
 - **CP13.** The commit that enacts a bill names, in its body, the pull request that carries the
   enactment.

@@ -43,7 +43,7 @@ a clause the bill marks **verify first** is a gate naming the spike that proves 
    wave's squash. If it already exists, stop and ask: resuming is the owner's call.
    (source: WK13)
 6. **The baseline is green** before the first change: the product's battery passes on main.
-   (source: AG1)
+   (source: DA1)
 7. **Report** all of the above with the ordered scope, then wait. (source: WK8)
 
 ## Running the wave
@@ -51,17 +51,14 @@ a clause the bill marks **verify first** is a gate naming the spike that proves 
 - **Phase boundaries are commit boundaries**, and this session's own commits obey the worker's
   commit rules. (source: CP2)
 - **The full battery stays with this session**, green at every phase boundary; one surface per
-  implementation job, and a delegated agent reruns only the tests it touched. (source: AG1)
+  implementation job, and a delegated agent reruns only the tests it touched. (source: DA1)
 - **Every spawn prompt's second line is the worker's pointer line**,
   `Ground rules: constitution/process/ground-rules.worker.md`, and the prompt restates nothing
-  that file says; it names the agent's own scratch subdirectory. (source: WK5, AG5)
-- **A job briefed as fitting one context is sized** before it is spawned. (source: AG2)
-- **An idle notification gets no reply** unless something changed. (source: AG8)
-- **Long-running servers run in a visible window** from the start, never in a background task
-  with a time cap. (source: AG7)
+  that file says; it names the agent's own scratch subdirectory. (source: WK5, DA5)
+- **A job briefed as fitting one context is sized** before it is spawned. (source: DA2)
 - **Concurrency is the normal case**: a wave's writes go to a worktree when another branch is in
   flux on the shared checkout, and no shared private file is written while another session is
-  active on the machine. (source: AG5, AG6)
+  active on the machine. (source: DA5, DA6)
 - **A worktree releases its branch** when its last agent is done with it, never under one still
   committing, and is removed only after its pull request merges. (source: WK15)
 - **A default this session took stays "defaults taken" in the brief**, lifted into a bill only
@@ -72,7 +69,5 @@ a clause the bill marks **verify first** is a gate naming the spike that proves 
   behaviour it describes. (source: WK18)
 - **Under `ORCH_BUDGET=lean`**, work inline, delegate only where a job's reading would outgrow
   this context, keep working while delegated jobs run in the background, and keep the close-out
-  to one short record. (source: AG12)
-- **Where the prompt cache expires sooner than the gaps between turns**, keep the session warm
-  with a cheap periodic action rather than letting a long context go cold. (source: AG13)
+  to one short record. (source: DA10)
 - **When the proof run is done**, read the close-out ground rules. (source: WK3)

@@ -59,8 +59,8 @@ fails is reported, never worked around: the world moved since the brief.
 
 After the proof run the owner walks the build: uses it, in the product, the way its users will.
 Nothing the wave produced enters an immutable tier before then (WK9). Each thing the walk turns
-up is a rider; the orchestrator states the running total at each one, names the growth once and
-lets the owner decide (WK10). A documentation-only wave opts out in one line and is reviewed at
+up is a rider; when the walk ends the orchestrator states their running total, names the growth
+once and lets the owner decide (WK10). A documentation-only wave opts out in one line and is reviewed at
 its pull request instead.
 
 ## Close-out and the landing
@@ -74,7 +74,7 @@ the feature-log entries appended, the manifest rows stamped, the journal brought
 
 `.conf`'s `ORCH_BUDGET` says how much delegation and ceremony a wave affords. Under `full`, the
 reference practice, each job goes to a delegated agent, a review loop runs before the pull
-request, and the close-out files its appendices. Under `lean` (AG12):
+request, and the close-out files its appendices. Under `lean` (DA10):
 
 - the orchestrator works inline, and delegates only as a context firewall: when a job's reading
   would outgrow the orchestrator's own context;
@@ -84,11 +84,3 @@ request, and the close-out files its appendices. Under `lean` (AG12):
   drafted feature-log entries, with no appendices.
 
 Pick `lean` where idle time is expensive, as when a session's prompt cache expires quickly.
-
-## The keep-alive
-
-Where a session's prompt cache expires sooner than the gaps between its turns (a long wait on a
-build, a walk that takes an afternoon), a cold cache makes the next turn re-read the whole
-context at full cost. The fallback is a behaviour, not a feature: the orchestrator keeps the
-session warm with a cheap periodic action, such as a status check of the job it is waiting on,
-for as long as the wait lasts, and lets it go cold only when the wave is parked (AG13).

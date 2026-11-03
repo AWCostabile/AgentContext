@@ -1,6 +1,6 @@
 # Seed rulings: hygiene and gates
 
-_status:_ seed — adopt, amend or delete
+_status:_ adopted 2026-11-04
 
 How the tree checks itself, how the files every session loads stay small, the tools that check
 what the linters cannot see, and how a product's code is held to a written standard with an

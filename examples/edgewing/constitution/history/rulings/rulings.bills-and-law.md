@@ -1,6 +1,6 @@
 # Seed rulings: bills and law
 
-_status:_ seed — adopt, amend or delete
+_status:_ adopted 2026-11-04
 
 How law is proposed, built from, corrected, enacted or withdrawn, and how the files that enforce
 it stay bound to it. The articles on [the constitution](../../articles/article.constitution.md)

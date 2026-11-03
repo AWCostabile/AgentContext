@@ -1,6 +1,6 @@
 # Seed rulings: shared and private
 
-_status:_ seed — adopt, amend or delete
+_status:_ adopted 2026-11-04
 
 What the shared tree may know and what stays on one machine: the private tree as a nested
 repository, the one direction of reference, the posture of shared prose, the feature log as the

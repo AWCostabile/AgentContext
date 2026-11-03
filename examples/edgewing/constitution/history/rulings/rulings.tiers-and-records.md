@@ -1,6 +1,6 @@
 # Seed rulings: tiers and records
 
-_status:_ seed — adopt, amend or delete
+_status:_ adopted 2026-11-04
 
 Who may write in a branch and how: the provenance tiers that are added once and never edited,
 the current law that is edited as the truth moves, the generated tiers that only a generator

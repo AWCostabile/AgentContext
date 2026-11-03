@@ -1,7 +1,7 @@
 # The constitution: three tiers of law, and the files that enforce it
 
-_source:_ history/rulings/rulings.tree-structure.md TS1–TS2; history/rulings/rulings.bills-and-law.md BL1, BL5–BL7, BL13–BL15; history/rulings/rulings.agents-and-budgets.md AG11
-_reviewed:_ 2026-11-02
+_source:_ history/rulings/rulings.tree-structure.md TS1–TS2; history/rulings/rulings.bills-and-law.md BL1, BL5–BL7, BL13–BL15; bills/bill.2026-11-2.delegated-agents.md DA9 (bill — pending enactment)
+_reviewed:_ 2026-11-04
 
 The knowledge tree governs itself. Its law about its own shape, and the process that keeps the
 work honest (how law is proposed, enacted, amended and enforced), is filed in a tree of its own,
@@ -64,7 +64,7 @@ and leave the reasoning to the article they implement:
 | `common/rules/active-work.md` | [the work journal](./article.work-journal.md) |
 | `common/HYGIENE.md`, `common/scripts/` | [hygiene](./article.hygiene.md) |
 | `constitution/process/` | [the wave ground rules](./article.wave-ground-rules.md), [rigour](./article.rigour.md) |
-| what an adapter lays down: guards, agent profiles, commands | the article each enforces (AG11) |
+| what an adapter lays down: guards, agent profiles, commands | the article each enforces (DA9) |
 
 An operative file written for this instance cites its article near its top (BL13):
 

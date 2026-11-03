@@ -18,7 +18,7 @@ other. (source: WK11)
   kickoff's `Walkthrough:` line says when, or why not. (source: WK9)
 - **It sits after the proof run and before the close-out check and the final review round**, so
   the riders it spawns are checked and reviewed with the rest. (source: WK9)
-- **While the owner walks, state the running total at each rider**; name the growth once, in one
+- **When the walk ends, state the running total of its riders**; name the growth once, in one
   sentence, and let the owner decide. (source: WK10)
 - **The owner enacts the bill**: at the walkthrough of a build wave, or at the pull-request
   review of a documentation-only one; one action, one commit. List every dated amendment the
@@ -58,7 +58,7 @@ before the owner raises the pull request. (source: HG19)
 | The branch, unpushed | the product repository; the owner raises the pull request (source: WK17) |
 
 Under `ORCH_BUDGET=lean` the body, the journal entry and the drafted feature-log entries are the
-whole of it: no appendices. (source: AG12)
+whole of it: no appendices. (source: DA10)
 
 ## The landing
 
@@ -73,5 +73,3 @@ When the pull request has merged:
 4. `latest.md` rewritten, and the private repository tagged `landed/<date>-<slug>`.
    (source: SP14)
 5. Every generated tier the change moved regenerated, now and not before. (source: TR11)
-6. The landing's own filings ride the next documentation branch; they never raise alone.
-   (source: CP12)

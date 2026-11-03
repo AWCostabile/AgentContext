@@ -27,26 +27,26 @@ Nothing of it is restated here.
 
 - **Every git write names its repository**; a command that writes checks its working directory
   first; a call that depends on a changed directory is never paired with another call.
-  (source: AG4)
+  (source: DA4)
 - **Manifest rows are edited by a script with an exact-string replace**, never a stream editor.
-  (source: AG4)
+  (source: DA4)
 - **Provenance is never edited**: a record is copied in verbatim with its row; the pre-write
   guard, where one exists, refuses anything else. (source: TR2, TR3)
 - **Scratch goes under your own subdirectory** of the session's scratch space, the one your
-  prompt names; never a shared name there. (source: AG5)
-- **Rerun only the tests you touched**; the full battery is the orchestrator's. (source: AG1)
+  prompt names; never a shared name there. (source: DA5)
+- **Rerun only the tests you touched**; the full battery is the orchestrator's. (source: DA1)
 
 ## Stop and report
 
 - **Never invent.** When the brief conflicts with the code, a gate fails, or a clause cannot be
   built as written, stop and report it. A bill clause you must deviate from gets a dated
-  `_amended YYYY-MM-DD:_` line where it stands, named in your report. (source: AG9, BL3)
-- **The budget**: aim at about 300k tokens; you may run to 500–600k with care, and never reach a
-  context compaction. Hand back at your last commit boundary before that. (source: AG3)
+  `_amended YYYY-MM-DD:_` line where it stands, named in your report. (source: DA7, BL3)
+- **The budget**: aim at about 200k tokens; you may run to 350k with care, and never reach a
+  context compaction. Hand back at your last commit boundary before that. (source: DA3)
 
 ## The report
 
 Your final message is data for the orchestrator: the outcome first, then the evidence (files
 touched, commands run and what they said, commits made), and last a short block of the
 decisions and why, the traps hit and the invariants found, or the single word `none`.
-(source: AG10)
+(source: DA8)

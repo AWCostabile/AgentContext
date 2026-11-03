@@ -1,7 +1,7 @@
 # The work journal: what is in flux on one machine, and how the private repository is kept
 
-_source:_ history/rulings/rulings.shared-and-private.md SP13–SP14; history/rulings/rulings.tree-structure.md TS14; history/rulings/rulings.waves-and-close-out.md WK11–WK12, WK16; history/rulings/rulings.agents-and-budgets.md AG5–AG6; history/rulings/rulings.bills-and-law.md BL18
-_reviewed:_ 2026-11-02
+_source:_ history/rulings/rulings.shared-and-private.md SP13–SP14; history/rulings/rulings.tree-structure.md TS14; history/rulings/rulings.waves-and-close-out.md WK11–WK12, WK16; bills/bill.2026-11-2.delegated-agents.md DA5–DA6 (bill — pending enactment); history/rulings/rulings.bills-and-law.md BL18
+_reviewed:_ 2026-11-04
 
 What is in flux is a fact about one machine, so it lives in the private tree, in
 `private/journal/`. On a machine with no private tree there is no active-work state, and nothing
@@ -72,10 +72,10 @@ The private tree is a repository of its own, run on one trunk (SP14):
 
 ## Concurrency
 
-Concurrency is the normal case (AG5). Each delegated agent writes under its own scratch
+Concurrency is the normal case (DA5). Each delegated agent writes under its own scratch
 subdirectory; on a shared checkout every commit is path-scoped; a wave's writes go to a worktree
 when `latest.md` shows another branch in flux there.
 
 While another session is active on the machine, a coordinating session writes no shared private
 file: `latest.md`, an epic, a ledger, a plan in flight. An isolated leaf with a path-scoped
-commit is safe (AG6).
+commit is safe (DA6).
