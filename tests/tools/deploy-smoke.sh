@@ -2,8 +2,8 @@
 # deploy-smoke.sh — this repository's gate for the deployer: it deploys throwaway
 # instances from the COMMITTED tree, lints them, updates one, proves the refusals, lints
 # every worked example as of its snapshot date, runs tests/check.sh, the scripts' own
-# check over the fixture tree, and updates instances of the last release through the move
-# rule onto the common directory.
+# check over the fixture tree, updates instances of the last release through the move
+# rule onto the common directory, and adopts modules into instances and updates over them.
 #
 # Usage: bash tests/tools/deploy-smoke.sh   (from anywhere; no arguments)
 #
@@ -430,6 +430,130 @@ if [ "$ADP" = claude-code ]; then
   check "the fresh root with the $ADP adapter is exactly: $want6" '[ "$root6" = "$want6" ]'
 else
   info "the first adapter is ${ADP:-none}, not claude-code: its fresh root not judged"
+fi
+
+# -- 19. module adoption, and the update over adopted modules -------------------------------------------------
+# (a) The first instance carries graphify and context-retention copied in by hand, which its manifest
+# never recorded: an update leaves them as they are; --adopt records graphify with nothing copied,
+# a file edited beforehand reported as differing and then kept by the next update; a second --adopt
+# refuses.
+dig_mods() { (cd "$1/common/modules" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum); }
+before=$(dig_mods "$I1")
+out=$(bash "$INIT" --update --target "$I1" --from "$SRC" 2>&1); rc=$?
+check "an update over a manifest with no module= line touches nothing under common/modules/" \
+  '[ $rc -eq 0 ] && [ "$(dig_mods "$I1")" = "$before" ] && ! printf "%s\n" "$out" | grep -q "common/modules/"'
+printf '%s\n' "A local note." >> "$I1/common/modules/graphify/README.md"
+ngf=$(cd "$SRC/modules/graphify" && find . -type f | wc -l | tr -d ' ')
+out=$(bash "$INIT" --adopt graphify --target "$I1" --from "$SRC" 2>&1); rc=$?
+check "--adopt of a module already in place records it with nothing copied: 1 differs, $((ngf - 1)) match" \
+  '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -qx "differs common/modules/graphify/README.md" && printf "%s\n" "$out" | grep -q "^recorded graphify, already at common/modules/graphify/: $((ngf - 1)) match, 1 differ, 0 missing"'
+check "the manifest carries module=graphify and the release's hash for each of its $ngf files" \
+  'grep -qx "module=graphify" "$I1/common/.agentcontext" && [ "$(grep -c "  common/modules/graphify/" "$I1/common/.agentcontext")" -eq "$ngf" ] && grep -q "^$(sha256sum < "$SRC/modules/graphify/README.md" | cut -c1-64)  common/modules/graphify/README.md$" "$I1/common/.agentcontext"'
+out=$(bash "$INIT" --update --target "$I1" --from "$SRC" 2>&1); rc=$?
+check "the next update keeps the file edited before the adoption" \
+  '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -qx "kept common/modules/graphify/README.md (changed locally)"'
+before=$(tree_digest "$I1")
+err=$(bash "$INIT" --adopt graphify --target "$I1" --from "$SRC" 2>&1 >/dev/null); rc=$?
+check "a second --adopt of the module refuses with exit 2 and writes nothing" \
+  '[ $rc -eq 2 ] && printf "%s\n" "$err" | grep -q "already recorded" && [ "$(tree_digest "$I1")" = "$before" ]'
+
+# (b) A fresh instance adopts two modules, one of each kind: a script module and a tree module.
+I9="$TMP/instance9"
+bash "$INIT" --from "$SRC" --target "$I9" --conf "$CONF" >/dev/null 2>&1
+before=$(tree_digest "$I9")
+out=$(bash "$INIT" --adopt codebase --target "$I9" --from "$SRC" --dry-run 2>&1); rc=$?
+check "--adopt --dry-run exits 0 and writes nothing" '[ $rc -eq 0 ] && [ "$(tree_digest "$I9")" = "$before" ]'
+arc=0
+for m in constitution codebase; do bash "$INIT" --adopt "$m" --target "$I9" --from "$SRC" >/dev/null 2>&1 || arc=1; done
+check "--adopt constitution and --adopt codebase exit 0" '[ $arc -eq 0 ]'
+check "the constitution's tree/ is laid at constitution/ byte for byte, its README left in the release" \
+  'diff -r -q "$SRC/modules/constitution/tree" "$I9/constitution" >/dev/null && [ ! -e "$I9/constitution/README.md" ]'
+check "the codebase module is laid whole at common/modules/codebase/ byte for byte" \
+  'diff -r -q "$SRC/modules/codebase" "$I9/common/modules/codebase" >/dev/null'
+nct=$(cd "$SRC/modules/constitution/tree" && find . -type f | wc -l | tr -d ' ')
+ncb=$(cd "$SRC/modules/codebase" && find . -type f | wc -l | tr -d ' ')
+check "the manifest's header names both modules, sorted, and its list hashes their $nct + $ncb files" \
+  '[ "$(grep "^module=" "$I9/common/.agentcontext" | tr "\n" " ")" = "module=codebase module=constitution " ] && [ "$(grep -c "  constitution/" "$I9/common/.agentcontext")" -eq "$nct" ] && [ "$(grep -c "  common/modules/codebase/" "$I9/common/.agentcontext")" -eq "$ncb" ]'
+(cd "$I9" && sed '1,/^$/d' common/.agentcontext | sha256sum -c --quiet >/dev/null 2>&1); hrc=$?
+check "every hash the manifest records verifies" '[ $hrc -eq 0 ]'
+(cd "$I9" && bash common/scripts/cure.sh >/dev/null 2>&1); crc=$?
+check "the instance with two adopted modules lints with 0 fails" '[ $crc -eq 0 ]'
+
+# (c) The refusals: exit 2 and nothing written. A second source carries a stand-in private-tree
+# module and a module with no payload, which this release does not ship.
+SRC2="$TMP/src2"; cp -R "$SRC" "$SRC2"
+mkdir -p "$SRC2/modules/local/tree" "$SRC2/modules/empty"
+printf '%s\n' "# Local" > "$SRC2/modules/local/tree/.index.md"
+printf '%s\n' "# Empty" > "$SRC2/modules/empty/README.md"
+before=$(tree_digest "$I9")
+refused=""
+for m in no-such-module change-log constitution empty; do
+  err=$(bash "$INIT" --adopt "$m" --target "$I9" --from "$SRC2" 2>&1 >/dev/null); rc=$?
+  [ $rc -eq 2 ] || refused+="$m(rc=$rc) "
+done
+check "an unknown module, change-log, one already recorded and one with no payload refuse with exit 2${refused:+ (not: $refused)}" '[ -z "$refused" ]'
+check "the four refusals wrote nothing" '[ "$(tree_digest "$I9")" = "$before" ]'
+err=$(bash "$INIT" --adopt change-log --target "$I9" --from "$SRC" 2>&1 >/dev/null)
+check "the change-log refusal points at a repository's .github/workflows/" 'printf "%s\n" "$err" | grep -q "\.github/workflows/"'
+before=$(tree_digest "$I2")
+err=$(bash "$INIT" --adopt local --target "$I2" --from "$SRC2" 2>&1 >/dev/null); rc=$?
+check "a private-tree module on an instance without a private tree refuses with exit 2 and writes nothing" \
+  '[ $rc -eq 2 ] && printf "%s\n" "$err" | grep -q "goes into the private tree" && [ "$(tree_digest "$I2")" = "$before" ]'
+
+# (d) An update from a source with one changed and one new module file, one removed, one changed
+# seed and one changed ruling the user had marked adopted, over one module file edited locally.
+R=history/rulings SEED=rulings.hygiene-and-gates.md ADOPTED=rulings.tree-structure.md
+printf '%s\n' "" "A line new upstream." >> "$SRC2/modules/codebase/README.md"
+printf '%s\n' "A file new upstream." > "$SRC2/modules/codebase/NOTES.md"
+rm "$SRC2/modules/codebase/fixture/profile.json"
+for f in $SEED $ADOPTED; do printf '%s\n' "" "- **ZZ1.** A ruling new upstream." >> "$SRC2/modules/constitution/tree/$R/$f"; done
+sed -i 's/^_status:_ seed.*$/_status:_ adopted 2026-01-01/' "$I9/constitution/$R/$ADOPTED"
+printf '%s\n' "# a local edit" >> "$I9/common/modules/codebase/codebase.py"
+out=$(bash "$INIT" --update --target "$I9" --from "$SRC2" 2>&1); rc=$?
+printf '%s\n' "$out" > "$TMP/modupdate.txt"
+check "the update over adopted modules: 0 moved, 2 replaced, 2 kept, 1 added, 1 removed-upstream" \
+  '[ $rc -eq 0 ] && grep -qx "update: 0 moved, 2 replaced, 2 kept, 1 added, 1 removed-upstream" "$TMP/modupdate.txt"'
+check "the changed module file and the seed still marked seed are replaced" \
+  'grep -qx "replaced common/modules/codebase/README.md" "$TMP/modupdate.txt" && grep -qx "replaced constitution/$R/$SEED" "$TMP/modupdate.txt" && grep -q "ZZ1" "$I9/constitution/$R/$SEED"'
+check "the locally edited module file and the ruling marked adopted are kept" \
+  'grep -qx "kept common/modules/codebase/codebase.py (changed locally)" "$TMP/modupdate.txt" && grep -qx "kept constitution/$R/$ADOPTED (changed locally)" "$TMP/modupdate.txt" && ! grep -q "ZZ1" "$I9/constitution/$R/$ADOPTED"'
+check "the new module file is added and the removed one reported, its copy left" \
+  'grep -qx "added common/modules/codebase/NOTES.md" "$TMP/modupdate.txt" && grep -qx "removed-upstream common/modules/codebase/fixture/profile.json" "$TMP/modupdate.txt" && [ -f "$I9/common/modules/codebase/fixture/profile.json" ]'
+check "both module= lines survive the update" \
+  '[ "$(grep "^module=" "$I9/common/.agentcontext" | tr "\n" " ")" = "module=codebase module=constitution " ]'
+
+# (e) A release that no longer ships an adopted module: reported once, its line dropped, its files left.
+SRC3="$TMP/src3"; cp -R "$SRC2" "$SRC3"; rm -rf "$SRC3/modules/codebase"
+out=$(bash "$INIT" --update --target "$I9" --from "$SRC3" 2>&1); rc=$?
+check "a module the release dropped is reported, its module= line dropped, its files left" \
+  '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -qx "removed-upstream module codebase (its files stay)" && ! grep -qx "module=codebase" "$I9/common/.agentcontext" && grep -qx "module=constitution" "$I9/common/.agentcontext" && [ -f "$I9/common/modules/codebase/codebase.py" ]'
+
+# (f) A v0.4.0 instance: --adopt refuses before its update, and after it finds a module copied in by
+# hand at its old place (MOVES), moving every file that matches the release.
+if [ -n "${OLD:-}" ] && [ -d "${I7:-}" ]; then
+  I10="$TMP/instance10"
+  bash "$OLD/init.sh" --from "$ARC" --target "$I10" --conf "$TMP/old.conf" --no-private >/dev/null 2>&1
+  before=$(tree_digest "$I10")
+  err=$(bash "$INIT" --adopt graphify --target "$I10" --from "$SRC" 2>&1 >/dev/null); rc=$?
+  check "--adopt on an instance whose manifest is still at the root refuses with exit 2 and writes nothing" \
+    '[ $rc -eq 2 ] && printf "%s\n" "$err" | grep -q "update the instance to this release first" && [ "$(tree_digest "$I10")" = "$before" ]'
+  # the hand copy: the release's files, one of them edited by the user
+  mkdir -p "$I7/modules" && cp -R "$SRC/modules/context-retention" "$I7/modules/context-retention"
+  printf '%s\n' "# a local edit" >> "$I7/modules/context-retention/meta.sh"
+  ncr=$(cd "$SRC/modules/context-retention" && find . -type f | wc -l | tr -d ' ')
+  out=$(bash "$INIT" --adopt context-retention --target "$I7" --from "$SRC" 2>&1); rc=$?
+  printf '%s\n' "$out" > "$TMP/oldadopt.txt"
+  check "--adopt finds the hand copy at modules/ through MOVES: $((ncr - 1)) moved, the edited one kept" \
+    '[ $rc -eq 0 ] && grep -qx "adopted context-retention from modules/context-retention/: $((ncr - 1)) moved, 1 kept, 0 added" "$TMP/oldadopt.txt" && grep -qx "kept modules/context-retention/meta.sh (differs from the release; moved to common/modules/context-retention/meta.sh)" "$TMP/oldadopt.txt"'
+  check "the release's copy of every file is at common/modules/context-retention/" \
+    'diff -r -q "$SRC/modules/context-retention" "$I7/common/modules/context-retention" >/dev/null'
+  check "the moved files' old paths are gone, the edited one alone left at modules/" \
+    '[ "$(cd "$I7/modules" && find . -type f)" = "./context-retention/meta.sh" ]'
+  (cd "$I7" && sed '1,/^$/d' common/.agentcontext | sha256sum -c --quiet >/dev/null 2>&1); hrc=$?
+  check "the manifest records module=context-retention and every hash verifies" \
+    'grep -qx "module=context-retention" "$I7/common/.agentcontext" && [ $hrc -eq 0 ]'
+else
+  info "no $OLDREL instance: --adopt over a hand copy at the old place not run"
 fi
 
 echo "== deploy smoke: $FAIL fail(s) =="
