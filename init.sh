@@ -6,6 +6,7 @@
 #           [--from <dir|archive.tar.gz>] [--no-private] [--sibling <RepoName>]...
 #           [--adapter <name>] [--dry-run]
 #   init.sh --update --target <dir> (--ref <tag> | --from <dir|archive.tar.gz>) [--dry-run]
+#   init.sh --adopt <module> --target <dir> [--ref <tag> | --from <dir|archive.tar.gz>] [--dry-run]
 #   init.sh --help
 #
 # Install (the first form) copies the skeleton to <dir>, resolves its placeholders from a
@@ -41,6 +42,19 @@
 #   --from <src>      take the release from a local directory or .tar.gz instead
 #   --dry-run         print the report, and write nothing
 #
+# Adopt (the third form) lays one module of the release into an instance and records it in the
+# manifest, a module=<name> line and its files hashed with the core's, so --update refreshes it
+# file by file as it does the core. A script module goes whole to common/modules/<name>/, the
+# constitution's tree/ to constitution/, the local module's tree/ to private/local/ (an instance
+# with a private tree only). A module already in place is recorded, nothing copied, each file
+# reported as matching the release or differing from it; one at the old place MOVES names for it
+# (a module copied in by hand before the common directory) is moved file by file as an update
+# moves the core. The change-log module is refused: its workflow goes into a repository's
+# .github/workflows/, never an instance. The source defaults to the directory init.sh lives in.
+#   --ref <tag>       fetch the module from that release of the upstream repository
+#   --from <src>      take it from a local directory or .tar.gz instead
+#   --dry-run         print the report, and write nothing
+#
 # Exit: 0 done; 2 usage or refusal (the reason on stderr, nothing written); 1 failure
 # mid-way (what was written is said).
 
@@ -71,13 +85,15 @@ die()    { printf 'init.sh: failed: %s\n' "$*" >&2; exit 1; }
 say()    { printf '%s\n' "$*"; }
 
 # -- arguments ------------------------------------------------------------------
-MODE=install TARGET="" CONF="" NAME="" FROM="" REF="" ADAPTER="" NO_PRIVATE=0 DRY=0
+MODE=install TARGET="" CONF="" NAME="" FROM="" REF="" ADAPTER="" ADOPT="" NO_PRIVATE=0 DRY=0
 SIBLINGS=()
 need_value() { [ $# -ge 2 ] && [ -n "$2" ] || refuse "$1 needs a value (see --help)"; }
+one_mode()   { [ "$MODE" = install ] || refuse "--update and --adopt are separate runs (see --help)"; }
 while [ $# -gt 0 ]; do
   case "$1" in
     --help|-h)    usage; exit 0 ;;
-    --update)     MODE=update ;;
+    --update)     one_mode; MODE=update ;;
+    --adopt)      need_value "$@"; one_mode; MODE=adopt ADOPT=$2; shift ;;
     --target)     need_value "$@"; TARGET=$2; shift ;;
     --conf)       need_value "$@"; CONF=$2; shift ;;
     --name)       need_value "$@"; NAME=$2; shift ;;
@@ -94,12 +110,16 @@ done
 [ -n "$TARGET" ] || refuse "--target is required (see --help)"
 TARGET=${TARGET%/}
 if [ "$MODE" = install ]; then
-  [ -z "$REF" ] || refuse "--ref is for --update only"
+  [ -z "$REF" ] || refuse "--ref is for --update and --adopt only"
 else
   [ -z "$CONF$NAME$ADAPTER" ] && [ $NO_PRIVATE -eq 0 ] && [ ${#SIBLINGS[@]} -eq 0 ] \
-    || refuse "--update takes only --target, --ref or --from, and --dry-run"
-  { [ -n "$REF" ] && [ -z "$FROM" ]; } || { [ -z "$REF" ] && [ -n "$FROM" ]; } \
-    || refuse "--update needs exactly one of --ref <tag> and --from <dir|archive.tar.gz>"
+    || refuse "--$MODE takes only --target, --ref or --from, and --dry-run"
+  if [ "$MODE" = update ]; then
+    { [ -n "$REF" ] && [ -z "$FROM" ]; } || { [ -z "$REF" ] && [ -n "$FROM" ]; } \
+      || refuse "--update needs exactly one of --ref <tag> and --from <dir|archive.tar.gz>"
+  else
+    [ -z "$REF" ] || [ -z "$FROM" ] || refuse "--adopt takes at most one of --ref <tag> and --from <dir|archive.tar.gz>"
+  fi
   [ -d "$TARGET" ] && { [ -f "$TARGET/$MANIFEST" ] || [ -f "$TARGET/$OLD_MANIFEST" ]; } \
     || refuse "no .agentcontext at target: $TARGET was not deployed by init.sh"
 fi
@@ -126,7 +146,7 @@ extract_archive() {
   printf '%s' "$t"
 }
 SRC_REF=working-tree
-if [ -z "$FROM" ] && [ "$MODE" = install ]; then
+if [ -z "$FROM" ] && [ -z "$REF" ]; then
   SRC=$SELF_DIR
 elif [ -n "$REF" ]; then
   fetch=$(mktmp)
@@ -221,25 +241,117 @@ hashes() {
     | awk '{ h = $1; print h "  " substr($0, length(h) + 3) }' | LC_ALL=C sort -k2
 }
 
+# -- modules ----------------------------------------------------------------------------------
+# Where each module is adopted: a script module whole under common/modules/<name>/; a tree
+# module's tree/ at its own place, the constitution at the root, the local module in the
+# private tree. The change-log module is a repository's workflow and is never adopted.
+module_dest() {   # module_dest <name>: its directory in an instance
+  case "$1" in
+    constitution) printf 'constitution' ;;
+    local)        printf 'private/local' ;;
+    *)            printf 'common/modules/%s' "$1" ;;
+  esac
+}
+module_src() {    # module_src <name>: the directory of the release that is laid
+  case "$1" in
+    constitution|local) printf '%s' "$SRC/modules/$1/tree" ;;
+    *)                  printf '%s' "$SRC/modules/$1" ;;
+  esac
+}
+has_payload() {   # has_payload <name>: a file other than a top-level README.md to lay
+  local s
+  s=$(module_src "$1")
+  [ -d "$s" ] && (cd "$s" && find . -type f | sed 's|^\./||') | grep -qv '^README\.md$'
+}
+lay_module() {    # lay_module <name> <dest root>
+  local d
+  d="$2/$(module_dest "$1")"
+  mkdir -p "$d" && cp -R "$(module_src "$1")/." "$d/"
+}
+module_list() {   # module_list <root> <name>: the module's paths present under <root>, sorted
+  local d
+  d=$(module_dest "$2")
+  [ -d "$1/$d" ] || return 0
+  (cd "$1" && find "$d" -type f | LC_ALL=C sort)
+}
+module_names() {  # the modules of the release, one per line, for a refusal's hint
+  local d
+  for d in "$SRC"/modules/*/; do [ -d "$d" ] && { d=${d%/}; printf '  %s\n' "${d##*/}"; }; done
+}
+
+# -- the manifest ------------------------------------------------------------------------------
+# A header of key=value lines (upstream, ref, installed, adapter, one module= per adopted
+# module, updated), a blank line, and one "<sha256>  <path>" line per recorded file.
+declare -A HEADER RECORDED
+MODULES=()
+read_manifest() {   # read_manifest <instance>: fills MAN_IN, HEADER, MODULES and RECORDED
+  local line body=0
+  MAN_IN=$MANIFEST
+  [ -f "$1/$MANIFEST" ] || MAN_IN=$OLD_MANIFEST
+  while IFS= read -r line || [ -n "$line" ]; do
+    line=${line%$'\r'}
+    if [ $body -eq 0 ]; then
+      [ -z "$line" ] && { body=1; continue; }
+      case "$line" in
+        module=*) MODULES+=("${line#module=}") ;;
+        *)        HEADER[${line%%=*}]=${line#*=} ;;
+      esac
+    else
+      [ -n "$line" ] || continue
+      RECORDED[${line:66}]=${line:0:64}
+    fi
+  done < "$1/$MAN_IN"
+}
+manifest_header() {   # manifest_header <ref> <installed> <adapter> <updated> [<module>...]
+  local ref=$1 installed=$2 adapter=$3 updated=$4 m
+  shift 4
+  say "upstream=${HEADER[upstream]:-$UPSTREAM}"
+  say "ref=$ref"
+  say "installed=$installed"
+  [ -n "$adapter" ] && say "adapter=$adapter"
+  for m in $(printf '%s\n' "$@" | grep -v '^$' | LC_ALL=C sort -u); do say "module=$m"; done
+  [ -n "$updated" ] && say "updated=$updated"
+  say ""
+}
+
+# -- MOVES ---------------------------------------------------------------------------------------
+MV_OLD=() MV_NEW=()
+read_moves() {   # the release's "<old> <new>" pairs, comments and blank lines skipped
+  local o n _
+  [ -f "$SRC/MOVES" ] || return 0
+  while read -r o n _ || [ -n "$o" ]; do
+    case "$o" in ''|'#'*) continue ;; esac
+    MV_OLD+=("$o"); MV_NEW+=("${n%$'\r'}")
+  done < "$SRC/MOVES"
+}
+moved_path() {   # moved_path <path>: its name in this release, through MOVES
+  local p=$1 i o
+  for i in "${!MV_OLD[@]}"; do
+    o=${MV_OLD[$i]}
+    case "$o" in
+      */) case "$p" in "$o"*) p=${MV_NEW[$i]}${p#"$o"} ;; esac ;;
+      *)  [ "$p" = "$o" ] && p=${MV_NEW[$i]} ;;
+    esac
+  done
+  printf '%s' "$p"
+}
+old_path() {     # old_path <dir>: the directory a directory pair of MOVES moved to <dir>, else nothing
+  local d="$1/" i o n
+  for i in "${!MV_OLD[@]}"; do
+    o=${MV_OLD[$i]} n=${MV_NEW[$i]}
+    [ "${o%/}" != "$o" ] && [ "${n%/}" != "$n" ] || continue
+    case "$d" in "$n"*) d=$o${d#"$n"}; printf '%s' "${d%/}"; return 0 ;; esac
+  done
+}
+read_moves
+
 # =====================================================================================
 # update
 # =====================================================================================
 if [ "$MODE" = update ]; then
   TARGET=$(cd "$TARGET" && pwd)
-  declare -A RECORDED UP LOCAL HEADER MOVED_TO
-  MAN_IN=$MANIFEST
-  [ -f "$TARGET/$MANIFEST" ] || MAN_IN=$OLD_MANIFEST
-  body=0
-  while IFS= read -r line || [ -n "$line" ]; do
-    line=${line%$'\r'}
-    if [ $body -eq 0 ]; then
-      [ -z "$line" ] && { body=1; continue; }
-      HEADER[${line%%=*}]=${line#*=}
-    else
-      [ -n "$line" ] || continue
-      RECORDED[${line:66}]=${line:0:64}
-    fi
-  done < "$TARGET/$MAN_IN"
+  declare -A UP LOCAL MOVED_TO
+  read_manifest "$TARGET"
   INST_ADAPTER=${HEADER[adapter]:-}
   # the instance's name: its workspace file's, else the directory's
   INST_NAME=""
@@ -250,7 +362,20 @@ if [ "$MODE" = update ]; then
 
   UPDIR=$(mktmp)
   lay_core "$UPDIR" "$INST_ADAPTER" "$INST_NAME" || die "cannot lay out the release's core files (nothing written)"
-  while IFS= read -r l; do UP[${l:66}]=${l:0:64}; done < <(core_list "$UPDIR" "$INST_ADAPTER" | hashes "$UPDIR")
+  # an adopted module rides beside the core, file by file; one the release dropped is
+  # reported once, and its files as any file the release no longer ships
+  MODS_OUT=()
+  for m in "${MODULES[@]}"; do
+    if has_payload "$m"; then
+      lay_module "$m" "$UPDIR" || die "cannot lay out module $m (nothing written)"
+      MODS_OUT+=("$m")
+    else
+      say "removed-upstream module $m (its files stay)"
+    fi
+  done
+  while IFS= read -r l; do UP[${l:66}]=${l:0:64}; done < <(
+    { core_list "$UPDIR" "$INST_ADAPTER"; for m in "${MODS_OUT[@]}"; do module_list "$UPDIR" "$m"; done; } \
+      | LC_ALL=C sort -u | hashes "$UPDIR")
   present=()
   for p in "${!RECORDED[@]}" "${!UP[@]}"; do [ -f "$TARGET/$p" ] && present+=("$p"); done
   while IFS= read -r l; do
@@ -265,24 +390,6 @@ if [ "$MODE" = update ]; then
   }
 
   # -- the move rule: a recorded path the release moved (MOVES) goes to its new name first
-  MV_OLD=() MV_NEW=()
-  if [ -f "$SRC/MOVES" ]; then
-    while read -r o n _ || [ -n "$o" ]; do
-      case "$o" in ''|'#'*) continue ;; esac
-      MV_OLD+=("$o"); MV_NEW+=("${n%$'\r'}")
-    done < "$SRC/MOVES"
-  fi
-  moved_path() {   # moved_path <path>: its name in this release, through MOVES
-    local p=$1 i o
-    for i in "${!MV_OLD[@]}"; do
-      o=${MV_OLD[$i]}
-      case "$o" in
-        */) case "$p" in "$o"*) p=${MV_NEW[$i]}${p#"$o"} ;; esac ;;
-        *)  [ "$p" = "$o" ] && p=${MV_NEW[$i]} ;;
-      esac
-    done
-    printf '%s' "$p"
-  }
   while IFS= read -r p; do
     [ -n "$p" ] || continue
     q=$(moved_path "$p")
@@ -358,12 +465,7 @@ if [ "$MODE" = update ]; then
   manifest_tmp="$TARGET/$MANIFEST.tmp"
   mkdir -p "$TARGET/$(dirname "$MANIFEST")" || die "creating $(dirname "$MANIFEST")/; $done_n core file(s) were written"
   {
-    say "upstream=${HEADER[upstream]:-$UPSTREAM}"
-    say "ref=$SRC_REF"
-    say "installed=${HEADER[installed]:-unknown}"
-    [ -n "$INST_ADAPTER" ] && say "adapter=$INST_ADAPTER"
-    say "updated=$TODAY"
-    say ""
+    manifest_header "$SRC_REF" "${HEADER[installed]:-unknown}" "$INST_ADAPTER" "$TODAY" "${MODS_OUT[@]}"
     printf '%s\n' "${NEWHASH[@]}" | LC_ALL=C sort -k2
   } > "$manifest_tmp" && mv "$manifest_tmp" "$TARGET/$MANIFEST" \
     || die "rewriting $MANIFEST; $done_n core file(s) were written"
@@ -379,7 +481,108 @@ if [ "$MODE" = update ]; then
   done
   say "$summary"
   advice
-  say "manifest: ref=$SRC_REF, ${#NEWHASH[@]} core files"
+  nmod=0
+  for l in "${NEWHASH[@]}"; do
+    for m in "${MODS_OUT[@]}"; do
+      case "${l:66}" in "$(module_dest "$m")"/*) nmod=$((nmod + 1)); break ;; esac
+    done
+  done
+  say "manifest: ref=$SRC_REF, $((${#NEWHASH[@]} - nmod)) core files${MODS_OUT[*]:+, $nmod module files (${MODS_OUT[*]})}"
+  exit 0
+fi
+
+# =====================================================================================
+# adopt
+# =====================================================================================
+if [ "$MODE" = adopt ]; then
+  TARGET=$(cd "$TARGET" && pwd)
+  read_manifest "$TARGET"
+  [ "$MAN_IN" = "$MANIFEST" ] \
+    || refuse "the manifest is at the instance root, as an older release left it: update the instance to this release first (init.sh --update)"
+  case "$ADOPT" in
+    change-log) refuse "module 'change-log' is never adopted into an instance: copy its post-merge.yml into each repository's .github/workflows/ (SETUP.md, the change-log step)" ;;
+    .|..|*/*|*\\*) refuse "--adopt: not a module name: '$ADOPT'" ;;
+  esac
+  if [ ! -d "$SRC/modules/$ADOPT" ]; then
+    { say "modules in this release:"; module_names; } >&2
+    refuse "unknown module '$ADOPT'"
+  fi
+  has_payload "$ADOPT" || refuse "module '$ADOPT' has no payload in this release"
+  DEST=$(module_dest "$ADOPT")
+  case "$DEST" in
+    private/*) [ -d "$TARGET/private" ] || refuse "module '$ADOPT' goes into the private tree, and $TARGET has none" ;;
+  esac
+  for m in "${MODULES[@]}"; do
+    [ "$m" = "$ADOPT" ] && refuse "module '$ADOPT' is already recorded in $MANIFEST: --update refreshes it"
+  done
+
+  # The release's copy is staged whole and hashed before anything is written. The module is
+  # then fresh (nothing there), present (its directory exists: recorded, nothing copied), or at
+  # the old place MOVES names for its directory (moved file by file, as an update moves the core).
+  STAGE=$(mktmp)
+  lay_module "$ADOPT" "$STAGE" || die "cannot lay out module $ADOPT (nothing written)"
+  HASHES=$(module_list "$STAGE" "$ADOPT" | hashes "$STAGE")
+  OLDDEST=$(old_path "$DEST")
+  if [ -d "$TARGET/$DEST" ]; then how=present
+  elif [ -n "$OLDDEST" ] && [ -d "$TARGET/$OLDDEST" ]; then how=old
+  else how=fresh; fi
+  WRITE=() UNLINK=()
+  n_files=0 n_match=0 n_diff=0 n_miss=0 n_mv=0 n_kept=0 n_add=0
+  while IFS= read -r l; do
+    [ -n "$l" ] || continue
+    h=${l:0:64} p=${l:66}; n_files=$((n_files + 1))
+    case "$how" in
+      fresh) WRITE+=("$p") ;;
+      present)
+        if [ ! -f "$TARGET/$p" ]; then say "missing $p"; n_miss=$((n_miss + 1))
+        elif [ "$(sha256sum < "$TARGET/$p" | cut -c1-64)" = "$h" ]; then say "matches $p"; n_match=$((n_match + 1))
+        else say "differs $p"; n_diff=$((n_diff + 1)); fi ;;
+      old)
+        o=$OLDDEST${p#"$DEST"}
+        if [ ! -f "$TARGET/$o" ]; then say "added $p"; n_add=$((n_add + 1)); WRITE+=("$p")
+        elif [ "$(sha256sum < "$TARGET/$o" | cut -c1-64)" = "$h" ]; then
+          say "moved $o -> $p"; n_mv=$((n_mv + 1)); WRITE+=("$p"); UNLINK+=("$o")
+        else
+          say "kept $o (differs from the release; moved to $p)"; n_kept=$((n_kept + 1)); WRITE+=("$p")
+        fi ;;
+    esac
+  done <<< "$HASHES"
+  case "$how" in
+    fresh)   summary="adopted $ADOPT: $n_files file(s) laid at $DEST/" ;;
+    present) summary="recorded $ADOPT, already at $DEST/: $n_match match, $n_diff differ, $n_miss missing (nothing copied)" ;;
+    old)     summary="adopted $ADOPT from $OLDDEST/: $n_mv moved, $n_kept kept, $n_add added" ;;
+  esac
+  NEWMAN="$STAGE/.manifest"
+  {
+    manifest_header "${HEADER[ref]:-unknown}" "${HEADER[installed]:-unknown}" "${HEADER[adapter]:-}" \
+      "${HEADER[updated]:-}" "${MODULES[@]}" "$ADOPT"
+    { for p in "${!RECORDED[@]}"; do
+        case "$p" in "$DEST"/*) continue ;; esac   # the release's hashes stand for the module
+        printf '%s  %s\n' "${RECORDED[$p]}" "$p"
+      done
+      printf '%s\n' "$HASHES"; } | grep -v '^$' | LC_ALL=C sort -k2
+  } > "$NEWMAN" || die "staging the manifest (nothing written)"
+  if [ $DRY -eq 1 ]; then
+    for p in "${WRITE[@]}"; do say "would write $TARGET/$p"; done
+    say "$summary"
+    say "dry-run: nothing written to $TARGET"
+    exit 0
+  fi
+  done_n=0
+  for p in "${WRITE[@]}"; do
+    { mkdir -p "$TARGET/$(dirname "$p")" && cp "$STAGE/$p" "$TARGET/$p"; } \
+      || die "writing $p; $done_n file(s) before it were written, the manifest was not rewritten"
+    done_n=$((done_n + 1))
+  done
+  cp "$NEWMAN" "$TARGET/$MANIFEST.tmp" && mv "$TARGET/$MANIFEST.tmp" "$TARGET/$MANIFEST" \
+    || die "rewriting $MANIFEST; $done_n module file(s) were written"
+  for p in "${UNLINK[@]}"; do   # as the move rule: an old name whose file was the release's
+    rm -f "$TARGET/$p" || die "removing $p; $MANIFEST is written"
+    d=$(dirname "$p")
+    while [ "$d" != . ] && rmdir "$TARGET/$d" 2>/dev/null; do d=$(dirname "$d"); done
+  done
+  say "$summary"
+  say "manifest: module=$ADOPT, $n_files file(s) hashed"
   exit 0
 fi
 
@@ -561,11 +764,7 @@ residue=$(
 CORE=$(core_list "$STAGE" "$ADAPTER" | hashes "$STAGE")
 NCORE=$(printf '%s\n' "$CORE" | grep -c .)
 {
-  say "upstream=$UPSTREAM"
-  say "ref=$SRC_REF"
-  say "installed=$TODAY"
-  [ -n "$ADAPTER" ] && say "adapter=$ADAPTER"
-  say ""
+  manifest_header "$SRC_REF" "$TODAY" "$ADAPTER" ""
   printf '%s\n' "$CORE"
 } > "$STAGE/$MANIFEST"
 
