@@ -39,7 +39,7 @@ Two habits keep this cheap:
 - **Reading means descending.** Start at the root file and follow `.index.md` files down. When you do not know where something lives, resolve its tags with the search tool rather than crawling directories. The same tool answers what cites a leaf (its backlinks) and which leaves carry a marker line, such as every review date older than a given day.
 - **Writing is one action.** A leaf, its Contents row and any new tags land together, in the deepest branch that fits. A leaf with no row cannot be found; a row with no leaf is a lie.
 
-The grammar is written out as plain documents an instance carries under `rules/`, and `HYGIENE.md` lists every check the linter makes against it.
+The grammar is written out as plain documents an instance carries under `common/rules/`, and `common/HYGIENE.md` lists every check the linter makes against it.
 
 ## The tiers
 
@@ -99,13 +99,17 @@ A software shop might use `apps sites`; a consultancy might use `clients`. Each 
 
 ## What an instance tells an agent
 
-An instance's root carries two short pages for two readers. `README.md` is for a person who has never seen the method: what the tree is, where to start (a product's feature log), how to search, how to file, the two trees. The deployer names it after the instance, and it is a core file, so an update keeps the owner's edits to it. `AGENTS.md` is the one instruction every agent session reads first: read `.conf`, read the journal's status page if this machine has one, descend indexes and never crawl, resolve tags with the search tool, obey a branch's standing orders, route a new document by its kind, write a leaf with its row and its tags as one action, and the laws above. It stays short because the law lives in `rules/` and the checks in `HYGIENE.md`. The core never names an agent harness; an adapter adds what one harness can enforce.
+An instance's root carries two short pages for two readers. `README.md` is for a person who has never seen the method: what the tree is, where to start (a product's feature log), how to search, how to file, the two trees. The deployer names it after the instance, and it is a core file, so an update keeps the owner's edits to it. `AGENTS.md` is the one instruction every agent session reads first: read `.conf`, read the journal's status page if this machine has one, descend indexes and never crawl, resolve tags with the search tool, obey a branch's standing orders, route a new document by its kind, write a leaf with its row and its tags as one action, and the laws above. It stays short because the law lives in `common/rules/` and the checks in `common/HYGIENE.md`. The core never names an agent harness; an adapter adds what one harness can enforce.
 
 ## Deploying and updating
 
 `init.sh`, at the root of a release, is the one deployer and the one unpack. Given a target directory and a `.conf`, it copies the skeleton, resolves every placeholder from your catalogs and your details, runs `git init` inside the private mirror, writes the workspace file and the editor settings, and records a manifest. It is bash, because the agent that runs it has bash wherever it runs. `--adapter <name>` lays one adapter's payload onto the tree; with no flag it lays down the neutral core and prints the list of adapters, never picking one. `SETUP.md` is the run-sheet an agent follows to do all of this: one command and one check per step, and the questions to ask first.
 
-The manifest, `.agentcontext` at the instance root, is what makes updates safe. It names the release installed and hashes every core file: the scripts, the rules, the templates, the editor settings, the instruction, the hygiene document and the reader page. `init.sh --update --ref <tag>` fetches a later release and, file by file, replaces what you never edited, keeps what you did and tells you so, adds what is new, and reports what the release dropped. It never touches `public/`, `private/`, `.conf` or the workspace file.
+An instance's root shows its trees and little else: `public/`, `private/`, an adopted `constitution/` and `graphs/`, the two pages above, `.conf`, the repository's own files and an adapter's directory. Everything the template ships and rolls forward sits in one directory, `common/`: the scripts, the rules, the templates, the hygiene document, the `.conf` example, adopted script modules and the manifest. An agent reads `AGENTS.md` and `.conf` and need not care about the rest of it.
+
+The manifest, `common/.agentcontext`, is what makes updates safe. It names the release installed and hashes every core file: everything under `common/`, the editor settings, the instruction and the reader page. `init.sh --update --ref <tag>` fetches a later release and, file by file, replaces what you never edited, keeps what you did and tells you so, adds what is new, and reports what the release dropped. It never touches `public/`, `private/`, `.conf` or the workspace file.
+
+A release that moves a core file says so in `MOVES`, one old and new path per line, kept cumulative so an instance that skipped a release still catches up. The update moves an untouched file to its new path and removes the old one, with any directory that leaves empty: the one deletion the deployer ever makes, and only of a file whose hash is the recorded one. An edited file stays where it is, beside the release's copy at the new path. When the update keeps a file, it names the migration guides in `migrations/`, one per release, which say what is left to do by hand.
 
 ## Adapters
 
