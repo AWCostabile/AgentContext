@@ -82,7 +82,7 @@ spelling with forward slashes) and the date it was seen. It is rewritten whole b
 
 ## Adoption
 
-Copy `modules/context-retention/` into the instance's `common/modules/`, run `init` from the instance root and answer
+Adopt it with the deployer, `bash init.sh --adopt context-retention --target <instance>` from a release (it lays the module at `common/modules/context-retention/` and records it in the manifest), run `init` from the instance root and answer
 the excludes question, then run `check` whenever a folder has been renamed or moved, or let an
 adapter run it at every session start. The core never depends on the module: an instance without
 it loses only the move report and the identity line; the first-touch rule in `AGENTS.md` stands

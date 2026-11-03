@@ -13,7 +13,7 @@ The seed rulings are written for no particular organisation: they are a reasonab
 
 ## Adopting it
 
-1. Copy `modules/constitution/tree/` to `<instance>/constitution/`.
+1. From a release, run `bash init.sh --adopt constitution --target <instance>`: it lays `tree/` at `<instance>/constitution/` and records the module in the instance's manifest, so an update replaces a seed still exactly as shipped and keeps every leaf you have changed.
 2. Read `constitution/articles/article.constitution.md` first, then the seed rulings.
 3. Keep what applies; delete what does not. Delete a whole rulings leaf, a single ruling, or an article whose rulings you dropped, and remove its Contents row in the same action. Amend a ruling's wording or a default number (caps, budgets, round limits) to what you will hold.
 4. Change each kept rulings leaf's `_status:_ seed — adopt, amend or delete` line to `_status:_ adopted YYYY-MM-DD`, and fill its manifest row's Created with the same date. The status line is what freezes a leaf: a pre-write guard that refuses edits under `constitution/history/` lets a leaf through while its first lines still read `_status:_ seed`, so prune and amend before you change the line, never after. Articles carry no status line: they stay current law and are edited as the law moves.
