@@ -233,8 +233,11 @@ for ex in "$SRC"/examples/*/; do
   check "example $name: cure.sh reports 0 fails" '[ $crc -eq 0 ]'
   # An example is a snapshot: the calendar smells (S01, S21) are judged as of the day its
   # manifest was last written, so the lint is the same on any day.
-  asof=$(sed -n 's/^updated=//p' "$ex/.agentcontext" | head -n 1)
-  [ -n "$asof" ] || asof=$(sed -n 's/^installed=//p' "$ex/.agentcontext" | head -n 1)
+  # The manifest sits under common/; an example laid before the common directory kept it at the root.
+  man="$ex/common/.agentcontext"; [ -f "$man" ] || man="$ex/.agentcontext"
+  asof=$(sed -n 's/^updated=//p' "$man" 2>/dev/null | head -n 1)
+  [ -n "$asof" ] || asof=$(sed -n 's/^installed=//p' "$man" 2>/dev/null | head -n 1)
+  check "example $name: its manifest names the snapshot date (${asof:-none})" '[ -n "$asof" ]'
   smells=$(bash "$SRC/scripts/smell.sh" --root "$ex" ${asof:+--today "$asof"} 2>/dev/null | grep '^\[SMELL ' || true)
   check "example $name: smell.sh reports 0 smells as of its snapshot date ${asof:-today}${smells:+ ($(printf '%s\n' "$smells" | head -n 1))}" '[ -z "$smells" ]'
   left=$(grep -rlE '\{\{[A-Za-z]' --exclude-dir=.git "$ex" | grep -v /templates/)
