@@ -20,8 +20,8 @@
 #                 default the current directory. -r <dir> is a synonym.
 #
 # -x takes a branch path relative to the root (`-x public/misc`); a path from the
-# current directory that lies inside the root is accepted too (`--root template
-# -x template/public`). -b takes a leaf the same two ways, or a bare basename when one
+# current directory that lies inside the root is accepted too (`--root blueprint
+# -x blueprint/public`). -b takes a leaf the same two ways, or a bare basename when one
 # leaf in scope carries it (an ambiguous basename lists the candidates and asks for a path).
 #
 # Scope: public/ always, plus the private branches .conf's PRIVATE_SCOPES opts in to

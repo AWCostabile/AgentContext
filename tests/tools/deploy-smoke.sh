@@ -54,12 +54,12 @@ echo "== deploy smoke — $(date '+%Y-%m-%d %H:%M') =="
 # -- 1. the committed tree is the source -------------------------------------------------
 [ -n "$(git status --porcelain)" ] && warn "the worktree is dirty; the smoke proves HEAD, not the worktree"
 mkdir -p "$SRC" && git archive HEAD | tar -x -C "$SRC"
-check "git archive of HEAD extracted as the source" '[ -f "$INIT" ] && [ -f "$SRC/template/AGENTS.md" ]'
+check "git archive of HEAD extracted as the source" '[ -f "$INIT" ] && [ -f "$SRC/blueprint/AGENTS.md" ]'
 
 # -- 2. deploy -------------------------------------------------------------------------------
 # PRIVATE_SCOPES and ORCH_BUDGET are dropped so the deployer has to derive them.
 sed -e 's/^CATALOGS=.*/CATALOGS="products projects"/' -e '/^PRIVATE_SCOPES=/d' -e '/^ORCH_BUDGET=/d' \
-  "$REPO/template/.conf.example" > "$CONF"
+  "$REPO/blueprint/.conf.example" > "$CONF"
 I1="$TMP/instance"
 out=$(bash "$INIT" --from "$SRC" --target "$I1" --conf "$CONF" --name Example 2>&1); rc=$?
 printf '%s\n' "$out" | sed 's/^/       /'
