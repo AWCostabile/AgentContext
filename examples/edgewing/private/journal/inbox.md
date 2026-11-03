@@ -9,4 +9,8 @@ its own. An item older than 14 days is a smell (S21).
 
 ## Mine
 
+- 2026-11-04 — winter flying: ask the two clubs whether a short day's sheet should still print a full page
+
 ## Candidates
+
+- 2026-11-04 — a ruling on the sheet's column order, once the day's sheet merges: it was settled with the owner in the plan, and no rulings leaf holds it yet
