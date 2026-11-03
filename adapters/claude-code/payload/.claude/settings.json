@@ -5,9 +5,9 @@
   },
   "permissions": {
     "allow": [
-      "Bash(bash scripts/find.sh:*)",
-      "Bash(bash scripts/cure.sh:*)",
-      "Bash(bash scripts/smell.sh:*)",
+      "Bash(bash common/scripts/find.sh:*)",
+      "Bash(bash common/scripts/cure.sh:*)",
+      "Bash(bash common/scripts/smell.sh:*)",
       "Bash(git status:*)",
       "Bash(git log:*)",
       "Bash(git diff:*)",

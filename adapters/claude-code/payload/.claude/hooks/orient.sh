@@ -1,13 +1,13 @@
 #!/bin/bash
 # orient.sh — SessionStart: hand the session its bearings in at most 45 lines.
-#   (a) the first line: the VERDICT of scripts/cure.sh --fast, so the session opens
+#   (a) the first line: the VERDICT of common/scripts/cure.sh --fast, so the session opens
 #       knowing whether the tree is structurally sound; then, when the instance has
-#       scripts/review.sh, its one-line brief: the smell count, the inbox, the stale and
+#       common/scripts/review.sh, its one-line brief: the smell count, the inbox, the stale and
 #       uncited leaves, the retro pressure, the unpushed branches, the newest entry
 #   (b) the work journal's status page, private/journal/latest.md, when this machine
 #       has one; nothing when it does not
 #   (c) private tree only: the retro pressure, how many manifest rows landed after
-#       the newest retro leaf (scripts/lib-manifest.sh); every landed row counts
+#       the newest retro leaf (common/scripts/lib-manifest.sh); every landed row counts
 #       while no retro exists
 #   (d) one line per repository: this one, its nested private repository when
 #       present, and every sibling directory with a .git:
@@ -33,11 +33,11 @@ add() { text+="$1"$'\n'; }
 
 # (a) the tree verdict, first
 verdict=""
-[ -f "$ROOT/scripts/cure.sh" ] \
-  && verdict=$(cd "$ROOT" && timeout 30 bash scripts/cure.sh --fast 2>/dev/null | grep '^== VERDICT' | tail -1)
+[ -f "$ROOT/common/scripts/cure.sh" ] \
+  && verdict=$(cd "$ROOT" && timeout 30 bash common/scripts/cure.sh --fast 2>/dev/null | grep '^== VERDICT' | tail -1)
 add "Knowledge tree orient — cure.sh --fast: ${verdict:-unavailable}"
-if [ -f "$ROOT/scripts/review.sh" ]; then
-  brief=$(cd "$ROOT" && timeout 40 bash scripts/review.sh --brief 2>/dev/null | tail -n 1)
+if [ -f "$ROOT/common/scripts/review.sh" ]; then
+  brief=$(cd "$ROOT" && timeout 40 bash common/scripts/review.sh --brief 2>/dev/null | tail -n 1)
   [ -n "$brief" ] && add "$brief"
 fi
 
@@ -52,8 +52,8 @@ if [ -f "$JOURNAL" ]; then
 fi
 
 # (c) the retro pressure: a fact about the private tree, silent without one
-if [ -f "$ROOT/scripts/lib-manifest.sh" ]; then
-  . "$ROOT/scripts/lib-manifest.sh"
+if [ -f "$ROOT/common/scripts/lib-manifest.sh" ]; then
+  . "$ROOT/common/scripts/lib-manifest.sh"
   if has_mirror; then
     last=$(last_retro_leaf)
     if [ -n "$last" ]; then

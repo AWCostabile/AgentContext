@@ -5,7 +5,7 @@ module's: `constitution/process/ground-rules.orchestrator.md` for the session an
 `constitution/process/kickoff-guide.md` for a kickoff's anatomy and gates. Read both first;
 nothing in them is restated here. This file says only what the Claude Code harness adds.
 Where the module is not adopted, the kickoff itself carries the rules this file leans on.
-Two siblings carry the rest: `WORKER.md` for every subagent, `CLOSEOUT.md` for the end.
+Two siblings carry the rest: `.claude/process/WORKER.md` for every subagent, `.claude/process/CLOSEOUT.md` for the end.
 
 ## How this file reaches you
 
@@ -20,11 +20,11 @@ Two siblings carry the rest: `WORKER.md` for every subagent, `CLOSEOUT.md` for t
 
 ## Routing to the three profiles
 
-- **The Agent tool spawns a subagent by `subagent_type`**: `implementer-deep` (design-sensitive,
+- **The Agent tool spawns a subagent by `subagent_type`**: `principal` (design-sensitive,
   unfamiliar or cross-cutting work), `implementer` (well-scoped feature work, the default),
   `mechanic` (renames, scaffolds, documentation sync). Name the one you chose in one line.
   (source: constitution/history/rulings/rulings.agents-and-budgets.md)
-- **Every spawn prompt's second line is `Ground rules: WORKER.md`**; the prompt restates
+- **Every spawn prompt's second line is `Ground rules: .claude/process/WORKER.md`**; the prompt restates
   nothing that file says and pastes the two or three facts the job needs.
 - **Model rides the profile**; the Agent tool's `model` parameter overrides it per call.
 - **Each subagent gets its own scratch subdirectory** of the session scratchpad, named in its
@@ -61,7 +61,7 @@ Two siblings carry the rest: `WORKER.md` for every subagent, `CLOSEOUT.md` for t
   record by `cp` plus its manifest row; `KNOWLEDGE_TREE_TIER_OVERRIDE=1` is for a deliberate
   exception, stated in the report.
   (source: constitution/history/rulings/rulings.tiers-and-records.md)
-- **`lint-on-write`** runs `scripts/cure.sh --fast` after every write into the tree and hands
+- **`lint-on-write`** runs `common/scripts/cure.sh --fast` after every write into the tree and hands
   back the FAIL lines: fix them in the same action.
   (source: constitution/history/rulings/rulings.hygiene-and-gates.md)
 
@@ -74,7 +74,7 @@ Two siblings carry the rest: `WORKER.md` for every subagent, `CLOSEOUT.md` for t
   (source: constitution/history/rulings/rulings.commits-and-pull-requests.md)
 - **Git from the Bash tool names its repository**: `git -C <path> …`, because a `cd` does
   not reliably carry between calls. Interactive flags (`rebase -i` with an editor,
-  `add -i`) cannot run here; `CLOSEOUT.md` has the non-interactive fold.
+  `add -i`) cannot run here; `.claude/process/CLOSEOUT.md` has the non-interactive fold.
   (source: constitution/history/rulings/rulings.agents-and-budgets.md)
 
 ## Model recommendation
@@ -83,4 +83,4 @@ A kickoff's model line sits after its fenced prompt, never inside it: the most c
 the account offers, thinking enabled, for dense or format-changing work; `opus`, thinking
 enabled, for standard work whose shape the brief fixes. Subagents ride their profiles.
 
-When the proof run is done, read `CLOSEOUT.md`.
+When the proof run is done, read `.claude/process/CLOSEOUT.md`.

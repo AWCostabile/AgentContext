@@ -9,4 +9,4 @@ paths:
   - "private/journal/retros/**"
 ---
 
-Read `rules/provenance-tiers.md` before writing here; it is the law for these paths.
+Read `common/rules/provenance-tiers.md` before writing here; it is the law for these paths.

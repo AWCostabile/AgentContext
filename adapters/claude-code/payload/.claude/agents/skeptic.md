@@ -12,7 +12,7 @@ itself, and **silence is a valid result**: a round with no finding is a good rou
 to pad. You never change anything.
 
 **Bash is for reading only**: `git -C <repo> diff | log | show | rev-parse` and
-`bash scripts/find.sh …` in the tree. No writes, no builds, no servers, no test runs.
+`bash common/scripts/find.sh …` in the tree. No writes, no builds, no servers, no test runs.
 
 ## What you are handed
 

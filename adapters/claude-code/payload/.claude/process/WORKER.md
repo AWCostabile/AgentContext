@@ -8,7 +8,7 @@ harness adds. Your prompt says what the job is.
 
 ## Commits
 
-- **No attribution trailer** while `KICKOFF.md`'s "Attribution trailers" line reads `off`:
+- **No attribution trailer** while `.claude/process/KICKOFF.md`'s "Attribution trailers" line reads `off`:
   it overrides the harness's per-session reminder to add a `Co-Authored-By` line.
   (source: constitution/history/rulings/rulings.commits-and-pull-requests.md)
 - **A fixup is a plain commit**: `git -C <repo> commit --fixup=<sha> -- <paths>`. Never run

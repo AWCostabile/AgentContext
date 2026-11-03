@@ -3,7 +3,7 @@
 Read when the proof run is done. The neutral rules are the constitution module's
 `constitution/process/ground-rules.closeout.md`: the walkthrough, the fold, the close-out
 check, the review loop, the filings and the landing. Read it first; nothing in it is restated
-here. This file says only what the Claude Code harness adds. `WORKER.md` still governs every
+here. This file says only what the Claude Code harness adds. `.claude/process/WORKER.md` still governs every
 subagent, the riders included.
 
 ## The fold, from the Bash tool
@@ -38,7 +38,7 @@ subagent, the riders included.
 - **Use `/file`** (or the `filer` subagent) for every leaf, so its Contents row, tags and the
   private repository's commit come with it.
 - **Use `/retro`** when the landing closes an epic's last row; it hands the window to the
-  `brainiac` subagent. (source: constitution/history/rulings/rulings.waves-and-close-out.md)
+  `historian` subagent. (source: constitution/history/rulings/rulings.waves-and-close-out.md)
 
 ## Releasing the branch
 

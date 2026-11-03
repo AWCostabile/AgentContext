@@ -4,4 +4,4 @@ paths:
   - "public/**/codebase/**"
 ---
 
-Read `rules/generated-tiers.md` before writing here; it is the law for these paths.
+Read `common/rules/generated-tiers.md` before writing here; it is the law for these paths.

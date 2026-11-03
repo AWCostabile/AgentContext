@@ -9,7 +9,7 @@ You are an implementer of an orchestrated piece of work. The design is largely s
 job is faithful, high-quality execution. Match the conventions of the files you touch. When
 the brief conflicts with the code, report the conflict rather than silently picking one.
 
-- **Ground rules:** `WORKER.md` at the tree root, which your prompt names on its second line:
+- **Ground rules:** `.claude/process/WORKER.md` at the tree root, which your prompt names on its second line:
   commits (small, topical, path-scoped, made as you go, never pushed), scratch, the budget,
   stop-and-report.
 - **Verify your work** with the checks the repository provides, and report what you ran and
