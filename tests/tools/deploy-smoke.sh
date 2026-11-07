@@ -346,7 +346,11 @@ check "every path the run-sheet names under the pinned release exists in $REL${m
 # land without the fixture that proves it. It runs from the archive, so HEAD is what is proved.
 # Its stdin is held open and never written, as a backgrounded shell's can be: a script that
 # reads stdin when it was handed no file hangs there, and the timeout turns that into a fail.
-out=$(sleep 300 | timeout 240 bash "$SRC/tests/check.sh" 2>&1); rc=$?
+# The open end is a process substitution on its own descriptor, killed afterwards, so the check
+# takes its own time rather than the sleep's (a pipeline would wait for every member).
+exec 3< <(exec sleep 300); held=$!
+out=$(timeout 240 bash "$SRC/tests/check.sh" <&3 3<&- 2>&1); rc=$?
+exec 3<&-; kill "$held" 2>/dev/null
 check "tests/check.sh reports 0 fails, with stdin held open${rc:+ ($( [ $rc -eq 124 ] && printf 'timed out: a script read stdin' || printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
 check "the fixture's CRLF leaf kept its bytes through git archive" \
   '[ "$(awk -v BINMODE=3 "/\r$/" "$SRC/tests/fixture/public/misc/leaves/crlf.md" | wc -l | tr -d " ")" = 6 ]'
