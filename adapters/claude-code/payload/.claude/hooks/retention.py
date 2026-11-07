@@ -11,7 +11,7 @@ import re
 import shutil
 import sys
 
-META = "modules/context-retention/meta.sh"
+META = "common/modules/context-retention/meta.sh"
 
 
 def encode(path):

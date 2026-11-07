@@ -57,12 +57,12 @@ and leave the reasoning to the article they implement:
 | Operative file | Implements |
 | --- | --- |
 | `AGENTS.md` at the root | the constitution as a whole |
-| `rules/branch-grammar.md`, `templates/` | [tree structure](./article.tree-structure.md), [the branch grammar](./article.branch-grammar.md) |
-| `rules/provenance-tiers.md`, `rules/design-tier.md` | [the tiers](./article.tiers.md) |
-| `rules/generated-tiers.md` | [generated tiers](./article.generated-tiers.md) |
-| `rules/feature-log.md` | [the feature log](./article.feature-log.md) |
-| `rules/active-work.md` | [the work journal](./article.work-journal.md) |
-| `HYGIENE.md`, `scripts/` | [hygiene](./article.hygiene.md) |
+| `common/rules/branch-grammar.md`, `common/templates/` | [tree structure](./article.tree-structure.md), [the branch grammar](./article.branch-grammar.md) |
+| `common/rules/provenance-tiers.md`, `common/rules/design-tier.md` | [the tiers](./article.tiers.md) |
+| `common/rules/generated-tiers.md` | [generated tiers](./article.generated-tiers.md) |
+| `common/rules/feature-log.md` | [the feature log](./article.feature-log.md) |
+| `common/rules/active-work.md` | [the work journal](./article.work-journal.md) |
+| `common/HYGIENE.md`, `common/scripts/` | [hygiene](./article.hygiene.md) |
 | `constitution/process/` | [the wave ground rules](./article.wave-ground-rules.md), [rigour](./article.rigour.md) |
 | what an adapter lays down: guards, agent profiles, commands | the article each enforces (AG11) |
 
@@ -76,7 +76,7 @@ An operative file written for this instance cites its article near its top (BL13
 
 The core files a template release installs carry no citation line, so that an update can
 replace them cleanly; the table above is their citation. The core linter does not check the
-chain. An instance that wants it proven adds a check as `HYGIENE.md` describes ("Adding a
+chain. An instance that wants it proven adds a check as `common/HYGIENE.md` describes ("Adding a
 smell"); until then a reviewing agent checks it at every enactment.
 
 ## Citation forms

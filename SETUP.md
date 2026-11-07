@@ -79,7 +79,7 @@ If the deployer refuses, it exits 2 and the last line of its error output, prefi
 **Run**
 
 ```
-cd <path> && bash scripts/cure.sh && bash scripts/smell.sh --quiet && bash scripts/find.sh -l
+cd <path> && bash common/scripts/cure.sh && bash common/scripts/smell.sh --quiet && bash common/scripts/find.sh -l
 ```
 
 **Check**: `cure.sh` ends with `== VERDICT: 0 fail(s), 0 warning(s) ==`; `smell.sh` ends with `== SUMMARY: 0 smell(s)`; `find.sh -l` lists the tree's tags with their counts. Anything else is a deployer defect: tell the user and keep the output.
@@ -98,7 +98,7 @@ cd <path> && git init -b main && git add -A && git commit -m "chore: a knowledge
 
 **Run**: open `<path>/<RepositoryName>.code-workspace` in the editor. It holds the tree and, when present, the private tree as two folders; `.vscode/` carries the recommended extensions and the settings for Markdown and search.
 
-**Check**: the editor shows `AGENTS.md` at the root. That file is the instruction every agent session in this tree reads first. The tree is usable from here: the user's first product is `templates/product` copied into a catalog. The steps below are optional modules, in the order they are best adopted: what concerns the instance and this machine first, then the process law, then the repository's workflow, then the two generated tiers with their installs.
+**Check**: the editor shows `AGENTS.md` at the root. That file is the instruction every agent session in this tree reads first. The tree is usable from here: the user's first product is `common/templates/product` copied into a catalog. The steps below are optional modules, in the order they are best adopted: what concerns the instance and this machine first, then the process law, then the repository's workflow, then the two generated tiers with their installs.
 
 ## 7. Project context retention (optional)
 
@@ -117,13 +117,13 @@ cd <path> && for f in ../*/CLAUDE.md ../*/AGENTS.md; do [ -f "$f" ] && wc -c < "
 **Run** (from the instance root; `--yes` or `--no` carries the first answer when the user is not at the terminal)
 
 ```
-cp -R AgentContext-0.4.0/modules/context-retention <path>/modules/context-retention && cd <path>
-bash modules/context-retention/meta.sh init
+cp -R AgentContext-0.4.0/modules/context-retention <path>/common/modules/context-retention && cd <path>
+bash common/modules/context-retention/meta.sh init
 ```
 
 Pass the folders from the second answer as paths after `init` when the user named fewer than the workspace file does.
 
-**Check**: `<path>/.agents/.id.meta` exists and is exactly three lines, `id=`, `name=` and `created=`, with no path in it; each named folder has one too; `bash modules/context-retention/meta.sh check` ends with `0 fail(s)` and one `[ OK ]` line per project; `bash modules/context-retention/meta.sh list` prints one row per project with its path; with a yes to the first question, `git -C <path> status --short` does not list `.agents/`, and `git config --global core.excludesFile` names a file containing the line `.agents/.id.meta`. Nothing of this is committed: the identity is this user's, and the map is this machine's.
+**Check**: `<path>/.agents/.id.meta` exists and is exactly three lines, `id=`, `name=` and `created=`, with no path in it; each named folder has one too; `bash common/modules/context-retention/meta.sh check` ends with `0 fail(s)` and one `[ OK ]` line per project; `bash common/modules/context-retention/meta.sh list` prints one row per project with its path; with a yes to the first question, `git -C <path> status --short` does not list `.agents/`, and `git config --global core.excludesFile` names a file containing the line `.agents/.id.meta`. Nothing of this is committed: the identity is this user's, and the map is this machine's.
 
 **With the Claude Code adapter, measure the prompt-cache lifetime too.** An orchestrating session that waits on a delegated job for longer than the cache lives pays a cold write of its whole prompt on its next turn; the harness caches for five minutes by default on an API key or a cloud provider, and for an hour on a subscription within its plan.
 
@@ -140,7 +140,7 @@ The constitution is the tree's law about itself: starting rulings, the articles 
 **Run**
 
 ```
-cp -R AgentContext-0.4.0/modules/constitution/tree <path>/constitution && cd <path> && bash scripts/cure.sh
+cp -R AgentContext-0.4.0/modules/constitution/tree <path>/constitution && cd <path> && bash common/scripts/cure.sh
 ```
 
 Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
@@ -175,12 +175,12 @@ The codebase module keeps a generated code map of a product's repository in the 
 **Run** (from the instance root, once per product; `<repository>` is the product's checkout beside it)
 
 ```
-cp -R AgentContext-0.4.0/modules/codebase <path>/modules/codebase && cd <path>
-python modules/codebase/codebase.py --repo ../<repository> --into public/<catalog>/<Product>/codebase \
+cp -R AgentContext-0.4.0/modules/codebase <path>/common/modules/codebase && cd <path>
+python common/modules/codebase/codebase.py --repo ../<repository> --into public/<catalog>/<Product>/codebase \
   --profile ../<repository>/codebase.profile.json --write-agent
 ```
 
-Write the profile first, at the repository's root: the product's name, its areas (a name and the path prefixes it claims) and the surfaces the map lists. `modules/codebase/README.md` gives the shape; without a profile each top-level directory is an area. Then add one row to the product's `.index.md`:
+Write the profile first, at the repository's root: the product's name, its areas (a name and the path prefixes it claims) and the surfaces the map lists. `common/modules/codebase/README.md` gives the shape; without a profile each top-level directory is an area. Then add one row to the product's `.index.md`:
 
 ```
 | [<Product> code base](./codebase/.index.md) | the generated code map: areas, surfaces, symbols; never hand-edited |
@@ -199,11 +199,11 @@ The graphify module keeps one Graphify knowledge graph per repository in the tre
 **Run** (from the instance root; `<slug>` a short lowercase name per repository)
 
 ```
-cp -R AgentContext-0.4.0/modules/graphify <path>/modules/graphify && cd <path>
+cp -R AgentContext-0.4.0/modules/graphify <path>/common/modules/graphify && cd <path>
 printf 'GRAPHS="<slug>=../<repository>"\n' >> .conf
-bash modules/graphify/graphs.sh home <slug>
+bash common/modules/graphify/graphs.sh home <slug>
 uv tool install "graphifyy[mcp]" && graphify install
-bash modules/graphify/graphs.sh scan
+bash common/modules/graphify/graphs.sh scan
 ```
 
 `home` seeds the repository's `.graphifyignore` and its `graphify-out/` ignore line, links `graphify-out` into `graphs/<slug>/live/` (a junction on Windows, a symlink elsewhere), scaffolds `graphs/` and appends the `graphs/` block to the instance's `.gitignore`. The user edits the seeded `.graphifyignore` (dependencies, build output, generated code; `graphify-out/` stays). Then add one row to the table in `AGENTS.md`:
@@ -214,13 +214,15 @@ bash modules/graphify/graphs.sh scan
 
 The install line is the user's: `graphify install` registers the `/graphify` skill with their assistant (`--platform <name>` for one other than its default), and the query server is registered once over `~/.graphify/global-graph.json`, which `scan` keeps current; `modules/graphify/README.md` says how. Pin the version `scan` reports with `GRAPHIFY_VERSION=` in `.conf` so every machine builds the same graph.
 
-**Check**: `bash modules/graphify/graphs.sh check` ends with 0 fails and the snapshot current; `graphs/.index.md` carries one row per repository with its counts and commit; in each repository `git status` shows only `.graphifyignore` and the `.gitignore` line as new, never `graphify-out/`; `cure.sh` still ends with 0 fails. Commit `graphs/` here and the two files there.
+**Check**: `bash common/modules/graphify/graphs.sh check` ends with 0 fails and the snapshot current; `graphs/.index.md` carries one row per repository with its counts and commit; in each repository `git status` shows only `.graphifyignore` and the `.gitignore` line as new, never `graphify-out/`; `cure.sh` still ends with 0 fails. Commit `graphs/` here and the two files there.
 
 The snapshot is regenerated with `scan` at the landing of the change that moved the source, never hand-edited; the live layer may run ahead through the repository's hooks, and `check` says when it does.
 
 ## How to update
 
-A release of the template changes the core files an instance received: `scripts/`, `rules/`, `templates/`, `.vscode/`, `AGENTS.md`, `HYGIENE.md`, `.conf.example` and an adapter's payload. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `.agentcontext` at the instance root records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone.
+A release of the template changes the core files an instance received: everything under `common/` (`scripts/`, `rules/`, `templates/`, `HYGIENE.md`, `.conf.example`), `.vscode/`, `AGENTS.md`, `README.md` and an adapter's payload. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `common/.agentcontext` records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone. (An instance deployed before the common directory keeps its manifest at the root; the update reads it there and rewrites it under `common/`.)
+
+Always run the update with the **new** release's `init.sh`: an older one cannot read a newer layout. When the update keeps a file, it names the migration guides that apply (`migrations/<version>.md` in the template repository, one per release, read in order from the instance's own); they say what to finish by hand.
 
 **Run** (with the new tag; the deployer fetches that release itself)
 
@@ -229,14 +231,16 @@ curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/<tag>.t
 bash AgentContext-<tag without v>/init.sh --update --target <path> --ref <tag>
 ```
 
-**Check**: the report ends with `update: N replaced, N kept, N added, N removed-upstream` and then `manifest: ref=<tag>, N core files`, one line per file above them:
+**Check**: the report ends with `update: N moved, N replaced, N kept, N added, N removed-upstream` and then `manifest: ref=<tag>, N core files`, one line per file above them:
 
+- `moved <old> -> <new>`: a core file the release moved (its `MOVES` file lists them), never edited by the user: written at the new path, the old one removed with any directory it leaves empty. It is the only thing the update deletes;
+- `kept <old> (changed locally; moved to <new>)`: a moved file the user edited; it stays at its old path, the release's copy is written at the new one, and the user brings the change across and deletes the old file;
 - `replaced`: a core file the user never edited, now the new release's version;
 - `kept … (changed locally)`: a core file the user edited; it is left as it was, and the user merges   the release's version by hand if they want it (`deleted locally` and `exists locally` are the same outcome for a file the user removed, or created before the release shipped one);
 - `added`: a core file new in this release;
 - `removed-upstream`: a core file the release no longer ships; the local copy stays.
 
-Then run step 4 again (`cure.sh` at 0 fails) and commit:
+After the summary, `run bash common/scripts/cure.sh: N kept file(s) may name moved paths` means an edited root document (an `AGENTS.md`, say) still names old paths, and `guide: migrations/<version>.md` names each guide to read. Then run step 4 again (`cure.sh` at 0 fails) and commit:
 
 ```
 cd <path> && git add -A && git commit -m "chore: core files updated to <tag>"
@@ -246,7 +250,7 @@ cd <path> && git add -A && git commit -m "chore: core files updated to <tag>"
 
 ## What the deployer fills
 
-The skeleton carries `{{ }}` placeholders. The deployer resolves every one outside `templates/`:
+The skeleton carries `{{ }}` placeholders. The deployer resolves every one outside `common/templates/`:
 
 | Placeholder | Becomes |
 | --- | --- |
@@ -258,14 +262,14 @@ The skeleton carries `{{ }}` placeholders. The deployer resolves every one outsi
 | a `.tags` line that is a placeholder | removed |
 | the skeleton's set-up comments | removed; the deployer did what they describe |
 
-`templates/` keeps its placeholders on purpose: those files are copied by hand when a branch or a product is added, and the linter never reads them as part of the tree.
+`common/templates/` keeps its placeholders on purpose: those files are copied by hand when a branch or a product is added, and the linter never reads them as part of the tree.
 
 ## When a step refuses
 
 | Message | Meaning | What to do |
 | --- | --- | --- |
 | `target is not empty: <path> holds …` | the path exists and holds files other than `.conf` | choose another path, or empty it |
-| `no .conf: copy blueprint/.conf.example, fill it, pass --conf` | neither `--conf` nor `<path>/.conf` was found | step 2 |
+| `no .conf: copy blueprint/common/.conf.example, fill it, pass --conf` | neither `--conf` nor `<path>/.conf` was found | step 2 |
 | `missing key <KEY> in <conf>` | a required `.conf` line is absent or empty | fill it and run again |
 | `bad catalog …` | a `CATALOGS` entry is not `[a-z0-9-]`, is repeated, or is reserved (`catalog`, `misc`, `scratch-tools`) | rename it in `.conf` |
 | `adapter '<name>' has no payload in this release` | the adapter is a stub; the list printed above it says which are written | leave `--adapter` out, or pick one marked `written` |

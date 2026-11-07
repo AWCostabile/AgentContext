@@ -15,12 +15,12 @@
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 META_SH="$HERE/meta.sh"
 LIB=""
-for c in "$HERE/../../scripts/lib-scopes.sh" "$HERE/../../blueprint/scripts/lib-scopes.sh" "$PWD/scripts/lib-scopes.sh"; do
+for c in "$HERE/../../scripts/lib-scopes.sh" "$HERE/../../blueprint/scripts/lib-scopes.sh" "$PWD/scripts/lib-scopes.sh" "$HERE/../scripts/lib-scopes.sh" "$PWD/common/scripts/lib-scopes.sh"; do
   [ -f "$c" ] && { LIB=$c; break; }
 done
 [ -n "$LIB" ] || { echo "cannot find scripts/lib-scopes.sh beside the module" >&2; exit 2; }
 CURE=""
-for c in "$HERE/../../scripts/cure.sh" "$PWD/scripts/cure.sh"; do [ -f "$c" ] && { CURE=$c; break; }; done
+for c in "$HERE/../../scripts/cure.sh" "$PWD/scripts/cure.sh" "$HERE/../scripts/cure.sh" "$PWD/common/scripts/cure.sh"; do [ -f "$c" ] && { CURE=$c; break; }; done
 
 FAIL=0
 ok()   { printf '[ OK ] %s\n' "$1"; }
@@ -40,8 +40,8 @@ G=(git -c user.name=check -c user.email=check@example.invalid -c core.autocrlf=f
 echo "== context-retention module check — $(date '+%Y-%m-%d %H:%M') =="
 
 # -- the fake instance and two projects beside it -----------------------------------------------
-mkdir -p "$HOME_T" "$INST/scripts" "$INST/public/products" "$A/src" "$B"
-cp "$LIB" "$INST/scripts/lib-scopes.sh"
+mkdir -p "$HOME_T" "$INST/common/scripts" "$INST/public/products" "$A/src" "$B"
+cp "$LIB" "$INST/common/scripts/lib-scopes.sh"
 printf '%s\n' 'CATALOGS="products"' > "$INST/.conf"
 printf '%s\n' '# Public' '' '## Contents' '' '| File | Purpose |' '| ---- | ------- |' \
   '| [Products](./products/.index.md) | the products |' > "$INST/public/.index.md"

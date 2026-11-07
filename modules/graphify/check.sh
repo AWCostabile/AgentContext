@@ -17,12 +17,12 @@
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 GRAPHS_SH="$HERE/graphs.sh"
 LIB=""
-for c in "$HERE/../../scripts/lib-scopes.sh" "$HERE/../../blueprint/scripts/lib-scopes.sh" "$PWD/scripts/lib-scopes.sh"; do
+for c in "$HERE/../../scripts/lib-scopes.sh" "$HERE/../../blueprint/scripts/lib-scopes.sh" "$PWD/scripts/lib-scopes.sh" "$HERE/../scripts/lib-scopes.sh" "$PWD/common/scripts/lib-scopes.sh"; do
   [ -f "$c" ] && { LIB=$c; break; }
 done
 [ -n "$LIB" ] || { echo "cannot find scripts/lib-scopes.sh beside the module" >&2; exit 2; }
 CURE=""
-for c in "$HERE/../../scripts/cure.sh" "$PWD/scripts/cure.sh"; do [ -f "$c" ] && { CURE=$c; break; }; done
+for c in "$HERE/../../scripts/cure.sh" "$PWD/scripts/cure.sh" "$HERE/../scripts/cure.sh" "$PWD/common/scripts/cure.sh"; do [ -f "$c" ] && { CURE=$c; break; }; done
 
 FAIL=0
 ok()   { printf '[ OK ] %s\n' "$1"; }
@@ -41,8 +41,8 @@ same_dir() { [ "$(cd "$1" 2>/dev/null && pwd -P)" = "$(cd "$2" 2>/dev/null && pw
 echo "== graphify module check — $(date '+%Y-%m-%d %H:%M') =="
 
 # -- the fake instance and repository ---------------------------------------------------------------
-mkdir -p "$INST/scripts" "$INST/public/products" "$REPO/src"
-cp "$LIB" "$INST/scripts/lib-scopes.sh"
+mkdir -p "$INST/common/scripts" "$INST/public/products" "$REPO/src"
+cp "$LIB" "$INST/common/scripts/lib-scopes.sh"
 printf '%s\n' 'CATALOGS="products"' 'GRAPHS="lantern=../lantern"' > "$INST/.conf"
 printf '%s\n' "# This machine's development-cycle tree: a repository of its own." "/private/" \
   "# This machine's settings: who the user is and what search covers." "/.conf" > "$INST/.gitignore"

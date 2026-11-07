@@ -3,4 +3,4 @@ paths:
   - "public/**/design/**"
 ---
 
-Read `rules/design-tier.md` before writing here; it is the law for these paths.
+Read `common/rules/design-tier.md` before writing here; it is the law for these paths.

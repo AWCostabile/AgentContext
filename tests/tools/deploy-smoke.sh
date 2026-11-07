@@ -1,8 +1,9 @@
 #!/bin/bash
 # deploy-smoke.sh — this repository's gate for the deployer: it deploys throwaway
 # instances from the COMMITTED tree, lints them, updates one, proves the refusals, lints
-# every worked example as of its snapshot date, and runs tests/check.sh, the scripts' own
-# check over the fixture tree.
+# every worked example as of its snapshot date, runs tests/check.sh, the scripts' own
+# check over the fixture tree, and updates instances of the last release through the move
+# rule onto the common directory.
 #
 # Usage: bash tests/tools/deploy-smoke.sh   (from anywhere; no arguments)
 #
@@ -59,7 +60,7 @@ check "git archive of HEAD extracted as the source" '[ -f "$INIT" ] && [ -f "$SR
 # -- 2. deploy -------------------------------------------------------------------------------
 # PRIVATE_SCOPES and ORCH_BUDGET are dropped so the deployer has to derive them.
 sed -e 's/^CATALOGS=.*/CATALOGS="products projects"/' -e '/^PRIVATE_SCOPES=/d' -e '/^ORCH_BUDGET=/d' \
-  "$REPO/blueprint/.conf.example" > "$CONF"
+  "$REPO/blueprint/common/.conf.example" > "$CONF"
 I1="$TMP/instance"
 out=$(bash "$INIT" --from "$SRC" --target "$I1" --conf "$CONF" --name Example 2>&1); rc=$?
 printf '%s\n' "$out" | sed 's/^/       /'
@@ -85,40 +86,41 @@ else
 fi
 check ".vscode/extensions.json and settings.json present" \
   '[ -f "$I1/.vscode/extensions.json" ] && [ -f "$I1/.vscode/settings.json" ]'
-ncore=$(sed '1,/^$/d' "$I1/.agentcontext" 2>/dev/null | grep -c .)
-check ".agentcontext names ref=working-tree and lists $ncore core files (at least 20)" \
-  'grep -q "^ref=working-tree$" "$I1/.agentcontext" && [ "$ncore" -ge 20 ]'
+ncore=$(sed '1,/^$/d' "$I1/common/.agentcontext" 2>/dev/null | grep -c .)
+check "common/.agentcontext names ref=working-tree and lists $ncore core files (at least 20)" \
+  'grep -q "^ref=working-tree$" "$I1/common/.agentcontext" && [ "$ncore" -ge 20 ]'
 check ".gitignore names /private/ and /.conf" \
   'grep -q "^/private/$" "$I1/.gitignore" && grep -q "^/\.conf$" "$I1/.gitignore"'
 check ".conf gained the derived PRIVATE_SCOPES and ORCH_BUDGET" \
   'grep -q "^PRIVATE_SCOPES=\"products projects journal\"$" "$I1/.conf" && grep -q "^ORCH_BUDGET=full$" "$I1/.conf"'
 check "README.md is the reader page, named after the instance, with no placeholder left" \
   '[ -f "$I1/README.md" ] && [ "$(head -n 1 "$I1/README.md")" = "# Example" ] && ! grep -q "{{" "$I1/README.md"'
-check "README.md is listed in the manifest as a core file" 'grep -q "  README.md$" "$I1/.agentcontext"'
+check "README.md is listed in the manifest as a core file" 'grep -q "  README.md$" "$I1/common/.agentcontext"'
 check "no tests/ directory is laid into an instance" '[ ! -e "$I1/tests" ]'
+root1=$(ls -A "$I1" | LC_ALL=C sort | tr '\n' ' ')   # the fresh root, judged in section 18
 
 # -- 4. the instance lints clean ----------------------------------------------------------------
-cure=$(bash "$I1/scripts/cure.sh" --root "$I1" 2>&1); crc=$?
+cure=$(bash "$I1/common/scripts/cure.sh" --root "$I1" 2>&1); crc=$?
 info "cure: $(printf '%s\n' "$cure" | grep '^== VERDICT')"
 check "cure.sh reports 0 fails on the instance" '[ $crc -eq 0 ]'
-smell=$(bash "$I1/scripts/smell.sh" --root "$I1" --quiet 2>&1); src=$?
+smell=$(bash "$I1/common/scripts/smell.sh" --root "$I1" --quiet 2>&1); src=$?
 info "smell: $(printf '%s\n' "$smell" | grep '^== SUMMARY')"
 if [ $src -eq 0 ]; then ok "smell.sh reports 0 smells on the instance"
-else warn "smell.sh reports $src smell(s):"; bash "$I1/scripts/smell.sh" --root "$I1" | grep '^\[SMELL'; fi
+else warn "smell.sh reports $src smell(s):"; bash "$I1/common/scripts/smell.sh" --root "$I1" | grep '^\[SMELL'; fi
 
 # -- 5. an update from the same source changes nothing --------------------------------------------
 out=$(bash "$INIT" --update --target "$I1" --from "$SRC" 2>&1); rc=$?
-check "update from the same source: 0 replaced, 0 kept, 0 added, 0 removed-upstream" \
-  '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^update: 0 replaced, 0 kept, 0 added, 0 removed-upstream$"'
+check "update from the same source: 0 moved, 0 replaced, 0 kept, 0 added, 0 removed-upstream" \
+  '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^update: 0 moved, 0 replaced, 0 kept, 0 added, 0 removed-upstream$"'
 
 # -- 6. a local edit is kept; a dry run writes nothing ----------------------------------------------
-printf '%s\n' "A local note." >> "$I1/rules/branch-grammar.md"
-edited=$(sha256sum < "$I1/rules/branch-grammar.md")
+printf '%s\n' "A local note." >> "$I1/common/rules/branch-grammar.md"
+edited=$(sha256sum < "$I1/common/rules/branch-grammar.md")
 out=$(bash "$INIT" --update --target "$I1" --from "$SRC" 2>&1); rc=$?
 report=$(printf '%s\n' "$out" | grep '^update: ')
 check "a locally edited core file is reported kept, exactly once" \
-  '[ $rc -eq 0 ] && [ "$report" = "update: 0 replaced, 1 kept, 0 added, 0 removed-upstream" ] && printf "%s\n" "$out" | grep -q "^kept rules/branch-grammar.md (changed locally)$"'
-check "the kept file is unchanged" '[ "$(sha256sum < "$I1/rules/branch-grammar.md")" = "$edited" ]'
+  '[ $rc -eq 0 ] && [ "$report" = "update: 0 moved, 0 replaced, 1 kept, 0 added, 0 removed-upstream" ] && printf "%s\n" "$out" | grep -q "^kept common/rules/branch-grammar.md (changed locally)$"'
+check "the kept file is unchanged" '[ "$(sha256sum < "$I1/common/rules/branch-grammar.md")" = "$edited" ]'
 before=$(tree_digest "$I1")
 out=$(bash "$INIT" --update --target "$I1" --from "$SRC" --dry-run 2>&1); rc=$?
 check "--dry-run prints the same report" '[ $rc -eq 0 ] && [ "$(printf "%s\n" "$out" | grep "^update: ")" = "$report" ]'
@@ -128,7 +130,7 @@ check "--dry-run writes nothing" '[ "$(tree_digest "$I1")" = "$before" ]'
 I2="$TMP/instance2"
 out=$(bash "$INIT" --from "$SRC" --target "$I2" --conf "$CONF" --no-private 2>&1); rc=$?
 check "--no-private installs, with no private/ directory" '[ $rc -eq 0 ] && [ -d "$I2/public" ] && [ ! -e "$I2/private" ]'
-bash "$I2/scripts/cure.sh" --root "$I2" >/dev/null 2>&1; crc=$?
+bash "$I2/common/scripts/cure.sh" --root "$I2" >/dev/null 2>&1; crc=$?
 check "cure.sh reports 0 fails on the instance without a private tree" '[ $crc -eq 0 ]'
 
 # -- 8. an adapter without a payload refuses ---------------------------------------------------------------
@@ -176,6 +178,7 @@ else
   I6="$TMP/instance6"
   out=$(bash "$INIT" --from "$SRC" --target "$I6" --conf "$CONF" --adapter "$ADP" 2>&1); rc=$?
   check "--adapter $ADP installs, exit 0" '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^done: $I6\$"'
+  root6=$(ls -A "$I6" | LC_ALL=C sort | tr '\n' ' ')   # the fresh root, judged in section 18
   mapfile -t pfiles < <(cd "$PAY" && find . -type f | sed 's|^\./||' | grep -v '^README\.md$' | LC_ALL=C sort)
   missing=""
   for f in "${pfiles[@]}"; do cmp -s "$PAY/$f" "$I6/$f" || missing+="$f "; done
@@ -196,12 +199,12 @@ else
   for h in "${hooks[@]}"; do [ -f "$I6/$h" ] || hmiss+="$h "; done
   check "the ${#hooks[@]} hook scripts the settings register are present (expected 6)${hmiss:+ (missing: $hmiss)}" \
     '[ ${#hooks[@]} -eq 6 ] && [ -z "$hmiss" ]'
-  mlist=$(sed '1,/^$/d' "$I6/.agentcontext" 2>/dev/null | awk '{print $2}')
+  mlist=$(sed '1,/^$/d' "$I6/common/.agentcontext" 2>/dev/null | awk '{print $2}')
   mmiss=""
   for f in "${pfiles[@]}"; do printf '%s\n' "$mlist" | grep -qF -- "$f" || mmiss+="$f "; done
-  check ".agentcontext carries adapter=$ADP and lists every payload file${mmiss:+ (unlisted: $mmiss)}" \
-    'grep -q "^adapter=$ADP\$" "$I6/.agentcontext" && [ -z "$mmiss" ]'
-  bash "$I6/scripts/cure.sh" --root "$I6" >/dev/null 2>&1; crc=$?
+  check "common/.agentcontext carries adapter=$ADP and lists every payload file${mmiss:+ (unlisted: $mmiss)}" \
+    'grep -q "^adapter=$ADP\$" "$I6/common/.agentcontext" && [ -z "$mmiss" ]'
+  bash "$I6/common/scripts/cure.sh" --root "$I6" >/dev/null 2>&1; crc=$?
   check "cure.sh reports 0 fails on the instance with the adapter" '[ $crc -eq 0 ]'
 
   # the headless boot: the adapter's own boot check, when it ships one (exit 3 = not run)
@@ -277,15 +280,15 @@ check "the change-log module's workflow and .github/workflows/post-merge.yml are
 out=$(bash "$SRC/modules/graphify/check.sh" 2>&1); rc=$?
 check "modules/graphify/check.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | tail -n 1))}" '[ $rc -eq 0 ]'
 cp -R "$SRC/examples/tillwright" "$TMP/tillwright"
-mkdir -p "$I1/modules" && cp -R "$SRC/modules/graphify" "$I1/modules/graphify"
+mkdir -p "$I1/common/modules" && cp -R "$SRC/modules/graphify" "$I1/common/modules/graphify"
 printf '%s\n' 'GRAPHS="tillwright=../tillwright"' >> "$I1/.conf"
-out=$(cd "$I1" && bash modules/graphify/graphs.sh home tillwright 2>&1); rc=$?
+out=$(cd "$I1" && bash common/modules/graphify/graphs.sh home tillwright 2>&1); rc=$?
 check "graphify home on the instance exits 0${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]|^refused' | head -n 1))}" '[ $rc -eq 0 ]'
 check "graphify-out in the repository links into the instance's graphs/tillwright/live/" \
   '[ -L "$TMP/tillwright/graphify-out" ] && [ "$(cd "$TMP/tillwright/graphify-out" && pwd -P)" = "$(cd "$I1/graphs/tillwright/live" && pwd -P)" ]'
 check "the instance's .gitignore keeps graphs/*/graph.json and ignores the rest" \
   'grep -qx "graphs/\*/\*" "$I1/.gitignore" && grep -qx "!graphs/\*/graph.json" "$I1/.gitignore" && grep -qx "/private/" "$I1/.gitignore"'
-out=$(cd "$I1" && bash scripts/cure.sh --fast 2>&1); rc=$?
+out=$(cd "$I1" && bash common/scripts/cure.sh --fast 2>&1); rc=$?
 check "the homed instance lints with 0 fails${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
 check "the deployed workspace hides graphify-out and .graphifyignore" \
   'grep -q "\"\*\*/graphify-out\": true" "$I1/Example.code-workspace" && grep -q "\"\*\*/.graphifyignore\": true" "$I1/Example.code-workspace"'
@@ -297,9 +300,9 @@ check "the deployed workspace hides graphify-out and .graphifyignore" \
 # the committed tree, which the deployer never writes one into.
 out=$(bash "$SRC/modules/context-retention/check.sh" 2>&1); rc=$?
 check "modules/context-retention/check.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | tail -n 1))}" '[ $rc -eq 0 ]'
-mkdir -p "$I1/modules" && cp -R "$SRC/modules/context-retention" "$I1/modules/context-retention"
+mkdir -p "$I1/common/modules" && cp -R "$SRC/modules/context-retention" "$I1/common/modules/context-retention"
 H="$TMP/home"; mkdir -p "$H"
-out=$(cd "$I1" && HOME="$H" XDG_CONFIG_HOME= bash modules/context-retention/meta.sh init --no 2>&1 < /dev/null); rc=$?
+out=$(cd "$I1" && HOME="$H" XDG_CONFIG_HOME= bash common/modules/context-retention/meta.sh init --no 2>&1 < /dev/null); rc=$?
 check "retention init on the instance exits 0 and writes .agents/.id.meta there${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]|^refused|^usage' | head -n 1))}" \
   '[ $rc -eq 0 ] && [ -f "$I1/.agents/.id.meta" ]'
 check "the identity is the closed shape, id=<slug>-<6 hex>, name= and created=, with no path" \
@@ -308,9 +311,9 @@ check "the no answer wrote nothing to git: no global configuration, no excludes 
   '[ ! -f "$H/.gitconfig" ] && [ ! -e "$H/.config/git" ]'
 check "the map in the throwaway HOME records the instance by id and path" \
   '[ -f "$H/.config/agentcontext/projects" ] && grep -q "^$(sed -n "s/^id=//p" "$I1/.agents/.id.meta")	" "$H/.config/agentcontext/projects"'
-out=$(cd "$I1" && HOME="$H" XDG_CONFIG_HOME= bash modules/context-retention/meta.sh check 2>&1 < /dev/null); rc=$?
+out=$(cd "$I1" && HOME="$H" XDG_CONFIG_HOME= bash common/modules/context-retention/meta.sh check 2>&1 < /dev/null); rc=$?
 check "retention check on the instance: 0 fails, the instance current" '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^\[ OK \] .*: .* at "'
-out=$(cd "$I1" && bash scripts/cure.sh --fast 2>&1); rc=$?
+out=$(cd "$I1" && bash common/scripts/cure.sh --fast 2>&1); rc=$?
 check "the instance with an identity lints with 0 fails${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
 check "the deployed workspace hides **/.agents/.id.meta" 'grep -q "\"\*\*/.agents/.id.meta\": true" "$I1/Example.code-workspace"'
 check "no identity file anywhere in the committed tree, and the deployer wrote none into a fresh instance" \
@@ -342,6 +345,92 @@ out=$(bash "$SRC/tests/check.sh" 2>&1); rc=$?
 check "tests/check.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
 check "the fixture's CRLF leaf kept its bytes through git archive" \
   '[ "$(awk -v BINMODE=3 "/\r$/" "$SRC/tests/fixture/public/misc/leaves/crlf.md" | wc -l | tr -d " ")" = 6 ]'
+
+# -- 18. the move rule on a v0.4.0 instance, and the fresh root ----------------------------------------------
+# v0.4.0 laid its core files at the instance root. An instance deployed by that release's own
+# init.sh, from its archive (so its manifest names ref=v0.4.0), is updated by this source's
+# init.sh: every untouched core file moves to the path MOVES gives it, the edited one is kept
+# where it is, nothing is left at an old path, the manifest lands at common/.agentcontext and
+# verifies, and the instance lints. The old paths are read from MOVES, never spelled here.
+OLDREL=v0.4.0
+if ! git rev-parse -q --verify "refs/tags/$OLDREL^{commit}" >/dev/null 2>&1; then
+  info "$OLDREL is not tagged here: the move-rule step not run"
+else
+  OV=${OLDREL#v}
+  ARC="$TMP/AgentContext-$OV.tar.gz"
+  git archive --format=tar.gz --prefix="AgentContext-$OV/" "$OLDREL" > "$ARC"
+  mkdir -p "$TMP/old" && tar --force-local -xzf "$ARC" -C "$TMP/old"
+  OLD="$TMP/old/AgentContext-$OV"
+  sed -e '/^PRIVATE_SCOPES=/d' -e '/^ORCH_BUDGET=/d' "$OLD/template/.conf.example" > "$TMP/old.conf"
+  mapfile -t MVOLD < <(awk '!/^#/ && NF >= 2 { print $1 }' "$SRC/MOVES")
+
+  # (a) the adapter instance, one core file edited
+  I7="$TMP/instance7"
+  out=$(bash "$OLD/init.sh" --from "$ARC" --target "$I7" --conf "$TMP/old.conf" --name Old --adapter claude-code 2>&1); rc=$?
+  check "$OLDREL's own init.sh deploys an instance from its archive, exit 0" '[ $rc -eq 0 ] && [ -f "$I7/.agentcontext" ]'
+  grep -q "^ref=$OLDREL$" "$I7/.agentcontext" || sed -i "s/^ref=.*/ref=$OLDREL/" "$I7/.agentcontext"
+  check "the $OLDREL instance's manifest names ref=$OLDREL" 'grep -q "^ref=$OLDREL$" "$I7/.agentcontext"'
+  printf '%s\n' "A local note." >> "$I7/rules/branch-grammar.md"
+  before=$(tree_digest "$I7")
+  out=$(bash "$INIT" --update --target "$I7" --from "$SRC" --dry-run 2>&1); rc=$?
+  check "the move rule's --dry-run exits 0 and writes nothing" '[ $rc -eq 0 ] && [ "$(tree_digest "$I7")" = "$before" ]'
+  out=$(bash "$INIT" --update --target "$I7" --from "$SRC" 2>&1); rc=$?
+  printf '%s\n' "$out" > "$TMP/move.txt"
+  nmv=$(grep -c '^moved ' "$TMP/move.txt")
+  check "the update from $OLDREL exits 0 and moves $nmv file(s)" '[ $rc -eq 0 ] && [ "$nmv" -ge 1 ]'
+  check "the process files and the renamed agents are among the moves" \
+    'grep -qx "moved KICKOFF.md -> .claude/process/KICKOFF.md" "$TMP/move.txt" && grep -qx "moved .claude/agents/brainiac.md -> .claude/agents/historian.md" "$TMP/move.txt"'
+  check "the edited core file is kept, its release copy at the new path" \
+    'grep -qx "kept rules/branch-grammar.md (changed locally; moved to common/rules/branch-grammar.md)" "$TMP/move.txt" && [ -f "$I7/common/rules/branch-grammar.md" ]'
+  check "the summary's moved count is the number of moved lines ($nmv)" 'grep -q "^update: $nmv moved, " "$TMP/move.txt"'
+  left=""
+  for o in "${MVOLD[@]}"; do
+    case "$o" in
+      rules/) [ "$(ls -A "$I7/rules" 2>/dev/null)" = branch-grammar.md ] || left+="$o " ;;
+      *) [ -e "$I7/${o%/}" ] && left+="$o " ;;
+    esac
+  done
+  check "no core file is left at an old path but the edited one${left:+ (left: $left)}" '[ -z "$left" ]'
+  empty=$(find "$I7" -type d -empty ! -path "$I7/private/.git/*" | sed "s|^$I7/||" | tr '\n' ' ')
+  check "no empty directory is left${empty:+ (empty: $empty)}" '[ -z "$empty" ]'
+  check "the manifest moved to common/.agentcontext" '[ -f "$I7/common/.agentcontext" ] && [ ! -e "$I7/.agentcontext" ]'
+  (cd "$I7" && sed '1,/^$/d' common/.agentcontext | sha256sum -c --quiet >/dev/null 2>&1); hrc=$?
+  check "every hash the moved manifest records verifies" '[ $hrc -eq 0 ]'
+  stale=$(sed '1,/^$/d' "$I7/common/.agentcontext" | awk '{ print substr($0, 67) }' | while IFS= read -r p; do
+    case "$p" in .agentcontext|common/.agentcontext) printf '%s ' "$p"; continue ;; esac
+    for o in "${MVOLD[@]}"; do
+      case "$o" in */) case "$p" in "$o"*) printf '%s ' "$p" ;; esac ;; *) [ "$p" = "$o" ] && printf '%s ' "$p" ;; esac
+    done
+  done)
+  check "the manifest lists no old path and not itself${stale:+ (listed: $stale)}" '[ -z "$stale" ]'
+  (cd "$I7" && bash common/scripts/cure.sh >/dev/null 2>&1); crc=$?
+  (cd "$I7" && bash common/scripts/smell.sh --quiet >/dev/null 2>&1); src=$?
+  check "the moved instance lints: cure.sh 0 fails, smell.sh 0 smells" '[ $crc -eq 0 ] && [ $src -eq 0 ]'
+  check "the update names the $OV migration guide" 'grep -qx "guide: migrations/$OV.md" "$TMP/move.txt"'
+  out=$(bash "$INIT" --update --target "$I7" --from "$SRC" 2>&1); rc=$?
+  check "a second update moves nothing" '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^update: 0 moved, "'
+
+  # (b) a kept root document asks for the linter
+  I8="$TMP/instance8"
+  bash "$OLD/init.sh" --from "$ARC" --target "$I8" --conf "$TMP/old.conf" --no-private >/dev/null 2>&1
+  printf '%s\n' "A local note." >> "$I8/AGENTS.md"
+  out=$(bash "$INIT" --update --target "$I8" --from "$SRC" 2>&1); rc=$?
+  check "a kept AGENTS.md is reported, and the update asks for cure.sh" \
+    '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -qx "kept AGENTS.md (changed locally)" && printf "%s\n" "$out" | grep -qx "run bash common/scripts/cure.sh: 1 kept file(s) may name moved paths"'
+fi
+
+# (c) the fresh root holds what CD1 lists for its deploy, and nothing else
+want1=".conf .gitattributes .gitignore .vscode AGENTS.md Example.code-workspace README.md common private public "
+check "the fresh root without an adapter is exactly: $want1" '[ "$root1" = "$want1" ]'
+want1b=$(printf '%s\n' $want1 .agents graphs | LC_ALL=C sort | tr '\n' ' ')
+now1=$(ls -A "$I1" | LC_ALL=C sort | tr '\n' ' ')
+check "with graphify and retention adopted, the root gains graphs/ and .agents/ alone$([ "$now1" = "$want1b" ] || printf " (now: %s)" "$now1")" '[ "$now1" = "$want1b" ]'
+if [ "$ADP" = claude-code ]; then
+  want6=".claude .conf .gitattributes .gitignore .vscode AGENTS.md CLAUDE.md README.md common instance6.code-workspace private public "
+  check "the fresh root with the $ADP adapter is exactly: $want6" '[ "$root6" = "$want6" ]'
+else
+  info "the first adapter is ${ADP:-none}, not claude-code: its fresh root not judged"
+fi
 
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL

@@ -2,14 +2,14 @@
 name: kickoff
 description: Generate the paste-ready kickoff prompt for an orchestrated piece of work from its plan and its bill, with the real gate values read from the repositories. Needs the constitution module. Use when asked to "write the kickoff", "generate a kickoff prompt", "prepare the brief", or whenever a scoping conversation has produced a plan.
 argument-hint: "<plan leaf path | plan name> [--repo <name>]"
-allowed-tools: Read, Glob, Grep, Bash(git log:*), Bash(git -C:*), Bash(git rev-parse:*), Bash(bash scripts/find.sh:*)
+allowed-tools: Read, Glob, Grep, Bash(git log:*), Bash(git -C:*), Bash(git rev-parse:*), Bash(bash common/scripts/find.sh:*)
 ---
 
 # Generate a kickoff
 
 **This skill depends on the constitution module.** When `constitution/` is absent from the
 tree root, say so and write the kickoff by hand from the plan, following the anatomy in
-`KICKOFF.md`; stop here.
+`.claude/process/KICKOFF.md`; stop here.
 
 Arguments: `$ARGUMENTS` (`--repo` names the repository the work happens in; otherwise the
 plan says).
@@ -29,7 +29,7 @@ plan says).
    guidance comments dropped, its first two lines verbatim. Each gate is phrased as a PROOF of
    what it cares about, never as the spelling of a command; every plan clause marked
    **verify first** becomes a gate naming the spike that proves it. State only what is
-   particular to this piece of work: nothing `KICKOFF.md` or the guide already says. Role
+   particular to this piece of work: nothing `.claude/process/KICKOFF.md` or the guide already says. Role
    words only ("the owner", "agents"), never a personal name.
 6. **Output** the prompt in one fenced block, then one line OUTSIDE it: the model
    recommendation and what the work gates on.

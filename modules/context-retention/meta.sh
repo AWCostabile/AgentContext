@@ -17,13 +17,13 @@
 # whatever its own memory and history need. The map is a machine fact and stays in the home.
 #
 # Usage (from the instance root, the directory holding .conf):
-#   bash modules/context-retention/meta.sh init [<path>...]   write .agents/.id.meta where absent
+#   bash common/modules/context-retention/meta.sh init [<path>...]   write .agents/.id.meta where absent
 #                                                            (creating .agents/), record each in the
 #                                                            map, and ask the excludes question once
-#   bash modules/context-retention/meta.sh check [<path>...]  report each project: current, moved,
+#   bash common/modules/context-retention/meta.sh check [<path>...]  report each project: current, moved,
 #                                                            first seen, or without an identity;
 #                                                            update the map (exit code: the fails)
-#   bash modules/context-retention/meta.sh list                print the map
+#   bash common/modules/context-retention/meta.sh list                print the map
 # With no <path>, the projects are this instance and every folder its workspace file names
 # (`<Name>.code-workspace` at the root; `.` and `./private` are the instance itself).
 # Options:
@@ -59,9 +59,9 @@ done
 [ -z "$ROOT" ] && ROOT=$PWD
 ROOT=$(cd "$ROOT" 2>/dev/null && pwd) || { echo "usage: --root $ROOT is not a directory" >&2; exit 2; }
 [ -f "$ROOT/.conf" ] || { echo "refused: $ROOT holds no .conf — run from the instance root or pass --root" >&2; exit 2; }
-[ -f "$ROOT/scripts/lib-scopes.sh" ] || { echo "refused: $ROOT/scripts/lib-scopes.sh is missing — the module runs inside an instance of the template" >&2; exit 2; }
+[ -f "$ROOT/common/scripts/lib-scopes.sh" ] || { echo "refused: $ROOT/common/scripts/lib-scopes.sh is missing — the module runs inside an instance of the template" >&2; exit 2; }
 # shellcheck source=/dev/null
-. "$ROOT/scripts/lib-scopes.sh"
+. "$ROOT/common/scripts/lib-scopes.sh"
 [ -n "$NAME" ] && { [ "$VERB" = init ] && [ ${#PATHS[@]} -eq 1 ]; } || [ -z "$NAME" ] || { echo "usage: --name goes with init and exactly one <path>" >&2; exit 2; }
 case "$NAME" in *[!a-z0-9-]*) echo "usage: --name '$NAME' — lowercase [a-z0-9-] only" >&2; exit 2 ;; esac
 
@@ -73,7 +73,7 @@ fail() { [ $PORCELAIN -eq 1 ] || printf '[FAIL] %s\n' "$1"; FAIL=$((FAIL + 1)); 
 row()  { [ $PORCELAIN -eq 0 ] || { local IFS=$'\t'; printf '%s\n' "$*"; }; }
 
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) WIN=1 ;; *) WIN=0 ;; esac
-SELF="modules/context-retention/meta.sh"
+SELF="common/modules/context-retention/meta.sh"
 ID_FILE=".agents/.id.meta"
 MAP_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/agentcontext"
 MAP="$MAP_DIR/projects"

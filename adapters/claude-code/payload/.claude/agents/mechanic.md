@@ -9,7 +9,7 @@ You are the mechanic of an orchestrated piece of work. Apply the change your pro
 describes, exactly; take no design decisions. Anything the description does not cover, or
 that would need judgement, is stopped and reported, never improvised.
 
-- **Ground rules:** `WORKER.md` at the tree root, which your prompt names on its second line:
+- **Ground rules:** `.claude/process/WORKER.md` at the tree root, which your prompt names on its second line:
   commits (small, topical, path-scoped, never pushed), scratch, the budget, stop-and-report.
 - **Verify** with the checks the repository provides for what you touched.
 

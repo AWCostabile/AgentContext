@@ -55,5 +55,5 @@ the same recipe, best done once and force-pushed with `--force-with-lease`.
 
 The knowledge tree never cites a plan or a branch from a public leaf; the one citable trace of
 delivery is a merged pull request or its change-log heading. This workflow is what makes that
-heading exist. The `rules/feature-log.md` document and the constitution module's code-standards
+heading exist. The `common/rules/feature-log.md` document and the constitution module's code-standards
 template both assume it or something like it.

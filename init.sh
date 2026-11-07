@@ -10,7 +10,7 @@
 #
 # Install (the first form) copies the skeleton to <dir>, resolves its placeholders from a
 # .conf, initialises the private tree as a repository of its own, writes the workspace
-# file and records the manifest .agentcontext.
+# file and records the manifest common/.agentcontext.
 #   --target <dir>    the instance: must not exist, or be empty, or hold only a .conf
 #   --conf <file>     the .conf to deploy with; default <dir>/.conf. Required keys:
 #                     CATALOGS, MY_NAME, MY_NICK, MY_PRONOUNS, MY_ROLE, MY_USER.
@@ -27,10 +27,16 @@
 #   --dry-run         print every file it would write, and write nothing
 #
 # Update (the second form) brings the core files of an instance up to another release:
-# scripts/, rules/, templates/, .vscode/, AGENTS.md, HYGIENE.md, README.md, .conf.example
-# and the adapter's payload. A core file edited locally is kept and reported, never overwritten;
-# public/, private/, .conf, .gitignore, .gitattributes and the workspace file are never
-# touched.
+# common/ (scripts/, rules/, templates/, HYGIENE.md, .conf.example), .vscode/, AGENTS.md,
+# README.md and the adapter's payload. A core file edited locally is kept and reported, never
+# overwritten; public/, private/, .conf, .gitignore, .gitattributes and the workspace file are
+# never touched. The paths a release moved are listed in its MOVES file, one "<old> <new>"
+# pair per line (a trailing / for a directory prefix): an untouched file at an old name is
+# moved, and its old name removed with any directory it leaves empty, the one deletion the
+# deployer makes; an edited one stays at its old name beside the release's copy at the new
+# one. When a file is kept, the template's migrations/<version>.md guides are named from the
+# instance's release onwards. A manifest at the instance root (an older release) is read
+# there and rewritten under common/.
 #   --ref <tag>       fetch that release of the upstream repository
 #   --from <src>      take the release from a local directory or .tar.gz instead
 #   --dry-run         print the report, and write nothing
@@ -46,6 +52,8 @@ TODAY=$(date +%F)
 REQUIRED_KEYS="CATALOGS MY_NAME MY_NICK MY_PRONOUNS MY_ROLE MY_USER"
 # Top-level public/ branches the skeleton already owns; a catalog may not take their name.
 RESERVED_CATALOGS="catalog misc scratch-tools"
+# The manifest, and where a release before the common directory left it.
+MANIFEST=common/.agentcontext OLD_MANIFEST=.agentcontext
 
 TMPS=()
 cleanup() { local d; for d in "${TMPS[@]}"; do rm -rf "$d"; done; }
@@ -92,7 +100,7 @@ else
     || refuse "--update takes only --target, --ref or --from, and --dry-run"
   { [ -n "$REF" ] && [ -z "$FROM" ]; } || { [ -z "$REF" ] && [ -n "$FROM" ]; } \
     || refuse "--update needs exactly one of --ref <tag> and --from <dir|archive.tar.gz>"
-  [ -d "$TARGET" ] && [ -f "$TARGET/.agentcontext" ] \
+  [ -d "$TARGET" ] && { [ -f "$TARGET/$MANIFEST" ] || [ -f "$TARGET/$OLD_MANIFEST" ]; } \
     || refuse "no .agentcontext at target: $TARGET was not deployed by init.sh"
 fi
 
@@ -160,8 +168,9 @@ adapter_list() {
 }
 
 # -- the core -------------------------------------------------------------------------
-CORE_DIRS="scripts rules templates .vscode"
-CORE_FILES="AGENTS.md HYGIENE.md README.md .conf.example"
+# common/ is composed from the skeleton's blueprint/common/ and the repository's scripts/.
+CORE_DIRS="common .vscode"
+CORE_FILES="AGENTS.md README.md"
 # The reader page README.md names the instance: the one core file carrying a placeholder,
 # resolved wherever the core is laid, so install and update hash the same bytes.
 resolve_tree_name() {   # resolve_tree_name <file> <name>
@@ -180,7 +189,7 @@ lay_core() {
     [ -f "$SRC/blueprint/$f" ] && { cp "$SRC/blueprint/$f" "$dest/$f" || return 1; }
   done
   resolve_tree_name "$dest/README.md" "$3" || return 1
-  mkdir -p "$dest/scripts" && cp -R "$SRC/scripts/." "$dest/scripts/" || return 1
+  mkdir -p "$dest/common/scripts" && cp -R "$SRC/scripts/." "$dest/common/scripts/" || return 1
   [ -n "$2" ] && { lay_payload "$2" "$dest" || return 1; }
   return 0
 }
@@ -191,12 +200,12 @@ lay_payload() {   # lay_payload <adapter> <dest>
     mkdir -p "$2/$(dirname "$p")" && cp "$SRC/adapters/$1/payload/$p" "$2/$p" || return 1
   done < <(payload_files "$SRC/adapters/$1")
 }
-# core_list <root> <adapter>: the core paths present under <root>, sorted
+# core_list <root> <adapter>: the core paths present under <root>, sorted; never the manifest
 core_list() {
   local root=$1 d f
   (
     cd "$root" || exit 1
-    for d in $CORE_DIRS; do [ -d "$d" ] && find "$d" -type f; done
+    for d in $CORE_DIRS; do [ -d "$d" ] && find "$d" -type f ! -path "$MANIFEST"; done
     for f in $CORE_FILES; do [ -f "$f" ] && printf '%s\n' "$f"; done
     if [ -n "$2" ]; then
       payload_files "$SRC/adapters/$2" | while IFS= read -r f; do [ -f "$f" ] && printf '%s\n' "$f"; done
@@ -217,7 +226,9 @@ hashes() {
 # =====================================================================================
 if [ "$MODE" = update ]; then
   TARGET=$(cd "$TARGET" && pwd)
-  declare -A RECORDED UP LOCAL HEADER
+  declare -A RECORDED UP LOCAL HEADER MOVED_TO
+  MAN_IN=$MANIFEST
+  [ -f "$TARGET/$MANIFEST" ] || MAN_IN=$OLD_MANIFEST
   body=0
   while IFS= read -r line || [ -n "$line" ]; do
     line=${line%$'\r'}
@@ -228,7 +239,7 @@ if [ "$MODE" = update ]; then
       [ -n "$line" ] || continue
       RECORDED[${line:66}]=${line:0:64}
     fi
-  done < "$TARGET/.agentcontext"
+  done < "$TARGET/$MAN_IN"
   INST_ADAPTER=${HEADER[adapter]:-}
   # the instance's name: its workspace file's, else the directory's
   INST_NAME=""
@@ -246,10 +257,52 @@ if [ "$MODE" = update ]; then
     [ -n "$l" ] && LOCAL[${l:66}]=${l:0:64}
   done < <(printf '%s\n' "${present[@]}" | LC_ALL=C sort -u | grep -v '^$' | hashes "$TARGET")
 
-  n_rep=0 n_kept=0 n_add=0 n_rm=0
-  WRITE=() NEWHASH=()
+  n_mv=0 n_rep=0 n_kept=0 n_add=0 n_rm=0 n_rootkept=0
+  WRITE=() NEWHASH=() UNLINK=()
+  kept() {   # kept <path> <reason>: a kept file reported; a root document counted
+    say "kept $1 ($2)"; n_kept=$((n_kept + 1))
+    case "$1" in */*) ;; *.md) n_rootkept=$((n_rootkept + 1)) ;; esac
+  }
+
+  # -- the move rule: a recorded path the release moved (MOVES) goes to its new name first
+  MV_OLD=() MV_NEW=()
+  if [ -f "$SRC/MOVES" ]; then
+    while read -r o n _ || [ -n "$o" ]; do
+      case "$o" in ''|'#'*) continue ;; esac
+      MV_OLD+=("$o"); MV_NEW+=("${n%$'\r'}")
+    done < "$SRC/MOVES"
+  fi
+  moved_path() {   # moved_path <path>: its name in this release, through MOVES
+    local p=$1 i o
+    for i in "${!MV_OLD[@]}"; do
+      o=${MV_OLD[$i]}
+      case "$o" in
+        */) case "$p" in "$o"*) p=${MV_NEW[$i]}${p#"$o"} ;; esac ;;
+        *)  [ "$p" = "$o" ] && p=${MV_NEW[$i]} ;;
+      esac
+    done
+    printf '%s' "$p"
+  }
   while IFS= read -r p; do
     [ -n "$p" ] || continue
+    q=$(moved_path "$p")
+    [ "$q" != "$p" ] || continue
+    rec=${RECORDED[$p]} up=${UP[$q]:-} loc=${LOCAL[$p]:-}
+    unset "RECORDED[$p]"                          # the manifest records new names only
+    if [ -z "$up" ]; then say "removed-upstream $p"; n_rm=$((n_rm + 1)); continue; fi
+    [ -n "$loc" ] || continue                     # deleted locally: added at the new name below
+    if [ -f "$TARGET/$q" ]; then kept "$p" "moved to $q, which exists locally"; continue; fi
+    MOVED_TO[$q]=$p; WRITE+=("$q"); NEWHASH+=("$up  $q")
+    if [ "$loc" = "$rec" ]; then
+      say "moved $p -> $q"; n_mv=$((n_mv + 1)); UNLINK+=("$p")
+    else
+      kept "$p" "changed locally; moved to $q"
+    fi
+  done < <(printf '%s\n' "${!RECORDED[@]}" | LC_ALL=C sort)
+
+  while IFS= read -r p; do
+    [ -n "$p" ] || continue
+    [ -z "${MOVED_TO[$p]:-}" ] || continue        # written by the move rule above
     rec=${RECORDED[$p]:-} up=${UP[$p]:-} loc=${LOCAL[$p]:-}
     if [ -n "$rec" ] && [ -z "$up" ]; then
       say "removed-upstream $p"; n_rm=$((n_rm + 1)); continue
@@ -258,7 +311,7 @@ if [ "$MODE" = update ]; then
       if [ -z "$loc" ] || [ "$loc" = "$up" ]; then
         say "added $p"; n_add=$((n_add + 1)); [ -z "$loc" ] && WRITE+=("$p")
       else
-        say "kept $p (exists locally)"; n_kept=$((n_kept + 1))
+        kept "$p" "exists locally"
       fi
       NEWHASH+=("$up  $p"); continue
     fi
@@ -267,13 +320,32 @@ if [ "$MODE" = update ]; then
     elif [ "$loc" = "$rec" ]; then
       say "replaced $p"; n_rep=$((n_rep + 1)); WRITE+=("$p"); NEWHASH+=("$up  $p")
     else
-      if [ -z "$loc" ]; then say "kept $p (deleted locally)"; else say "kept $p (changed locally)"; fi
-      n_kept=$((n_kept + 1)); NEWHASH+=("$rec  $p")   # the last pristine version stays recorded
+      if [ -z "$loc" ]; then kept "$p" "deleted locally"; else kept "$p" "changed locally"; fi
+      NEWHASH+=("$rec  $p")                           # the last pristine version stays recorded
     fi
   done < <(printf '%s\n' "${!RECORDED[@]}" "${!UP[@]}" | LC_ALL=C sort -u)
-  summary="update: $n_rep replaced, $n_kept kept, $n_add added, $n_rm removed-upstream"
+  summary="update: $n_mv moved, $n_rep replaced, $n_kept kept, $n_add added, $n_rm removed-upstream"
+
+  # -- what a kept file asks of the user: the linter, and the migration guides
+  # A guide is named for the release it leaves; those from the instance's release up to the
+  # source's apply. Only a release names a version: a working-tree ref names none.
+  ver_lt() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n 1)" = "$1" ]; }
+  advice() {
+    [ $n_mv -gt 0 ] && [ $n_rootkept -gt 0 ] \
+      && say "run bash common/scripts/cure.sh: $n_rootkept kept file(s) may name moved paths"
+    [ $n_kept -gt 0 ] || return 0
+    local from=${HEADER[ref]:-} to="" g v
+    case "$from" in v[0-9]*) from=${from#v} ;; *) return 0 ;; esac
+    case "$SRC_REF" in v[0-9]*) to=${SRC_REF#v} ;; esac
+    while IFS= read -r v; do
+      ver_lt "$v" "$from" && continue
+      [ -n "$to" ] && ! ver_lt "$v" "$to" && continue
+      say "guide: migrations/$v.md"
+    done < <(for g in "$SRC"/migrations/[0-9]*.md; do [ -f "$g" ] && basename "$g" .md; done | sort -V)
+  }
   if [ $DRY -eq 1 ]; then
     say "$summary"
+    advice
     say "dry-run: nothing written to $TARGET"
     exit 0
   fi
@@ -283,7 +355,8 @@ if [ "$MODE" = update ]; then
       || die "writing $p; $done_n file(s) before it were written, the manifest was not rewritten"
     done_n=$((done_n + 1))
   done
-  manifest_tmp="$TARGET/.agentcontext.tmp"
+  manifest_tmp="$TARGET/$MANIFEST.tmp"
+  mkdir -p "$TARGET/$(dirname "$MANIFEST")" || die "creating $(dirname "$MANIFEST")/; $done_n core file(s) were written"
   {
     say "upstream=${HEADER[upstream]:-$UPSTREAM}"
     say "ref=$SRC_REF"
@@ -292,9 +365,20 @@ if [ "$MODE" = update ]; then
     say "updated=$TODAY"
     say ""
     printf '%s\n' "${NEWHASH[@]}" | LC_ALL=C sort -k2
-  } > "$manifest_tmp" && mv "$manifest_tmp" "$TARGET/.agentcontext" \
-    || die "rewriting .agentcontext; $done_n core file(s) were written"
+  } > "$manifest_tmp" && mv "$manifest_tmp" "$TARGET/$MANIFEST" \
+    || die "rewriting $MANIFEST; $done_n core file(s) were written"
+  if [ "$MAN_IN" != "$MANIFEST" ]; then
+    rm -f "$TARGET/$MAN_IN" || die "removing the old $MAN_IN; $MANIFEST is written"
+  fi
+  # The one deletion the deployer makes: an old name whose file was the recorded one,
+  # then any directory that leaves empty.
+  for p in "${UNLINK[@]}"; do
+    rm -f "$TARGET/$p" || die "removing $p; $MANIFEST is written"
+    d=$(dirname "$p")
+    while [ "$d" != . ] && rmdir "$TARGET/$d" 2>/dev/null; do d=$(dirname "$d"); done
+  done
   say "$summary"
+  advice
   say "manifest: ref=$SRC_REF, ${#NEWHASH[@]} core files"
   exit 0
 fi
@@ -310,10 +394,10 @@ if [ -e "$TARGET" ]; then
   [ -z "$others" ] || refuse "target is not empty: $TARGET holds ${others% }"
 fi
 if [ -z "$CONF" ]; then
-  [ -f "$TARGET/.conf" ] || refuse "no .conf: copy blueprint/.conf.example, fill it, pass --conf"
+  [ -f "$TARGET/.conf" ] || refuse "no .conf: copy blueprint/common/.conf.example, fill it, pass --conf"
   CONF="$TARGET/.conf"
 fi
-[ -f "$CONF" ] || refuse "no .conf: $CONF does not exist; copy blueprint/.conf.example, fill it, pass --conf"
+[ -f "$CONF" ] || refuse "no .conf: $CONF does not exist; copy blueprint/common/.conf.example, fill it, pass --conf"
 [ -n "$NAME" ] || NAME=$(basename "$TARGET")
 case "$NAME" in ''|.|..|*/*|*\\*|*\"*) refuse "--name: not a repository name: '$NAME'" ;; esac
 for s in "${SIBLINGS[@]}"; do
@@ -349,7 +433,7 @@ cp -R "$SRC/blueprint/." "$STAGE/" || die "copying the skeleton (nothing written
 cp "$CONF" "$STAGE/.conf" || die "cannot read $CONF"   # a .conf.example never shadows it
 resolve_tree_name "$STAGE/README.md" "$NAME" || die "naming the reader page (nothing written)"
 [ $NO_PRIVATE -eq 1 ] && rm -rf "$STAGE/private"
-mkdir -p "$STAGE/scripts" && cp -R "$SRC/scripts/." "$STAGE/scripts/" || die "copying scripts/ (nothing written)"
+mkdir -p "$STAGE/common/scripts" && cp -R "$SRC/scripts/." "$STAGE/common/scripts/" || die "copying scripts/ (nothing written)"
 COPIED=$(cd "$STAGE" && find . -type f ! -name .conf ! -name workspace.code-workspace | wc -l | tr -d ' ')
 
 TREES="public"
@@ -483,7 +567,7 @@ NCORE=$(printf '%s\n' "$CORE" | grep -c .)
   [ -n "$ADAPTER" ] && say "adapter=$ADAPTER"
   say ""
   printf '%s\n' "$CORE"
-} > "$STAGE/.agentcontext"
+} > "$STAGE/$MANIFEST"
 
 # -- report, or write ----------------------------------------------------------------------
 report() {

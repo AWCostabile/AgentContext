@@ -6,8 +6,8 @@ _reviewed:_ 2026-11-02
 A branch's tier says who may write in it and how. Three kinds exist in every tree, keyed by path
 (TR1): provenance records added once and never edited, current law edited as the truth moves,
 and generated output that only its generator writes. The instructions are
-[rules/provenance-tiers.md](../../rules/provenance-tiers.md) and
-[rules/design-tier.md](../../rules/design-tier.md); this article holds the reasoning and what
+[common/rules/provenance-tiers.md](../../common/rules/provenance-tiers.md) and
+[common/rules/design-tier.md](../../common/rules/design-tier.md); this article holds the reasoning and what
 those rules do not cover.
 
 ## Provenance: added verbatim, never edited
