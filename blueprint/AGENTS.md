@@ -90,7 +90,7 @@ The tree checks itself in two layers, and [HYGIENE.md](./common/HYGIENE.md) is t
   leaf's title, process vocabulary in `public/`, a retired spelling, an inbox item left too long. Every
   finding is a WARN to fix or to record a reason for.
 - `bash common/scripts/review.sh` prints the agenda the two imply in about thirty lines and writes nothing:
-  the verdict, the smell summary, the inbox, the stale and uncited leaves, the retro pressure, the
+  the verdict, the smell summary, the inbox, the open questions, the stale and uncited leaves, the retro pressure, the
   branches without an upstream, the newest journal entry; `--brief` is one line of counts.
 - `bash common/scripts/find.sh -b <leaf>` lists every file that cites a leaf (its index row marked), and
   `-f <key>` the files carrying a `_<key>:_` marker line with its value (`-f reviewed`,
