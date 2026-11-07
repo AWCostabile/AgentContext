@@ -1,3 +1,18 @@
+## Feature | Core Comforts [ _2026-11-07 11:26:36 UTC_ ]
+
+- refactor: the skeleton directory is blueprint/, one blueprint of an instance's root
+- chore: the worked example's core files brought up to this release by the deployer's update mode
+- test: the deploy smoke runs the script check, lints each example as of its snapshot date and proves the reader page
+- test: a fixture tree and tests/check.sh prove every check fires only where it was planted
+- docs: the worked example dates its feature leaves and gains an inbox item and a Tillwright glossary
+- feat: the orientation hook adds the review brief when the instance has review.sh
+- docs: the documents describe per-tier freshness, the uncited-leaf and inbox smells, the review agenda, the glossary and the reader page
+- feat: the skeleton gains an inbox, a product glossary, a dated feature leaf and a reader page the deployer names
+- feat: review.sh prints the review agenda, --brief one line of counts
+- feat: smell.sh judges freshness per tier, flags uncited law (S20) and overdue inbox items (S21), takes --today
+- feat: find.sh -b lists a leaf's backlinks and -f queries marker fields
+- chore: the deploy smoke moves under tests/tools
+
 ## Docs | Banner [ _2026-11-02 15:31:55 UTC_ ]
 
 - docs: the README opens with a banner of the two trees
