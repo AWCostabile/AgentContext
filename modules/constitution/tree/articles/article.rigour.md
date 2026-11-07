@@ -7,7 +7,7 @@ A product's shipped source can be held to a written standard: a rule catalog per
 full sweep that grounds it, a linter built from what the sweep proved, and an adversarial review
 of every orchestrated branch before its pull request is raised. This article says where each
 part lives, the shape it takes, and how the review loop runs. A product adopts as much of it as
-it needs; the [code-standards template](../process/code-standards.template.md) is where a product
+it needs; the [code-standards template](../process/templates/code-standards.md) is where a product
 records what it adopted.
 
 ## The two homes
