@@ -1,0 +1,2 @@
+# The fixture's retired vocabulary: one term, for S13.
+colour	color	public/products/Lantern/history/rulings.wick.md

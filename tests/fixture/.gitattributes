@@ -1,0 +1,2 @@
+# The one planted CRLF leaf keeps its bytes; everything else follows the repository rule.
+public/misc/leaves/crlf.md -text

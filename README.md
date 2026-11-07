@@ -30,11 +30,11 @@ git clone https://github.com/AWCostabile/AgentContext.git
 
 ## What you get
 
-- **A skeleton**, in `template/`, that maps onto your instance's root: indexes, tags, and templates for a branch, a leaf, a product and its private mirror. Every directory is a branch with one `.index.md`, one `.tags` and single-topic leaves.
+- **A skeleton**, in `blueprint/`, that maps onto your instance's root: indexes, tags, and templates for a branch, a leaf, a product and its private mirror. Every directory is a branch with one `.index.md`, one `.tags` and single-topic leaves.
 - **Two trees.** `public/` is what is true and is shared; `private/` is how the work was run on one machine, a nested repository the parent ignores. Links run one way, and the feature log is the one crossing.
-- **The scripts**, in `scripts/`: `cure.sh` fails on a broken invariant, `smell.sh` warns on what needs judgement, `find.sh` resolves tags and keywords to the right leaf. `template/HYGIENE.md` lists every check; `template/rules/` states the grammar.
+- **The scripts**, in `scripts/`: `cure.sh` fails on a broken invariant, `smell.sh` warns on what needs judgement, `find.sh` resolves tags and keywords to the right leaf. `blueprint/HYGIENE.md` lists every check; `blueprint/rules/` states the grammar.
 - **A deployer**, `init.sh`, with an update mode that replaces the core files you never edited and keeps the ones you did, through a manifest it records at install.
-- **An instruction for agents**, `template/AGENTS.md`, that an instance carries at its root; the core never names a harness.
+- **An instruction for agents**, `blueprint/AGENTS.md`, that an instance carries at its root; the core never names a harness.
 - **Modules**, optional: a constitution (seed rulings, articles and the process half of agent-led work), a code-map generator with TypeScript and Go extractors, a GitHub Actions workflow that turns every merged pull request into a squash commit and a change-log entry, and a Graphify knowledge graph per repository, kept in the tree and linked back into each repository.
 - **Adapters**, keyed by harness: Claude Code written (a pre-write guard on the immutable tiers, a lint after every write, orientation at session start, skills and agent profiles); Codex, Cursor and Gemini CLI as porting specs.
 - **A worked example**, `examples/quillfeather/`, a fictional startup's filled tree with generated code maps, so you can see the indexes with something in them.
@@ -48,8 +48,8 @@ The Claude Code adapter gives an instance its guard on the immutable tiers, its 
 - [ARCHITECTURE.md](./ARCHITECTURE.md): the method in full, section by section.
 - [CHANGE_LOG.md](./CHANGE_LOG.md): what each release landed, generated from the pull requests.
 - [SETUP.md](./SETUP.md): the run-sheet, deploying and updating.
-- [template/AGENTS.md](./template/AGENTS.md): what an instance tells an agent.
-- [template/HYGIENE.md](./template/HYGIENE.md): every check, what it means and how to fix it.
+- [blueprint/AGENTS.md](./blueprint/AGENTS.md): what an instance tells an agent.
+- [blueprint/HYGIENE.md](./blueprint/HYGIENE.md): every check, what it means and how to fix it.
 - [The example's reader page](./examples/quillfeather/README.md): a filled tree, and what to open first.
 
 ## Licence

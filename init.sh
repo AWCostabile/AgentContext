@@ -18,7 +18,7 @@
 #                     ORCH_BUDGET absent: written as full
 #   --name <name>     the repository name; default the basename of <dir>. The workspace
 #                     file is <name>.code-workspace
-#   --from <src>      the template: a directory holding template/, scripts/, adapters/,
+#   --from <src>      the template: a directory holding blueprint/, scripts/, adapters/,
 #                     or a .tar.gz of one; default the directory init.sh lives in
 #   --no-private      no private tree: private/ is not copied
 #   --sibling <name>  add the sibling repository ../<name> to the workspace; repeatable
@@ -27,8 +27,8 @@
 #   --dry-run         print every file it would write, and write nothing
 #
 # Update (the second form) brings the core files of an instance up to another release:
-# scripts/, rules/, templates/, .vscode/, AGENTS.md, HYGIENE.md, .conf.example and the
-# adapter's payload. A core file edited locally is kept and reported, never overwritten;
+# scripts/, rules/, templates/, .vscode/, AGENTS.md, HYGIENE.md, README.md, .conf.example
+# and the adapter's payload. A core file edited locally is kept and reported, never overwritten;
 # public/, private/, .conf, .gitignore, .gitattributes and the workspace file are never
 # touched.
 #   --ref <tag>       fetch that release of the upstream repository
@@ -106,14 +106,14 @@ release_name() {
   case "$n" in [0-9]*) n="v$n" ;; esac
   printf '%s' "$n"
 }
-# extract_archive <file>: prints the directory holding template/AGENTS.md
+# extract_archive <file>: prints the directory holding blueprint/AGENTS.md
 extract_archive() {
   local t d
   t=$(mktmp)
   tar --force-local -xzf "$1" -C "$t" 2>/dev/null || refuse "cannot extract $1"
-  if [ -f "$t/template/AGENTS.md" ]; then printf '%s' "$t"; return 0; fi
+  if [ -f "$t/blueprint/AGENTS.md" ]; then printf '%s' "$t"; return 0; fi
   for d in "$t"/*/; do
-    [ -f "$d/template/AGENTS.md" ] && { printf '%s' "${d%/}"; return 0; }
+    [ -f "$d/blueprint/AGENTS.md" ] && { printf '%s' "${d%/}"; return 0; }
   done
   printf '%s' "$t"
 }
@@ -136,7 +136,7 @@ elif [ -d "$FROM" ]; then
 else
   refuse "--from: no such file or directory: $FROM"
 fi
-[ -f "$SRC/template/AGENTS.md" ] || refuse "not a template source (no template/AGENTS.md): ${FROM:-$SRC}"
+[ -f "$SRC/blueprint/AGENTS.md" ] || refuse "not a template source (no blueprint/AGENTS.md): ${FROM:-$SRC}"
 # An extracted release directory (no .git) named AgentContext-<x> names its release.
 if [ -z "$REF" ] && [ ! -f "$FROM" ] && [ ! -e "$SRC/.git" ]; then
   case "$(basename "$SRC")" in AgentContext-?*) SRC_REF=$(release_name "$(basename "$SRC")") ;; esac
@@ -161,16 +161,25 @@ adapter_list() {
 
 # -- the core -------------------------------------------------------------------------
 CORE_DIRS="scripts rules templates .vscode"
-CORE_FILES="AGENTS.md HYGIENE.md .conf.example"
-# lay_core <dest> <adapter>: the core files exactly as install places them
+CORE_FILES="AGENTS.md HYGIENE.md README.md .conf.example"
+# The reader page README.md names the instance: the one core file carrying a placeholder,
+# resolved wherever the core is laid, so install and update hash the same bytes.
+resolve_tree_name() {   # resolve_tree_name <file> <name>
+  local content
+  [ -f "$1" ] || return 0
+  content=$(<"$1")
+  printf '%s\n' "${content//\{\{TREE_NAME\}\}/$2}" > "$1"
+}
+# lay_core <dest> <adapter> <name>: the core files exactly as install places them
 lay_core() {
   local dest=$1 d f
   for d in $CORE_DIRS; do
-    [ -d "$SRC/template/$d" ] && { mkdir -p "$dest/$d" && cp -R "$SRC/template/$d/." "$dest/$d/" || return 1; }
+    [ -d "$SRC/blueprint/$d" ] && { mkdir -p "$dest/$d" && cp -R "$SRC/blueprint/$d/." "$dest/$d/" || return 1; }
   done
   for f in $CORE_FILES; do
-    [ -f "$SRC/template/$f" ] && { cp "$SRC/template/$f" "$dest/$f" || return 1; }
+    [ -f "$SRC/blueprint/$f" ] && { cp "$SRC/blueprint/$f" "$dest/$f" || return 1; }
   done
+  resolve_tree_name "$dest/README.md" "$3" || return 1
   mkdir -p "$dest/scripts" && cp -R "$SRC/scripts/." "$dest/scripts/" || return 1
   [ -n "$2" ] && { lay_payload "$2" "$dest" || return 1; }
   return 0
@@ -221,9 +230,15 @@ if [ "$MODE" = update ]; then
     fi
   done < "$TARGET/.agentcontext"
   INST_ADAPTER=${HEADER[adapter]:-}
+  # the instance's name: its workspace file's, else the directory's
+  INST_NAME=""
+  for w in "$TARGET"/*.code-workspace; do
+    [ -f "$w" ] && { INST_NAME=$(basename "$w" .code-workspace); break; }
+  done
+  [ -n "$INST_NAME" ] || INST_NAME=$(basename "$TARGET")
 
   UPDIR=$(mktmp)
-  lay_core "$UPDIR" "$INST_ADAPTER" || die "cannot lay out the release's core files (nothing written)"
+  lay_core "$UPDIR" "$INST_ADAPTER" "$INST_NAME" || die "cannot lay out the release's core files (nothing written)"
   while IFS= read -r l; do UP[${l:66}]=${l:0:64}; done < <(core_list "$UPDIR" "$INST_ADAPTER" | hashes "$UPDIR")
   present=()
   for p in "${!RECORDED[@]}" "${!UP[@]}"; do [ -f "$TARGET/$p" ] && present+=("$p"); done
@@ -295,10 +310,10 @@ if [ -e "$TARGET" ]; then
   [ -z "$others" ] || refuse "target is not empty: $TARGET holds ${others% }"
 fi
 if [ -z "$CONF" ]; then
-  [ -f "$TARGET/.conf" ] || refuse "no .conf: copy template/.conf.example, fill it, pass --conf"
+  [ -f "$TARGET/.conf" ] || refuse "no .conf: copy blueprint/.conf.example, fill it, pass --conf"
   CONF="$TARGET/.conf"
 fi
-[ -f "$CONF" ] || refuse "no .conf: $CONF does not exist; copy template/.conf.example, fill it, pass --conf"
+[ -f "$CONF" ] || refuse "no .conf: $CONF does not exist; copy blueprint/.conf.example, fill it, pass --conf"
 [ -n "$NAME" ] || NAME=$(basename "$TARGET")
 case "$NAME" in ''|.|..|*/*|*\\*|*\"*) refuse "--name: not a repository name: '$NAME'" ;; esac
 for s in "${SIBLINGS[@]}"; do
@@ -330,8 +345,9 @@ if [ -n "$ADAPTER" ]; then
 fi
 
 # -- copy ---------------------------------------------------------------------------
-cp -R "$SRC/template/." "$STAGE/" || die "copying the skeleton (nothing written)"
+cp -R "$SRC/blueprint/." "$STAGE/" || die "copying the skeleton (nothing written)"
 cp "$CONF" "$STAGE/.conf" || die "cannot read $CONF"   # a .conf.example never shadows it
+resolve_tree_name "$STAGE/README.md" "$NAME" || die "naming the reader page (nothing written)"
 [ $NO_PRIVATE -eq 1 ] && rm -rf "$STAGE/private"
 mkdir -p "$STAGE/scripts" && cp -R "$SRC/scripts/." "$STAGE/scripts/" || die "copying scripts/ (nothing written)"
 COPIED=$(cd "$STAGE" && find . -type f ! -name .conf ! -name workspace.code-workspace | wc -l | tr -d ' ')
