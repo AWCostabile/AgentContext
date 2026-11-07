@@ -1,3 +1,18 @@
+## Feature | Module Adoption [ _2026-11-07 11:50:00 UTC_ ]
+
+- fix: the deploy smoke holds the fixture check's stdin open without waiting out the sleep
+- fix: smell.sh never reads stdin for a branch with no index and no leaf
+- fix: the deploy smoke judges each example as of the date its manifest under common/ names
+- docs: the Edgewing reader page and the examples index say what the edge example shows and leaves out
+- docs: Edgewing's tree is filled: Winchbook designed, ruled and logged, a plan closed out with its pull-request record and journal
+- docs: Edgewing adopts seven seed rulings leaves, retires the delegation leaf and files its first bill
+- docs: the Edgewing example lays the full instance with every adoptable module, beside the Winchbook source and its code map
+- test: tests/tools/simulate.sh lays walkable instances into a git-ignored dist/
+- docs: the architecture and the module readmes adopt modules through the deployer
+- docs: the run-sheet and the migration guide adopt modules through the deployer
+- test: the deploy smoke adopts modules and updates over them
+- feat: init.sh --adopt lays a module into an instance and --update refreshes it file by file
+
 ## Feature | Common Directory [ _2026-11-07 11:29:11 UTC_ ]
 
 - refactor: the worked example moves onto the common directory through the deployer's update
