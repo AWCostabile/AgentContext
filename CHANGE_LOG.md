@@ -1,3 +1,15 @@
+## Feature | Common Directory [ _2026-11-07 11:29:11 UTC_ ]
+
+- refactor: the worked example moves onto the common directory through the deployer's update
+- test: the deploy smoke moves a v0.4.0 instance onto the common directory and judges the fresh root
+- test: the deploy smoke reads the instance's core files under common/
+- test: the fixture keeps its retired-terms list under common/scripts/
+- docs: the run-sheet, readme and architecture describe the common directory and the move rule
+- refactor: modules name their instance paths under common/
+- refactor: the Claude Code adapter keeps its process files under .claude/process/ and renames two agents
+- feat: --update moves the core files a release relocated
+- refactor: lay the files the template rolls forward under common/
+
 ## Feature | Core Comforts [ _2026-11-07 11:26:36 UTC_ ]
 
 - refactor: the skeleton directory is blueprint/, one blueprint of an instance's root
