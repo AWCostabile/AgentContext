@@ -230,9 +230,9 @@ Then add one row to the Contents table of `public/<catalog>/<Product>/.index.md`
 | [<Product> code base](./codebase/.index.md) | the generated code map: areas, surfaces, symbols; never hand-edited |
 ```
 
-and replace the tier's scaffold `.tags` with the words a searcher would use for that code.
+and respell the tier's `.tags`, which the generator writes once with generic words, to the words a searcher would use for that code.
 
-**Check**: `public/<catalog>/<Product>/codebase/` holds `.index.md`, `.tags`, `.agent`, `codebase.map.md`, `codebase.surfaces.md` and one `codebase.<area>.md` per area; the command `.agent` names, run again with `--check`, ends with no drift; `cure.sh` still ends with 0 fails. Commit.
+**Check**: `public/<catalog>/<Product>/codebase/` holds `.index.md`, `.tags`, `.agent`, `codebase.map.md`, `codebase.surfaces.md` and one `codebase.<area>.md` per area; the command `.agent` names, run again with `--check`, ends with no drift; `cure.sh` still ends with 0 fails. Commit here, and commit `codebase.profile.json` in the product's repository, where it lives.
 
 The tier is regenerated with that command at the landing of the change that moved the source, and never hand-edited. Python 3.10 or later is the module's one requirement.
 
@@ -284,7 +284,7 @@ and adds `local` to `PRIVATE_SCOPES` in `.conf` (`PRIVATE_SCOPES="<the words alr
 
 ## 13. Adopt the linkcheck module (optional)
 
-The linkcheck module asks every `http://` and `https://` URL the tree cites, once each, and reports the dead ones by file and line. It writes nothing and needs `curl` and the network, so it is run by hand or on a schedule, never as a gate. An instance works without it. Ask the user.
+The linkcheck module asks every `http://` and `https://` URL the leaves in the search scope cite (`public/` and the private branches `PRIVATE_SCOPES` names; `common/`, `constitution/` and `graphs/` are not leaves and are not read), once each, and reports the dead ones by file and line. It writes nothing and needs `curl` and the network, so it is run by hand or on a schedule, never as a gate. An instance works without it. Ask the user.
 
 **Run** (from the scratch directory, then from the instance root)
 
