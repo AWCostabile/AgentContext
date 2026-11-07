@@ -47,12 +47,12 @@ it is not.
 
 ## The verbs
 
-From the instance root, with the module copied to `modules/context-retention/`:
+From the instance root, with the module copied to `common/modules/context-retention/`:
 
 ```sh
-    bash modules/context-retention/meta.sh init [<path>...]    identities where absent; the excludes question
-    bash modules/context-retention/meta.sh check [<path>...]   current, moved, copied, first seen, or none
-    bash modules/context-retention/meta.sh list                 the map
+    bash common/modules/context-retention/meta.sh init [<path>...]    identities where absent; the excludes question
+    bash common/modules/context-retention/meta.sh check [<path>...]   current, moved, copied, first seen, or none
+    bash common/modules/context-retention/meta.sh list                 the map
 ```
 
 With no `<path>`, the projects are the instance itself and every folder the instance's workspace
@@ -82,11 +82,11 @@ spelling with forward slashes) and the date it was seen. It is rewritten whole b
 
 ## Adoption
 
-Copy `modules/context-retention/` into the instance, run `init` from the instance root and answer
+Copy `modules/context-retention/` into the instance's `common/modules/`, run `init` from the instance root and answer
 the excludes question, then run `check` whenever a folder has been renamed or moved, or let an
 adapter run it at every session start. The core never depends on the module: an instance without
 it loses only the move report and the identity line; the first-touch rule in `AGENTS.md` stands
-on its own. Bash and the core's `scripts/lib-scopes.sh` are all it needs.
+on its own. Bash and the core's `common/scripts/lib-scopes.sh` are all it needs.
 
 ## What an adapter adds
 

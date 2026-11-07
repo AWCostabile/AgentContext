@@ -2,7 +2,7 @@
 paths:
   - "**/.index.md"
   - "**/.tags"
-  - "templates/**"
+  - "common/templates/**"
 ---
 
-Read `rules/branch-grammar.md` before writing here; it is the law for these paths.
+Read `common/rules/branch-grammar.md` before writing here; it is the law for these paths.

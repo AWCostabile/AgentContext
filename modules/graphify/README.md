@@ -23,7 +23,7 @@ layer. The snapshot moves only when `scan` is run.
 
 ## Requirements
 
-Bash and the core's `scripts/lib-scopes.sh` (the module runs inside an instance). For the scan,
+Bash and the core's `common/scripts/lib-scopes.sh` (the module runs inside an instance). For the scan,
 graphify itself, the Python tool `graphifyy` (two y's: the package is `graphifyy`, the command
 `graphify`):
 
@@ -39,12 +39,12 @@ platforms. Python is also what the module reads a graph's counts with; without i
 
 ## Running it
 
-From the instance root, with the module copied to `modules/graphify/`:
+From the instance root, with the module copied to `common/modules/graphify/`:
 
 ```sh
-    bash modules/graphify/graphs.sh home <slug>...     home a repository (idempotent)
-    bash modules/graphify/graphs.sh scan [<slug>...]   regenerate every homed graph, or the named ones
-    bash modules/graphify/graphs.sh check [<slug>...]  report only; writes nothing
+    bash common/modules/graphify/graphs.sh home <slug>...     home a repository (idempotent)
+    bash common/modules/graphify/graphs.sh scan [<slug>...]   regenerate every homed graph, or the named ones
+    bash common/modules/graphify/graphs.sh check [<slug>...]  report only; writes nothing
 ```
 
 | Verb | What it does |
@@ -72,7 +72,7 @@ scan reports the version it ran and says how to pin it. The index row records th
 
 ## Adopting it
 
-1. Copy `modules/graphify/` from a release to `<instance>/modules/graphify/`.
+1. Copy `modules/graphify/` from a release to `<instance>/common/modules/graphify/`.
 2. Add `GRAPHS=` to `.conf`, one `<slug>=<path>` per repository.
 3. Run `home <slug>` for each; edit the seeded `.graphifyignore` (what the scan should skip:
    dependencies, build output, generated code; `graphify-out/` stays).
@@ -96,7 +96,7 @@ registration command for each assistant.
 
 ## The tier contract
 
-The tier obeys the generated-tiers rule of the core (`rules/generated-tiers.md`):
+The tier obeys the generated-tiers rule of the core (`common/rules/generated-tiers.md`):
 
 - **One writer.** Every `graph.json`, every Contents row of `graphs/.index.md` and `graphs/.agent`
   are written by `graphs.sh`. The prose above the Contents table and `.tags` are authored: the

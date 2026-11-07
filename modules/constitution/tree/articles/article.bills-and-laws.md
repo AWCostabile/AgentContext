@@ -13,7 +13,7 @@ it stands. This holds for the constitution and for every product alike.
 - A ruling made in a scoping conversation is filed as a bill (BL2). The kickoff cites it, agents
   build from it, and it may prove wrong.
 - The constitution's bills live in `constitution/bills/`; a product's in
-  `public/<catalog>/<Product>/bills/`, a branch made from `templates/branch` with the bills
+  `public/<catalog>/<Product>/bills/`, a branch made from `common/templates/branch` with the bills
   columns when its first bill arrives. A bill under `public/` is an authored shared leaf: it
   states rules, not schedules, and the smell S18 reads it like any other, so its Plan cell
   carries the counter (`2026-03-2`) without the word.

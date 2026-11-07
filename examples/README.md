@@ -10,6 +10,6 @@ hand, so that a reader can see indexes with something in them. Every name in the
 | [Spinecard source](./spinecard/README.md) | a small invented Go repository, the card printer the example's Spinecard code map is generated from |
 
 Each example is linted by `tests/tools/deploy-smoke.sh`: `cure.sh` and `smell.sh` must come back clean
-on it, and no placeholder may be left outside its `templates/`. The smoke also runs every example
+on it, and no placeholder may be left outside its `common/templates/`. The smoke also runs every example
 code map's command with `--check`, so a source repository here that changes without its code map
 being regenerated fails it.

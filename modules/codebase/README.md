@@ -14,10 +14,10 @@ Python 3.10 or later, standard library only. The extractors are line parsers wri
 
 ## Running it
 
-From the instance root, with the module copied to `modules/codebase/` (or from a checkout of this template):
+From the instance root, with the module copied to `common/modules/codebase/` (from a checkout of this template, `modules/codebase/` instead):
 
 ```sh
-    python modules/codebase/codebase.py --repo ../<repository> \
+    python common/modules/codebase/codebase.py --repo ../<repository> \
         --into public/<catalog>/<Product>/codebase --profile <profile.json> --write-agent
 ```
 
@@ -61,7 +61,7 @@ Each extractor's module says what its parser sees and what it does not. A file w
 
 ## The tier contract
 
-The tier obeys the generated-tiers rule of the core (`rules/generated-tiers.md` in an instance):
+The tier obeys the generated-tiers rule of the core (`common/rules/generated-tiers.md` in an instance):
 
 - **One writer.** Every `codebase.*.md` leaf and every Contents row of the tier's `.index.md` is written by `codebase.py`. The prose above the Contents table, `.tags` and `.agent` are authored: the generator creates them when absent and never rewrites them (`.agent` only with `--write-agent`). Never hand-edit a generated leaf; fix the extractor or the source and regenerate.
 - **Regenerate at the landing** of the change that moved the source, never for an unmerged branch. `.agent` names the command.

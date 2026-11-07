@@ -11,7 +11,7 @@ Not written; the core stands alone.
 ## 2. What the core degrades to without it
 
 Not written; the core stands alone. The linter and convention stand in for every enforcement in
-the checklist: a tier violation is caught when `scripts/cure.sh` runs, not when it is written; a
+the checklist: a tier violation is caught when `common/scripts/cure.sh` runs, not when it is written; a
 sibling's instruction is read by the agent on first touch, as `AGENTS.md` asks.
 
 ## 3. What a port must reproduce

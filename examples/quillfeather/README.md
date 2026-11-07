@@ -15,15 +15,17 @@ tree starts at [AGENTS.md](./AGENTS.md), as it would in yours.
 2. The template's own deployer laid the instance down: `init.sh --target examples/quillfeather
    --conf <that .conf> --name Quillfeather`, with no adapter.
 3. Everything under `public/` and `private/` was then filled by hand, following the rules the
-   instance received: each product copied from `templates/product`, each private mirror from
-   `templates/product-mirror`, every placeholder replaced.
+   instance received: each product copied from `common/templates/product`, each private mirror from
+   `common/templates/product-mirror`, every placeholder replaced.
 4. At each release the deployer's update mode brings its core files along, run from the template
    repository's root: `init.sh --update --target examples/quillfeather --from .`. It rewrites
-   `.agentcontext` itself; nothing there is edited by hand.
+   the manifest, `common/.agentcontext`, itself (the release that laid the core under `common/`
+   moved it there, file by file); nothing there is edited by hand.
 
-The core files (`AGENTS.md`, `HYGIENE.md`, `rules/`, `scripts/`, `templates/`, `.vscode/`,
-`.conf.example`) are the template's own, copied in by the deployer and listed with their hashes in
-`.agentcontext`. Read them in the template rather than here.
+The core files (`AGENTS.md`, `README.md`, `.vscode/` and everything under `common/`: `HYGIENE.md`,
+`rules/`, `scripts/`, `templates/`, `.conf.example`) are the template's own, copied in by the
+deployer and listed with their hashes in `common/.agentcontext`. Read them in the template rather
+than here.
 
 ## What to look at first
 
@@ -43,9 +45,9 @@ The core files (`AGENTS.md`, `HYGIENE.md`, `rules/`, `scripts/`, `templates/`, `
    [inbox](./private/journal/inbox.md), where a thought waits on one dated line until it is filed
    or dropped.
 
-Run the tree's own tools from this directory: `bash scripts/find.sh -l` lists the tag vocabulary,
-`bash scripts/find.sh offline` finds the branches about the offline till, and `bash scripts/cure.sh`
-and `bash scripts/smell.sh` both come back clean.
+Run the tree's own tools from this directory: `bash common/scripts/find.sh -l` lists the tag vocabulary,
+`bash common/scripts/find.sh offline` finds the branches about the offline till, and `bash common/scripts/cure.sh`
+and `bash common/scripts/smell.sh` both come back clean.
 
 ## The code maps
 
@@ -62,7 +64,7 @@ names runs from there; an instance runs the module from its own root, with `--re
 
 - **No adapter.** The example is harness-neutral: search and filing are run by hand, and the linter
   stands in for pre-write enforcement.
-- **No constitution module.** The tree's law about itself is the core `rules/`. The codebase module
+- **No constitution module.** The tree's law about itself is the core `common/rules/`. The codebase module
   was run from the template to write the code maps, but no module was copied into this directory.
 - **The private tree is a snapshot.** In a real instance `private/` is a git repository of its own
   that the instance ignores, and `.conf` is ignored too. Here both are committed so you can read

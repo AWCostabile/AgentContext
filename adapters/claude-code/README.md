@@ -13,27 +13,27 @@ instance.
   any `history/` whose first twelve lines carry a line starting `_status:_ seed` is prospective
   law, not yet enacted, and stays writable until the owner changes that line on adoption.
   `KNOWLEDGE_TREE_TIER_OVERRIDE=1` lets a deliberate exception through.
-- **A lint after every write.** A `PostToolUse` hook runs `scripts/cure.sh --fast` after any
-  write into the trees, `templates/`, `AGENTS.md` or `README.md`, and hands the FAIL lines back
+- **A lint after every write.** A `PostToolUse` hook runs `common/scripts/cure.sh --fast` after any
+  write into the trees, `common/templates/`, `AGENTS.md` or `README.md`, and hands the FAIL lines back
   to the session to fix in the same action.
 - **Orientation at session start.** A `SessionStart` hook hands the session the tree's lint
-  verdict, the one-line brief of `scripts/review.sh` when the instance has it (the smell count,
+  verdict, the one-line brief of `common/scripts/review.sh` when the instance has it (the smell count,
   the inbox, the stale and uncited leaves, the retro pressure, the unpushed branches, the newest
   journal entry), the journal's status page, the retro pressure, and every repository's branch,
   sync state and unpushed branches, in at most 45 lines.
 - **Kickoff detection.** A `UserPromptSubmit` hook recognises a kickoff on a session's first
-  prompt and injects `KICKOFF.md`; the output style switches from `scoping` to `orchestrated`.
+  prompt and injects `.claude/process/KICKOFF.md`; the output style switches from `scoping` to `orchestrated`.
 - **Skills.** `/file` files a leaf with its row and tags as one action; `/find` searches by tag,
   then keyword; `/cure` runs both linters and repairs what they find; `/kickoff` writes a
   paste-ready prompt from a plan and its bill (it needs the constitution module); `/retro` runs
   a retrospective over a window of landed work.
 - **Subagent profiles.** `librarian` (lookups), `filer` (filing), `scrutinizer` (leaf
-  hygiene), `skeptic` (pre-pull-request code review), `brainiac` (retrospectives), and three
-  implementer tiers, `implementer-deep`, `implementer` and `mechanic`, the orchestration
+  hygiene), `skeptic` (pre-pull-request code review), `historian` (retrospectives), and three
+  implementer tiers, `principal`, `implementer` and `mechanic`, the orchestration
   ground rules route to.
 - **Rules loaded by path.** Six loaders point a session at the grammar or tier rule for the
   paths it is touching, without copying the rule.
-- **The orchestration ground rules.** `KICKOFF.md`, `WORKER.md` and `CLOSEOUT.md` add this
+- **The orchestration ground rules.** `.claude/process/KICKOFF.md`, `.claude/process/WORKER.md` and `.claude/process/CLOSEOUT.md` add this
   harness's mechanics (routing, background jobs, the lean budget, the prompt-cache keep-alive,
   the attribution setting, the non-interactive fold) to the neutral process documents.
 - **A one-line `CLAUDE.md`** that imports the core's instruction with `@AGENTS.md`.
@@ -68,9 +68,9 @@ instance.
 ## 2. What the core degrades to without it
 
 The linter and convention stand in for the pre-write guard: a tier violation is caught when
-`scripts/cure.sh` and `scripts/smell.sh` run, not when the write is attempted. Orientation is
+`common/scripts/cure.sh` and `common/scripts/smell.sh` run, not when the write is attempted. Orientation is
 reading `private/journal/latest.md` by hand, as `AGENTS.md` instructs. Search and filing are
-run by hand from `AGENTS.md` and `rules/`. Kickoffs carry their ground rules by pointer line
+run by hand from `AGENTS.md` and `common/rules/`. Kickoffs carry their ground rules by pointer line
 alone. A sibling's instruction is read by the agent itself on first touch, as `AGENTS.md` asks;
 a moved project is reported by the module's `check` and repaired by hand from its README. No
 data is lost: every leaf, index and tag is the same with or without the adapter.
@@ -86,4 +86,4 @@ hook; a moved project is the `retention` hook over the module's `check`; the pre
 `guard-tiers`; the lint after write is `lint-on-write`; kickoff detection is `classify-mode`; the
 two postures are the output styles; the five procedures are the skills; the delegated roles are
 the agent profiles; the rules by path are the six loaders under `.claude/rules/`; the ground rules
-are `KICKOFF.md`, `WORKER.md` and `CLOSEOUT.md`; and every hook exits 0 on any failure of its own.
+are `.claude/process/KICKOFF.md`, `.claude/process/WORKER.md` and `.claude/process/CLOSEOUT.md`; and every hook exits 0 on any failure of its own.

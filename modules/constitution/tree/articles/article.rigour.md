@@ -13,8 +13,8 @@ records what it adopted.
 ## The two homes
 
 - **The catalog is current law** (HG14) and lives in a `rigour/` branch beside the product's
-  `design/`: `public/<catalog>/<Product>/rigour/`, made from `templates/branch`, each leaf from
-  `templates/branch/rule.md`. A leaf may hold several rules, grouped by the area or the bug
+  `design/`: `public/<catalog>/<Product>/rigour/`, made from `common/templates/branch`, each leaf from
+  `common/templates/branch/rule.md`. A leaf may hold several rules, grouped by the area or the bug
   class they guard.
 - **What a sweep or a review found is a record of the work** and lives in the private mirror at
   the same relative path: the findings ledger, each row **open**, **fixed**, **cleared** (a false
@@ -93,5 +93,5 @@ the close-out check done) and before the owner raises the pull request (HG20):
 ## The `ORCH_` settings
 
 Orchestration settings share the `.conf` prefix `ORCH_` (AG11). `ORCH_BUDGET` is in the core's
-`.conf.example`. An instance that adopts the review loop adds `ORCH_REVIEW_ROUNDS`: default `2`,
+`common/.conf.example`. An instance that adopts the review loop adds `ORCH_REVIEW_ROUNDS`: default `2`,
 and `0` disables the loop. Later loop settings, such as the finding cap, join the same prefix.

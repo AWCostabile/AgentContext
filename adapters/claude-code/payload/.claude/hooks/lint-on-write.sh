@@ -1,13 +1,13 @@
 #!/bin/bash
 # lint-on-write.sh — PostToolUse (Write|Edit|MultiEdit): after a write into the
-# knowledge tree (public/, private/, templates/, constitution/, AGENTS.md, README.md)
+# knowledge tree (public/, private/, common/templates/, constitution/, AGENTS.md, README.md)
 # run the structural lint and hand any [FAIL] lines plus the VERDICT back as
 # additionalContext, so the session repairs them in the same action.
 # Emits nothing when the tree is sound. Never blocks; always exits 0.
 set -u
 HOOKDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HOOKDIR/../.." && { pwd -W 2>/dev/null || pwd; })"
-[ -f "$HOOKDIR/../../scripts/cure.sh" ] || exit 0
+[ -f "$HOOKDIR/../../common/scripts/cure.sh" ] || exit 0
 
 PY=""
 for c in python3 python py; do
@@ -17,11 +17,11 @@ done
 
 rel=$("$PY" "$HOOKDIR/relpath.py" "$ROOT" 2>/dev/null) || exit 0
 case "$rel" in
-  public/*|private/*|templates/*|constitution/*|AGENTS.md|README.md) ;;
+  public/*|private/*|common/templates/*|constitution/*|AGENTS.md|README.md) ;;
   *) exit 0 ;;
 esac
 
-out=$(cd "$HOOKDIR/../.." && timeout 30 bash scripts/cure.sh --fast 2>/dev/null)
+out=$(cd "$HOOKDIR/../.." && timeout 30 bash common/scripts/cure.sh --fast 2>/dev/null)
 report="" nfail=0
 while IFS= read -r line; do
   case "$line" in

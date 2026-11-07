@@ -1,6 +1,6 @@
 #!/bin/bash
 # guard-tiers.sh — PreToolUse (Write|Edit|MultiEdit): refuse a write into an immutable
-# tier of the knowledge tree before it happens (rules/provenance-tiers.md).
+# tier of the knowledge tree before it happens (common/rules/provenance-tiers.md).
 #
 #   public/**/history/**        rulings, added verbatim with a manifest row
 #   constitution/history/**     the same tier in the constitution, where it is adopted
@@ -45,13 +45,13 @@ esac
 reason=""
 case "$lc" in
   public/*/history/*|constitution/history/*)
-    reason="history/ is an immutable provenance tier (rules/provenance-tiers.md): add a record verbatim with cp plus a manifest row, never Write/Edit it" ;;
+    reason="history/ is an immutable provenance tier (common/rules/provenance-tiers.md): add a record verbatim with cp plus a manifest row, never Write/Edit it" ;;
   private/*/prs/*)
     # An unlanded PR body is not yet a record: its own `_landed as:_` line reads `—`.
     if [ -f "$ROOT/$rel" ] && grep -q -m1 -E '^_landed as:_ (—|-) *$' "$ROOT/$rel"; then exit 0; fi
-    reason="prs/ is an immutable provenance tier (rules/provenance-tiers.md): add a body verbatim with cp plus a manifest row; a landed body is corrected forward, never edited" ;;
+    reason="prs/ is an immutable provenance tier (common/rules/provenance-tiers.md): add a body verbatim with cp plus a manifest row; a landed body is corrected forward, never edited" ;;
   private/*/appendices/*|private/journal/retros/*)
-    reason="this is an immutable provenance tier (rules/provenance-tiers.md): add a record verbatim with cp plus a manifest row, never Write/Edit it" ;;
+    reason="this is an immutable provenance tier (common/rules/provenance-tiers.md): add a record verbatim with cp plus a manifest row, never Write/Edit it" ;;
 esac
 [ -z "$reason" ] && exit 0
 

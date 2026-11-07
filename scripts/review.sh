@@ -12,7 +12,7 @@
 #   the newest journal entry                 when the journal last recorded a landing
 # With no private tree the private rows are simply absent, never an error.
 #
-# Usage: bash scripts/review.sh [--root <dir>] [--brief] [--today <YYYY-MM-DD>]
+# Usage: bash common/scripts/review.sh [--root <dir>] [--brief] [--today <YYYY-MM-DD>]
 #   --root <dir>  the tree root (the directory holding public/ and .conf); default the
 #                 current directory
 #   --brief       one line of counts, for a session's orientation
@@ -136,7 +136,7 @@ echo "$inbox_line"
 if [ $((n01 + n20 + n21)) -gt 0 ]; then
   echo "Stale, uncited, overdue (S01, S20, S21):"
   findings "S01 S20 S21" | head -n 12
-  [ $((n01 + n20 + n21)) -gt 12 ] && echo "  … and $((n01 + n20 + n21 - 12)) more: bash scripts/smell.sh"
+  [ $((n01 + n20 + n21)) -gt 12 ] && echo "  … and $((n01 + n20 + n21 - 12)) more: bash common/scripts/smell.sh"
 fi
 [ -n "$retro_line" ] && echo "$retro_line"
 if [ ${#unpushed[@]} -gt 0 ]; then

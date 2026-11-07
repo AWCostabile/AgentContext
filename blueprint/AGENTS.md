@@ -7,12 +7,12 @@ align to from the first prompt, at low token cost. `public/` is what is true and
 ## How to read
 
 1. Read `.conf` first. It says how to speak to this user and which catalogs and private branches
-   exist. Its keys are explained in `.conf.example`.
+   exist. Its keys are explained in `common/.conf.example`.
 2. If `private/journal/latest.md` exists, read it before anything else: what is in flux, what last
    landed, what is next. If it is absent, this machine holds no development-cycle records. Say so
    rather than guessing at the state of the work.
 3. Descend `.index.md` files from the table below. Never glob-crawl the tree.
-4. Resolve tags with `bash scripts/find.sh <tag...>`, then expand and descend.
+4. Resolve tags with `bash common/scripts/find.sh <tag...>`, then expand and descend.
 5. If a branch has a `.agent`, read it before reading from or writing to that branch.
 6. **Read a project on first touch, and not before.** The workspace holds this tree and its
    repositories side by side. Your session opens with this tree's instruction alone. The first
@@ -29,9 +29,9 @@ one leaf per area, each opening with a **State today** paragraph. Follow its lin
 | ----- | ------- |
 | [Public](./public/.index.md) | what is true: per-product rulings, design, feature log, research; shared tools; misc |
 | [Private — the development cycle on this machine](./private/.index.md) | only where this machine has one: plans, kickoffs, PR bodies, retros, the journal |
-| [Templates](./templates/.index.md) | copy these to make a new branch, leaf or product |
-| [Scripts](./scripts/.index.md) | `find.sh` search; `cure.sh` the linter; `smell.sh` the smells; `review.sh` the agenda |
-| [Rules](./rules/.index.md) | the grammar and tier rules as plain documents |
+| [Templates](./common/templates/.index.md) | copy these to make a new branch, leaf or product |
+| [Scripts](./common/scripts/.index.md) | `find.sh` search; `cure.sh` the linter; `smell.sh` the smells; `review.sh` the agenda |
+| [Rules](./common/rules/.index.md) | the grammar and tier rules as plain documents |
 
 ## Where to write
 
@@ -45,8 +45,8 @@ one leaf per area, each opening with a **State today** paragraph. Follow its lin
   your own.
 
 Write in the deepest matching branch. **Leaf + Contents row + tags is one action**; in the private
-tree it ends with one commit. Copy new branches from `templates/branch`, and new products from
-`templates/product` (its private mirror from `templates/product-mirror`), filling in every
+tree it ends with one commit. Copy new branches from `common/templates/branch`, and new products from
+`common/templates/product` (its private mirror from `common/templates/product-mirror`), filling in every
 placeholder.
 
 ## The laws
@@ -78,29 +78,29 @@ is never rewritten. A machine with no `private/` is normal, and every tool treat
 
 ## Maintenance
 
-The tree checks itself in two layers, and [HYGIENE.md](./HYGIENE.md) is the contract of both:
+The tree checks itself in two layers, and [HYGIENE.md](./common/HYGIENE.md) is the contract of both:
 
-- `bash scripts/cure.sh` lints the structure: every branch indexed and tagged, every leaf referenced,
+- `bash common/scripts/cure.sh` lints the structure: every branch indexed and tagged, every leaf referenced,
   every link resolving, nothing under `public/` pointing into `private/`, every catalog in `.conf`
   present. A broken invariant is a FAIL and the exit code counts them; `--fast` skips the advisory
   scans.
-- `bash scripts/smell.sh` hunts what is probably wrong and needs judgement: a stale design or feature
+- `bash common/scripts/smell.sh` hunts what is probably wrong and needs judgement: a stale design or feature
   leaf, a design or history leaf nothing cites, a dead tag, an index row that no longer matches its
   leaf's title, process vocabulary in `public/`, a retired spelling, an inbox item left too long. Every
   finding is a WARN to fix or to record a reason for.
-- `bash scripts/review.sh` prints the agenda the two imply in about thirty lines and writes nothing:
+- `bash common/scripts/review.sh` prints the agenda the two imply in about thirty lines and writes nothing:
   the verdict, the smell summary, the inbox, the stale and uncited leaves, the retro pressure, the
   branches without an upstream, the newest journal entry; `--brief` is one line of counts.
-- `bash scripts/find.sh -b <leaf>` lists every file that cites a leaf (its index row marked), and
+- `bash common/scripts/find.sh -b <leaf>` lists every file that cites a leaf (its index row marked), and
   `-f <key>` the files carrying a `_<key>:_` marker line with its value (`-f reviewed`,
   `-f 'reviewed<2026-01-01'`): what cites this, and what is due, without a grep.
 
 Both read `.conf` and treat an absent `private/` as normal. Run the linter after filing several
 leaves and before merging a branch: zero fails, every smell fixed or reasoned. The grammar the checks
-enforce is written out in [rules/](./rules/.index.md).
+enforce is written out in [common/rules/](./common/rules/.index.md).
 
-The core files this tree received from the template (`scripts/`, `rules/`, `templates/`, `.vscode/`,
-this file, `HYGIENE.md`, `README.md`, `.conf.example`) are listed with their hashes in `.agentcontext` at the root,
+The core files this tree received from the template (`common/scripts/`, `common/rules/`, `common/templates/`, `.vscode/`,
+this file, `common/HYGIENE.md`, `README.md`, `common/.conf.example`) are listed with their hashes in `common/.agentcontext`,
 with the release they came from. A later release is pulled in with the template's deployer in update
 mode, which replaces what was never edited here and reports what was; the procedure is the "How to
 update" section of the template's `SETUP.md`, at the `upstream=` address the manifest names. Nothing

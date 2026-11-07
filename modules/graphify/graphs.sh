@@ -5,7 +5,7 @@
 # graphs/ is GENERATED. This script is its only writer: every graph.json, the Contents rows of
 # graphs/.index.md and graphs/.agent come from here, and nothing under graphs/ is hand-edited
 # (the prose above the Contents table and .tags are authored, scaffolded once and never
-# rewritten). Re-runnable like scripts/cure.sh: one [ OK ] / [WARN] / [FAIL] line per
+# rewritten). Re-runnable like common/scripts/cure.sh: one [ OK ] / [WARN] / [FAIL] line per
 # finding, and the exit code is the number of FAILs (2 for a usage error or a refusal, when
 # nothing was written).
 #
@@ -19,27 +19,27 @@
 #                              graphify with the commit it was built at.
 #
 # Usage (from the instance root, the directory holding .conf):
-#   bash modules/graphify/graphs.sh home <slug>...    home a repository: seed its .graphifyignore
+#   bash common/modules/graphify/graphs.sh home <slug>...    home a repository: seed its .graphifyignore
 #                                                     (never rewritten once present), ignore
 #                                                     graphify-out/ in its .gitignore, link its
 #                                                     graphify-out into graphs/<slug>/live/,
 #                                                     scaffold graphs/ and the instance's own
 #                                                     .gitignore block. Idempotent.
-#   bash modules/graphify/graphs.sh scan [<slug>...]  regenerate every homed repository (or the
+#   bash common/modules/graphify/graphs.sh scan [<slug>...]  regenerate every homed repository (or the
 #                                                     named ones): a from-scratch, code-only,
 #                                                     offline extract into live/, the snapshot
 #                                                     copied up, registered in the user's global
 #                                                     graph, the index rows rewritten
-#   bash modules/graphify/graphs.sh check [<slug>...] report only: the links, the tool and its
+#   bash common/modules/graphify/graphs.sh check [<slug>...] report only: the links, the tool and its
 #                                                     pin, staleness against each repository's
 #                                                     HEAD, index drift. Writes nothing.
-#   bash modules/graphify/graphs.sh                   = scan
+#   bash common/modules/graphify/graphs.sh                   = scan
 # Options:
 #   --root <dir>   the instance root; default the current directory
 #   --force        scan: bypass graphify's parse cache too (every scan already rebuilds the graph)
 #   --no-global    scan: do not register the snapshot in ~/.graphify/global-graph.json
 #
-# .conf keys (read through scripts/lib-scopes.sh; never spelled here):
+# .conf keys (read through common/scripts/lib-scopes.sh; never spelled here):
 #   GRAPHS="<slug>=<path> ..."   the repositories, one word each: a slug ([a-z0-9-]) and the
 #                                repository's path relative to the instance root (`../<name>`
 #                                for a sibling in the workspace; `.` for the instance itself)
@@ -69,9 +69,9 @@ done
 [ -z "$ROOT" ] && ROOT=$PWD
 ROOT=$(cd "$ROOT" 2>/dev/null && pwd) || { echo "usage: --root $ROOT is not a directory" >&2; exit 2; }
 [ -f "$ROOT/.conf" ] || { echo "refused: $ROOT holds no .conf — run from the instance root or pass --root" >&2; exit 2; }
-[ -f "$ROOT/scripts/lib-scopes.sh" ] || { echo "refused: $ROOT/scripts/lib-scopes.sh is missing — the module runs inside an instance of the template" >&2; exit 2; }
+[ -f "$ROOT/common/scripts/lib-scopes.sh" ] || { echo "refused: $ROOT/common/scripts/lib-scopes.sh is missing — the module runs inside an instance of the template" >&2; exit 2; }
 # shellcheck source=/dev/null
-. "$ROOT/scripts/lib-scopes.sh"
+. "$ROOT/common/scripts/lib-scopes.sh"
 [ "$VERB" = home ] && [ ${#SLUGS[@]} -eq 0 ] && { echo "usage: home <slug>..." >&2; exit 2; }
 
 FAIL=0; WARN=0
@@ -87,7 +87,7 @@ for p in python3 python py; do
 done
 
 GRAPHS_DIR="$ROOT/graphs"
-SELF="modules/graphify/graphs.sh"
+SELF="common/modules/graphify/graphs.sh"
 
 # -- the repositories, from .conf -----------------------------------------------------------------
 declare -A REPO_PATH=() REPO_TITLE=()

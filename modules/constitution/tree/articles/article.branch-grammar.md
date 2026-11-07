@@ -5,8 +5,8 @@ _reviewed:_ 2026-11-02
 
 The grammar itself (branches, indexes, the Contents shapes, reading by descent, writing as one
 action, tags, standing orders, the archive form and promotion) is stated as an instruction in
-[rules/branch-grammar.md](../../rules/branch-grammar.md), and the checks that enforce it in
-[HYGIENE.md](../../HYGIENE.md). This article does not restate them. It carries what the rule
+[common/rules/branch-grammar.md](../../common/rules/branch-grammar.md), and the checks that enforce it in
+[HYGIENE.md](../../common/HYGIENE.md). This article does not restate them. It carries what the rule
 leaves out: why the grammar takes the shape it does, and the procedures for a move and a
 promotion, which are rare enough to need their reasoning beside them.
 

@@ -28,7 +28,7 @@ how it was run never does.
 
 ## How to search
 
-From the root, `bash scripts/find.sh <tag...>` resolves tags to the branches that carry them,
+From the root, `bash common/scripts/find.sh <tag...>` resolves tags to the branches that carry them,
 `-k <word>` greps the indexes, `-b <leaf>` lists every page that cites a leaf, and `-f <key>`
 lists the pages carrying a `_<key>:_` line, such as `-f reviewed`. Every directory is a branch
 with one `.index.md` and one `.tags`; `find.sh -l` lists the whole tag vocabulary.
@@ -37,19 +37,19 @@ with one `.index.md` and one `.tags`; `find.sh -l` lists the whole tag vocabular
 
 A new fact goes in the deepest branch that fits, as one action: the leaf, its row in the
 branch's `.index.md`, and any new tag in `.tags`. A new branch is copied from
-`templates/branch`, a new product from `templates/product`. A ruling, a design change, a
+`common/templates/branch`, a new product from `common/templates/product`. A ruling, a design change, a
 feature-log entry or a piece of research belongs in `public/`; a plan, a kickoff, a
 pull-request record or a journal entry in `private/`. A thought with no home yet goes on one
 dated line of `private/journal/inbox.md`, to be filed or dropped later.
 
 ## Keeping it honest
 
-`bash scripts/cure.sh` fails on a broken shape, `bash scripts/smell.sh` warns on what needs
-judgement, and `bash scripts/review.sh` prints the week's agenda from both.
-[HYGIENE.md](./HYGIENE.md) explains every check and how to put it right.
+`bash common/scripts/cure.sh` fails on a broken shape, `bash common/scripts/smell.sh` warns on what needs
+judgement, and `bash common/scripts/review.sh` prints the week's agenda from both.
+[HYGIENE.md](./common/HYGIENE.md) explains every check and how to put it right.
 
 ## For agents
 
 [AGENTS.md](./AGENTS.md) is the instruction an agent session reads first, and
-[rules/](./rules/.index.md) holds the grammar as plain documents. This page is for people;
+[common/rules/](./common/rules/.index.md) holds the grammar as plain documents. This page is for people;
 it repeats neither.

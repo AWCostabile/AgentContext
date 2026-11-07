@@ -2,7 +2,7 @@
 # retention.sh — SessionStart: the context-retention module's check for the instance and the
 # workspace's projects, and the repair of what this harness filed under a project's OLD path.
 #
-# The module (modules/context-retention/meta.sh) reports that project <id> was last seen at one
+# The module (common/modules/context-retention/meta.sh) reports that project <id> was last seen at one
 # path and is now at another. This harness files a project's transcripts and auto memory under
 # <config>/projects/<encoded path>/, so a moved project is a stranger to the resume picker and
 # to MEMORY.md. The hook derives the old and the new encoded names (every character outside
@@ -19,7 +19,7 @@
 set -u
 HOOKDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HOOKDIR/../.." && pwd)"
-[ -f "$ROOT/modules/context-retention/meta.sh" ] || exit 0
+[ -f "$ROOT/common/modules/context-retention/meta.sh" ] || exit 0
 PY=""
 for c in python3 python py; do
   "$c" -c pass >/dev/null 2>&1 && { PY="$c"; break; }
@@ -27,7 +27,7 @@ done
 [ -z "$PY" ] && exit 0
 # The check runs here, in the shell the hook runs in, and its rows reach the Python body
 # through the environment: a Python child resolving `bash` on Windows may find another bash.
-RETENTION_ROWS=$(cd "$ROOT" && timeout 20 bash modules/context-retention/meta.sh check --porcelain 2>/dev/null)
+RETENTION_ROWS=$(cd "$ROOT" && timeout 20 bash common/modules/context-retention/meta.sh check --porcelain 2>/dev/null)
 export RETENTION_ROWS
 timeout 10 "$PY" -I "$HOOKDIR/retention.py" "$ROOT" 2>/dev/null
 exit 0

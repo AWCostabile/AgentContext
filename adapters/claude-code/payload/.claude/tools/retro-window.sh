@@ -1,6 +1,6 @@
 #!/bin/bash
 # retro-window.sh — assemble the block of landed work inside a date window, for a
-# retrospective (the /retro skill feeds this to the brainiac subagent). Report-only.
+# retrospective (the /retro skill feeds this to the historian subagent). Report-only.
 #
 #   bash .claude/tools/retro-window.sh <since YYYY-MM-DD> [until YYYY-MM-DD]
 #   (until defaults to today; both ends inclusive)
@@ -11,7 +11,7 @@
 #      this machine has one; the current branch and main, deduped by git itself;
 #      author dates rendered in UTC, so a landing near midnight sits on one day
 #   2. manifest rows across both trees whose "Landed as" cell holds a date inside the
-#      window (scripts/lib-manifest.sh: the latest date in the cell), the count of
+#      window (common/scripts/lib-manifest.sh: the latest date in the cell), the count of
 #      RECORDS; several records (plan, PR body, rulings) usually cite one landing
 #   3. epic rows: a `[x]` plus a date inside the window, in every epic.*.md leaf
 #   4. the most recent retro leaf, or none

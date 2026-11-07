@@ -46,10 +46,10 @@ section 2 says which fall back to convention. A port counts as one when it answe
 2. **Orientation at session start.** The agent opens with the tree's bearings, in at most about
    45 lines: the `cure.sh --fast` verdict; `private/journal/latest.md` when it exists; with a
    private tree, the count of manifest rows landed since the newest retro
-   (`scripts/lib-manifest.sh`); one line per repository (this one, its private tree, each sibling
+   (`common/scripts/lib-manifest.sh`); one line per repository (this one, its private tree, each sibling
    with a `.git`) with branch and ahead/behind; the local branches with no upstream.
 3. **The reading order.** `.conf` first; the journal's status page when this machine has one;
-   indexes descended, never crawled; tags resolved with `scripts/find.sh`; a branch's `.agent`
+   indexes descended, never crawled; tags resolved with `common/scripts/find.sh`; a branch's `.agent`
    obeyed before reading or writing there. These are `AGENTS.md`'s own; a harness that cannot
    enforce them still leaves them to the agent, and says so.
 4. **The start prompt is the instance's own instruction, and a sibling is read on first touch.**
@@ -69,8 +69,8 @@ section 2 says which fall back to convention. A port counts as one when it answe
    one line naming the path and the rule. `.index.md`, `.tags` and `.agent` are never refused; a
    PR body whose `_landed as:_` line reads `—` is never refused; an environment variable lets a
    deliberate exception through. Plans and kickoffs are not refused by path.
-7. **The lint after write.** After a write into `public/`, `private/`, `templates/`,
-   `constitution/`, `AGENTS.md` or `README.md`, `scripts/cure.sh --fast` runs and its FAIL lines
+7. **The lint after write.** After a write into `public/`, `private/`, `common/templates/`,
+   `constitution/`, `AGENTS.md` or `README.md`, `common/scripts/cure.sh --fast` runs and its FAIL lines
    and verdict reach the agent; nothing is reported when the tree is sound.
 8. **Kickoff detection.** On a session's first prompt only, a first line of `Mode: orchestrated`,
    or two of the markers WORKING DIRECTORIES, HARD RULE, VERIFY RATHER THAN ASSUME, CLOSE-OUT,
@@ -80,7 +80,7 @@ section 2 says which fall back to convention. A port counts as one when it answe
    `AI_TECHNICALITY`, and an orchestrated posture for kickoff sessions that honours `ORCH_BUDGET`.
 10. **The five procedures** as commands or equivalents: file (leaf, row and tags as one action,
     routed by kind, ending with `cure.sh --fast` and one private commit), find (tags, then
-    keywords, then expand and descend), cure (both linters, repairs per `HYGIENE.md`, standing
+    keywords, then expand and descend), cure (both linters, repairs per `common/HYGIENE.md`, standing
     smells reported with reasons), kickoff (from a plan and its bill with the constitution
     module's kickoff template, degrading to a hand-written kickoff without it), and retro (a
     window of landed work assembled, then a retrospective leaf with computed numbers).
@@ -88,7 +88,7 @@ section 2 says which fall back to convention. A port counts as one when it answe
     code reviewer whose findings cite `path:line`, a retrospective writer, and three
     implementation tiers (design-sensitive, standard, mechanical), each ending its report with an
     `## Insights` block.
-12. **Rules loaded by path.** Touching a governed path brings the matching `rules/<name>.md` into
+12. **Rules loaded by path.** Touching a governed path brings the matching `common/rules/<name>.md` into
     the agent's attention, by pointer, never by copy.
 13. **The orchestration ground rules**, one file per reader (orchestrator at the start, every
     delegated agent, orchestrator at the close), saying only what the harness adds to the neutral

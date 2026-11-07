@@ -1,7 +1,7 @@
 #!/bin/bash
 # classify-mode.sh — UserPromptSubmit: on the FIRST prompt of a session decide
 # whether it is a kickoff (an orchestrated piece of work) and, if so, hand the session
-# its mode line plus KICKOFF.md as additionalContext. Either route detects it:
+# its mode line plus .claude/process/KICKOFF.md as additionalContext. Either route detects it:
 #   (a) the first non-blank line reads `Mode: orchestrated ...`
 #   (b) two or more of the kickoff section markers appear (case-insensitive):
 #       WORKING DIRECTORIES, HARD RULE, VERIFY RATHER THAN ASSUME, CLOSE-OUT, SETTLE WITH
@@ -14,7 +14,7 @@
 # Emits JSON only; on any problem, nothing. Always exits 0.
 set -u
 HOOKDIR=${BASH_SOURCE[0]%/*}
-KICKOFF="$HOOKDIR/../../KICKOFF.md"
+KICKOFF="$HOOKDIR/../process/KICKOFF.md"
 [ -f "$KICKOFF" ] || exit 0
 input=""
 IFS= read -r -d '' input || [ -n "$input" ] || exit 0
