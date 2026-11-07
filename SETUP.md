@@ -70,7 +70,7 @@ bash AgentContext-0.4.0/init.sh --target <path> --conf ./my.conf --sibling <name
 grep -rlE '\{\{[A-Za-z]' --exclude-dir=.git <path> | grep -v '/templates/'
 ```
 
-prints nothing: no placeholder is left outside the templates directory (the core documents mention the placeholder syntax itself, which is why the check looks for a brace pair followed by a letter). `<path>/public/` holds one directory per catalog and no `catalog/`; `<path>/.agentcontext` exists and its `ref=` line names the release; `<path>/<RepositoryName>.code-workspace` exists and its `folders` name the tree, the private tree when there is one, and each `--sibling`; with a private tree, `<path>/private/.git` exists.
+prints nothing: no placeholder is left outside the templates directory (the core documents mention the placeholder syntax itself, which is why the check looks for a brace pair followed by a letter). `<path>/public/` holds one directory per catalog and no `catalog/`; `<path>/common/.agentcontext` exists and its `ref=` line names the release; `<path>/<RepositoryName>.code-workspace` exists and its `folders` name the tree, the private tree when there is one, and each `--sibling`; with a private tree, `<path>/private/.git` exists.
 
 If the deployer refuses, it exits 2 and the last line of its error output, prefixed `init.sh:`, says why: a non-empty target, a missing `.conf` key, a catalog name that is not lowercase letters, digits and hyphens, an adapter with no payload in this release. Fix the cause and run it again; it builds the instance in a staging directory and writes nothing to the target when it refuses.
 
@@ -98,7 +98,7 @@ cd <path> && git init -b main && git add -A && git commit -m "chore: a knowledge
 
 **Run**: open `<path>/<RepositoryName>.code-workspace` in the editor. It holds the tree and, when present, the private tree as two folders; `.vscode/` carries the recommended extensions and the settings for Markdown and search.
 
-**Check**: the editor shows `AGENTS.md` at the root. That file is the instruction every agent session in this tree reads first. The tree is usable from here: the user's first product is `common/templates/product` copied into a catalog. The steps below are optional modules, in the order they are best adopted: what concerns the instance and this machine first, then the process law, then the repository's workflow, then the two generated tiers with their installs.
+**Check**: the editor shows `AGENTS.md` at the root. That file is the instruction every agent session in this tree reads first. The tree is usable from here: the user's first product is `common/templates/product` copied into a catalog. The steps below are optional modules, in the order they are best adopted: what concerns the instance and this machine first, then the process law, then the repository's workflow, then the two generated tiers with their installs. Each is laid down by the deployer, `init.sh --adopt <module>`, run from the scratch directory as in step 3: it copies the module to its place and records it in `common/.agentcontext`, so a later update refreshes it file by file as it does the core. The change-log module alone is copied by hand, because it belongs to each repository rather than to the tree.
 
 ## 7. Project context retention (optional)
 
@@ -117,13 +117,13 @@ cd <path> && for f in ../*/CLAUDE.md ../*/AGENTS.md; do [ -f "$f" ] && wc -c < "
 **Run** (from the instance root; `--yes` or `--no` carries the first answer when the user is not at the terminal)
 
 ```
-cp -R AgentContext-0.4.0/modules/context-retention <path>/common/modules/context-retention && cd <path>
+bash AgentContext-0.4.0/init.sh --adopt context-retention --target <path> && cd <path>
 bash common/modules/context-retention/meta.sh init
 ```
 
 Pass the folders from the second answer as paths after `init` when the user named fewer than the workspace file does.
 
-**Check**: `<path>/.agents/.id.meta` exists and is exactly three lines, `id=`, `name=` and `created=`, with no path in it; each named folder has one too; `bash common/modules/context-retention/meta.sh check` ends with `0 fail(s)` and one `[ OK ]` line per project; `bash common/modules/context-retention/meta.sh list` prints one row per project with its path; with a yes to the first question, `git -C <path> status --short` does not list `.agents/`, and `git config --global core.excludesFile` names a file containing the line `.agents/.id.meta`. Nothing of this is committed: the identity is this user's, and the map is this machine's.
+**Check**: the deployer's output ends with `manifest: module=context-retention, …`; `<path>/.agents/.id.meta` exists and is exactly three lines, `id=`, `name=` and `created=`, with no path in it; each named folder has one too; `bash common/modules/context-retention/meta.sh check` ends with `0 fail(s)` and one `[ OK ]` line per project; `bash common/modules/context-retention/meta.sh list` prints one row per project with its path; with a yes to the first question, `git -C <path> status --short` does not list `.agents/`, and `git config --global core.excludesFile` names a file containing the line `.agents/.id.meta`. Nothing of this is committed: the identity is this user's, and the map is this machine's.
 
 **With the Claude Code adapter, measure the prompt-cache lifetime too.** An orchestrating session that waits on a delegated job for longer than the cache lives pays a cold write of its whole prompt on its next turn; the harness caches for five minutes by default on an API key or a cloud provider, and for an hour on a subscription within its plan.
 
@@ -140,7 +140,7 @@ The constitution is the tree's law about itself: starting rulings, the articles 
 **Run**
 
 ```
-cp -R AgentContext-0.4.0/modules/constitution/tree <path>/constitution && cd <path> && bash common/scripts/cure.sh
+bash AgentContext-0.4.0/init.sh --adopt constitution --target <path> && cd <path> && bash common/scripts/cure.sh
 ```
 
 Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
@@ -149,9 +149,9 @@ Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
 | [Constitution](./constitution/.index.md) | the tree's law about itself: bills, the seed rulings, the articles, the process half |
 ```
 
-**Check**: `<path>/constitution/.index.md`, `constitution/history/rulings/`, `constitution/articles/` and `constitution/process/` exist; `cure.sh` still ends with 0 fails; `constitution/README.md` does not exist (the module's README stays in the release, only `tree/` is copied).
+**Check**: `<path>/constitution/.index.md`, `constitution/history/rulings/`, `constitution/articles/` and `constitution/process/` exist; `cure.sh` still ends with 0 fails; `constitution/README.md` does not exist (the module's README stays in the release, only `tree/` is laid); `grep -x module=constitution common/.agentcontext` prints the line.
 
-Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1, and the user keeps what applies and strikes the rest before the first commit. When a leaf is as the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one). The adoption steps in `AgentContext-0.4.0/modules/constitution/README.md` walk the same ground. Commit.
+Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1, and the user keeps what applies and strikes the rest before the first commit. When a leaf is as the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one), and it is also what an update reads: a leaf still exactly as the release shipped it, a seed, is replaced by the next release's seed, and any leaf the user has changed is kept and reported. The adoption steps in `AgentContext-0.4.0/modules/constitution/README.md` walk the same ground. Commit.
 
 ## 9. Adopt the change-log module (optional)
 
@@ -164,6 +164,8 @@ mkdir -p .github/workflows && cp AgentContext-0.4.0/modules/change-log/post-merg
 git add .github/workflows/post-merge.yml && git commit -m "chore: the post-merge workflow squashes, bubble-merges and logs each pull request"
 ```
 
+This is the one module `init.sh --adopt` refuses: the workflow lives in each repository, not in the tree, so the tree's manifest never records it.
+
 Then the user adds a repository secret named `ACTION_TOKEN` (a fine-grained personal access token with Contents: read and write on that repository) under Settings, Secrets and variables, Actions, and checks three settings: "Allow merge commits" on, "Automatically delete head branches" off, and force pushes to `main` allowed for their account if the branch is protected. The agent cannot do these; say exactly what to click.
 
 **Check**: `.github/workflows/post-merge.yml` is on `main` and is identical to the module's file (`cmp` prints nothing); the secret exists; the next merged pull request leaves `main` with a `merge: pull request #<n>` bubble and a `CHANGE_LOG.md` whose first heading is that pull request's title. Every clone then re-syncs with `git fetch && git reset --hard origin/main`, never a pull. `modules/change-log/README.md` says what the workflow asks of commit subjects.
@@ -175,7 +177,7 @@ The codebase module keeps a generated code map of a product's repository in the 
 **Run** (from the instance root, once per product; `<repository>` is the product's checkout beside it)
 
 ```
-cp -R AgentContext-0.4.0/modules/codebase <path>/common/modules/codebase && cd <path>
+bash AgentContext-0.4.0/init.sh --adopt codebase --target <path> && cd <path>
 python common/modules/codebase/codebase.py --repo ../<repository> --into public/<catalog>/<Product>/codebase \
   --profile ../<repository>/codebase.profile.json --write-agent
 ```
@@ -199,7 +201,7 @@ The graphify module keeps one Graphify knowledge graph per repository in the tre
 **Run** (from the instance root; `<slug>` a short lowercase name per repository)
 
 ```
-cp -R AgentContext-0.4.0/modules/graphify <path>/common/modules/graphify && cd <path>
+bash AgentContext-0.4.0/init.sh --adopt graphify --target <path> && cd <path>
 printf 'GRAPHS="<slug>=../<repository>"\n' >> .conf
 bash common/modules/graphify/graphs.sh home <slug>
 uv tool install "graphifyy[mcp]" && graphify install
@@ -220,7 +222,7 @@ The snapshot is regenerated with `scan` at the landing of the change that moved 
 
 ## How to update
 
-A release of the template changes the core files an instance received: everything under `common/` (`scripts/`, `rules/`, `templates/`, `HYGIENE.md`, `.conf.example`), `.vscode/`, `AGENTS.md`, `README.md` and an adapter's payload. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `common/.agentcontext` records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone. (An instance deployed before the common directory keeps its manifest at the root; the update reads it there and rewrites it under `common/`.)
+A release of the template changes the core files an instance received: everything under `common/` (`scripts/`, `rules/`, `templates/`, `HYGIENE.md`, `.conf.example`), `.vscode/`, `AGENTS.md`, `README.md`, an adapter's payload, and every module adopted with `--adopt` (the steps above), file by file as the core. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `common/.agentcontext` records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone. (An instance deployed before the common directory keeps its manifest at the root; the update reads it there and rewrites it under `common/`.)
 
 Always run the update with the **new** release's `init.sh`: an older one cannot read a newer layout. When the update keeps a file, it names the migration guides that apply (`migrations/<version>.md` in the template repository, one per release, read in order from the instance's own); they say what to finish by hand.
 
@@ -231,14 +233,15 @@ curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/<tag>.t
 bash AgentContext-<tag without v>/init.sh --update --target <path> --ref <tag>
 ```
 
-**Check**: the report ends with `update: N moved, N replaced, N kept, N added, N removed-upstream` and then `manifest: ref=<tag>, N core files`, one line per file above them:
+**Check**: the report ends with `update: N moved, N replaced, N kept, N added, N removed-upstream` and then `manifest: ref=<tag>, N core files` (with `, N module files (<modules>)` when modules are adopted), one line per file above them; an adopted module's files take the same verbs as the core's:
 
 - `moved <old> -> <new>`: a core file the release moved (its `MOVES` file lists them), never edited by the user: written at the new path, the old one removed with any directory it leaves empty. It is the only thing the update deletes;
 - `kept <old> (changed locally; moved to <new>)`: a moved file the user edited; it stays at its old path, the release's copy is written at the new one, and the user brings the change across and deletes the old file;
 - `replaced`: a core file the user never edited, now the new release's version;
 - `kept … (changed locally)`: a core file the user edited; it is left as it was, and the user merges   the release's version by hand if they want it (`deleted locally` and `exists locally` are the same outcome for a file the user removed, or created before the release shipped one);
 - `added`: a core file new in this release;
-- `removed-upstream`: a core file the release no longer ships; the local copy stays.
+- `removed-upstream`: a core file the release no longer ships; the local copy stays;
+- `removed-upstream module <name> (its files stay)`: an adopted module the release no longer ships; its `module=` line leaves the manifest and its files stay where they are.
 
 After the summary, `run bash common/scripts/cure.sh: N kept file(s) may name moved paths` means an edited root document (an `AGENTS.md`, say) still names old paths, and `guide: migrations/<version>.md` names each guide to read. Then run step 4 again (`cure.sh` at 0 fails) and commit:
 
@@ -247,6 +250,8 @@ cd <path> && git add -A && git commit -m "chore: core files updated to <tag>"
 ```
 
 `--dry-run` before `--target` prints the report and writes nothing, which is the way to preview.
+
+**A module copied in by hand** (every module before `--adopt` existed) is not in the manifest, so the update leaves it alone. After the update, run the same `--adopt <module>` its step names, with the same release: a module already at its place is recorded with nothing copied, each file reported `matches` or `differs` (a differing file is then kept by every update, as an edited core file is); one still at the old place `modules/<name>/` is moved to `common/modules/<name>/` file by file, as the update moves the core, an edited file staying at its old path beside the release's copy.
 
 ## What the deployer fills
 
@@ -273,5 +278,11 @@ The skeleton carries `{{ }}` placeholders. The deployer resolves every one outsi
 | `missing key <KEY> in <conf>` | a required `.conf` line is absent or empty | fill it and run again |
 | `bad catalog …` | a `CATALOGS` entry is not `[a-z0-9-]`, is repeated, or is reserved (`catalog`, `misc`, `scratch-tools`) | rename it in `.conf` |
 | `adapter '<name>' has no payload in this release` | the adapter is a stub; the list printed above it says which are written | leave `--adapter` out, or pick one marked `written` |
-| `no .agentcontext at target: …` | `--update` on a directory that was not deployed by this tool | deploy fresh, or write the manifest by hand from a known release |
+| `no .agentcontext at target: …` | `--update` or `--adopt` on a directory that was not deployed by this tool | deploy fresh, or write the manifest by hand from a known release |
+| `unknown module '<name>'` | `--adopt` names no module of this release; the list printed above it says which exist | check the spelling against the list |
+| `module '<name>' has no payload in this release` | the module directory holds nothing to lay down | pick another module, or another release |
+| `module 'change-log' is never adopted into an instance …` | the change-log workflow belongs to a repository | the change-log step: copy `post-merge.yml` by hand |
+| `module '<name>' goes into the private tree, and <path> has none` | the module lives in `private/`, and this instance was deployed with `--no-private` | adopt it on the machine that holds the private tree |
+| `module '<name>' is already recorded in common/.agentcontext …` | the module was adopted before | nothing to do: `--update` refreshes it |
+| `the manifest is at the instance root, as an older release left it …` | `--adopt` on an instance deployed before the common directory, not yet updated | run the update ("How to update") first, then adopt |
 | `not a template source (no blueprint/AGENTS.md)` | `--from` points at something that is not a release | check the extracted directory's name and contents |

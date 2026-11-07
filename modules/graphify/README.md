@@ -72,7 +72,7 @@ scan reports the version it ran and says how to pin it. The index row records th
 
 ## Adopting it
 
-1. Copy `modules/graphify/` from a release to `<instance>/common/modules/graphify/`.
+1. From a release, run `bash init.sh --adopt graphify --target <instance>`: it lays the module at `<instance>/common/modules/graphify/` and records it in the instance's manifest, so an update refreshes it.
 2. Add `GRAPHS=` to `.conf`, one `<slug>=<path>` per repository.
 3. Run `home <slug>` for each; edit the seeded `.graphifyignore` (what the scan should skip:
    dependencies, build output, generated code; `graphify-out/` stays).

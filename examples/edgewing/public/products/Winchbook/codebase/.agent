@@ -1,0 +1,10 @@
+Generated tier. Every codebase.*.md leaf and every Contents row of .index.md is written by
+codebase.py: never hand-edit them; fix the generator or the source and regenerate. The prose
+above the Contents table, .tags and this file are authored.
+
+Regenerate when the change that moved the source lands, never for an unmerged branch, from
+the directory this command was first run in:
+
+    python modules/codebase/codebase.py --repo examples/winchbook --into examples/edgewing/public/products/Winchbook/codebase --profile examples/winchbook/codebase.profile.json
+
+Add --check to report drift without writing; the _generated:_ line never counts as drift.

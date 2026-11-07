@@ -1,0 +1,9 @@
+# retired-terms.txt — vocabulary that must not appear in live documents.
+# One entry per line: term<TAB>replacement<TAB>source; lines starting with "# " are
+# comments (a bare "#word" is a term). Matched as a fixed, case-sensitive substring by
+# common/scripts/smell.sh (S13) in live documents only: design/, glossary.md, and the root
+# AGENTS.md, common/HYGIENE.md and README.md; never verbatim provenance. Add a line only with
+# a decision you can cite in the source column; see common/HYGIENE.md "Adding a smell".
+#
+# The list ships empty. An instance adds its own retired spellings as its decisions
+# retire them: a renamed field, a refused format name, a product word that changed.

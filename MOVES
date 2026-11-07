@@ -10,6 +10,9 @@ rules/ common/rules/
 templates/ common/templates/
 HYGIENE.md common/HYGIENE.md
 .conf.example common/.conf.example
+# a script module copied in by hand before the common directory; no manifest recorded one,
+# so this pair moves nothing on --update and tells --adopt where to find it
+modules/ common/modules/
 KICKOFF.md .claude/process/KICKOFF.md
 WORKER.md .claude/process/WORKER.md
 CLOSEOUT.md .claude/process/CLOSEOUT.md
