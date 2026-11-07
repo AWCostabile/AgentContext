@@ -17,7 +17,8 @@ writes, and how the records of the work are numbered and named. The articles on
   under the immutable tiers, with one named override used only for a deliberate exception that
   the commit using it states; where no guard exists, the linter and review catch the violation.
 - **TR4.** A plan is editable until its manifest row's "Landed as" is filled and frozen after; a
-  kickoff leaf is append-only; a retrospective is never edited, and a later one corrects it.
+  kickoff prompt is rewritten in place until an agent has run from it and frozen after, a later
+  prompt going below it; a retrospective is never edited, and a later one corrects it.
 - **TR5.** Corrections go forward: landed content that is wrong is corrected in current law,
   citing the ruling that corrects it, and never in the record itself.
 - **TR6.** A decision found inside a private record is lifted verbatim into a shared rulings leaf

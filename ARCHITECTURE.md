@@ -85,7 +85,7 @@ private/
     entries/  epics/  ledgers/  retros/  reflections/
 ```
 
-`plans/`, `kickoffs/`, `prs/`, `appendices/` and `journal/retros/` are the immutable tiers of the private tree. Records in them group by month (`2026-03/`). `latest.md` is rewritten as work moves, and a session reads it before anything else. `inbox.md` is the one cheap landing for a thought mid-session, append-only, each line promoted into a proper leaf or dropped within a fortnight. The repository runs on one trunk, with one commit per filing action, and is pushed to a private remote as a backup if one exists. A weekly `review.sh` prints what the linters, the inbox and the journal imply should be looked at, in a screen, and writes nothing.
+`plans/`, `kickoffs/`, `prs/`, `appendices/` and `journal/retros/` are the provenance tiers of the private tree, each record frozen once it has done its work: a plan when it lands, a kickoff prompt when an agent has run from it, a pull-request body when its landing is stamped. Records in them group by month (`2026-03/`). `latest.md` is rewritten as work moves, and a session reads it before anything else. `inbox.md` is the one cheap landing for a thought mid-session, append-only, each line promoted into a proper leaf or dropped within a fortnight. The repository runs on one trunk, with one commit per filing action, and is pushed to a private remote as a backup if one exists. A weekly `review.sh` prints what the linters, the inbox and the journal imply should be looked at, in a screen, and writes nothing.
 
 ## Catalogs
 

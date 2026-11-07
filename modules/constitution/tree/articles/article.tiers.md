@@ -26,9 +26,9 @@ those rules do not cover.
   provides refuses edits under these paths. It has one named override, for a deliberate
   exception that the commit using it states. Where no guard exists, the linter and review catch
   the violation after the fact; no data is lost, only the moment of the catch (TR3).
-- A plan is editable until its row's "Landed as" is filled; a kickoff leaf is append-only,
-  because agents were launched from its earlier prompts verbatim; a retrospective is corrected
-  by a later one (TR4). A pull-request body is amended in place while its pull request is open,
+- A plan is editable until its row's "Landed as" is filled; a kickoff prompt is rewritten in
+  place until an agent has run from it and frozen after, because that agent was launched from
+  it verbatim, a later prompt going below it; a retrospective is corrected by a later one (TR4). A pull-request body is amended in place while its pull request is open,
   and freezes when the landing stamps it (CP11).
 
 Records are cited by filename and id from commits, contracts and current law, and the

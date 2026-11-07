@@ -9,7 +9,7 @@ These branches hold records added verbatim. They are immutable, in both trees, b
 | ---- | ---- | ----- |
 | `private/journal/retros/` | private journal | retrospectives, grouped by the month of the run |
 | `private/**/appendices/` | private mirror | the audit tables behind a PR body |
-| `private/**/kickoffs/` | private mirror | the prompts that launched them; append-only |
+| `private/**/kickoffs/` | private mirror | the prompts that launched them; a prompt is frozen once an agent has run from it |
 | `private/**/plans/` | private mirror | implementation briefs, grouped by month |
 | `private/**/prs/` | private mirror | one record per pull request: how a change was delivered |
 | `public/**/history/` | public | rulings: the decisions as they were made |
@@ -19,8 +19,8 @@ These branches hold records added verbatim. They are immutable, in both trees, b
 - The two bodies that are not yet records: a plan whose manifest row's "Landed as" is `—` is
   editable until it lands; a PR body whose `_landed as:_` line reads `—` is amended in place to
   stay true to its branch while the pull request is open. The landing freezes both.
-- A kickoff leaf is append-only: a later prompt goes below the last; an earlier one is never
-  rewritten.
+- A kickoff prompt is rewritten in place until an agent has run from it, since until then it has
+  launched nothing; once one has, it is frozen and a later prompt goes below it.
 - Name a PR body with its plan's number and its branch: `pr.<YYYY-MM>-<n>.<branch-slug>.md`,
   the branch name with its type prefix dropped and its PascalCase kebabbed, opening with
   `_branch:_ <type>/<Name>` under the H1. Keep `prs/` for bodies only; an audit table that backs
