@@ -1,5 +1,7 @@
 # Tillwright: Selling
 
+_reviewed:_ 2026-11-02
+
 **State today.** The till sells offline: sales are stored on the till and sent to the ledger,
 oldest first, when the connection returns, and card payments go through the counter terminal.
 Customer orders reserve the first copy received, notify the customer by text or email, and hold

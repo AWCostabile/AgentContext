@@ -17,6 +17,9 @@ tree starts at [AGENTS.md](./AGENTS.md), as it would in yours.
 3. Everything under `public/` and `private/` was then filled by hand, following the rules the
    instance received: each product copied from `templates/product`, each private mirror from
    `templates/product-mirror`, every placeholder replaced.
+4. At each release the deployer's update mode brings its core files along, run from the template
+   repository's root: `init.sh --update --target examples/quillfeather --from .`. It rewrites
+   `.agentcontext` itself; nothing there is edited by hand.
 
 The core files (`AGENTS.md`, `HYGIENE.md`, `rules/`, `scripts/`, `templates/`, `.vscode/`,
 `.conf.example`) are the template's own, copied in by the deployer and listed with their hashes in
@@ -35,6 +38,10 @@ The core files (`AGENTS.md`, `HYGIENE.md`, `rules/`, `scripts/`, `templates/`, `
 4. **The state of the work**: [private/journal/latest.md](./private/journal/latest.md), then the plan,
    kickoff and pull-request record it points to, and the journal entry where the next feature-log
    entry waits, drafted, for its merge.
+5. **The lookups**: [Tillwright's glossary](./public/products/Tillwright/glossary.md), one line per
+   settled term pointing at the leaf that holds its law, and the
+   [inbox](./private/journal/inbox.md), where a thought waits on one dated line until it is filed
+   or dropped.
 
 Run the tree's own tools from this directory: `bash scripts/find.sh -l` lists the tag vocabulary,
 `bash scripts/find.sh offline` finds the branches about the offline till, and `bash scripts/cure.sh`

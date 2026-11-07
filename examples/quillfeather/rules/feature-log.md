@@ -7,9 +7,11 @@ to learn the state of a product, start here. `design/` stays the answer to "how 
 
 - The area list is the owner's call. Never add, rename or merge an area to fit an entry; propose
   it.
-- Leaf shape: an H1, a **State today** paragraph (edited as the product moves), then dated
-  entries newest first under ISO-week headers (`## 2026-W39 · Sep 21–27`), only weeks that
-  have entries.
+- Leaf shape: an H1; directly under it `_reviewed:_ YYYY-MM-DD`, the date someone last read
+  State today against the product (bump it when you do: the smell linter asks for the line and
+  judges it stale at 90 days, as it does a design leaf's); a **State today** paragraph (edited as
+  the product moves); then dated entries newest first under ISO-week headers
+  (`## 2026-W39 · Sep 21–27`), only weeks that have entries.
 - An entry is a bold date and two to four sentences on what is NOW TRUE of the codebase,
   linking the `design/` leaf and the rulings leaf. Append only; correct with a later entry and
   let State today absorb it.

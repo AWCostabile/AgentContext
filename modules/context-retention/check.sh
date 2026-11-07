@@ -15,7 +15,7 @@
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 META_SH="$HERE/meta.sh"
 LIB=""
-for c in "$HERE/../../scripts/lib-scopes.sh" "$HERE/../../template/scripts/lib-scopes.sh" "$PWD/scripts/lib-scopes.sh"; do
+for c in "$HERE/../../scripts/lib-scopes.sh" "$HERE/../../blueprint/scripts/lib-scopes.sh" "$PWD/scripts/lib-scopes.sh"; do
   [ -f "$c" ] && { LIB=$c; break; }
 done
 [ -n "$LIB" ] || { echo "cannot find scripts/lib-scopes.sh beside the module" >&2; exit 2; }

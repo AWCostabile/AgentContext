@@ -30,7 +30,7 @@ one leaf per area, each opening with a **State today** paragraph. Follow its lin
 | [Public](./public/.index.md) | what is true: per-product rulings, design, feature log, research; shared tools; misc |
 | [Private — the development cycle on this machine](./private/.index.md) | only where this machine has one: plans, kickoffs, PR bodies, retros, the journal |
 | [Templates](./templates/.index.md) | copy these to make a new branch, leaf or product |
-| [Scripts](./scripts/.index.md) | `find.sh` search; `cure.sh` the linter; `smell.sh` the smells |
+| [Scripts](./scripts/.index.md) | `find.sh` search; `cure.sh` the linter; `smell.sh` the smells; `review.sh` the agenda |
 | [Rules](./rules/.index.md) | the grammar and tier rules as plain documents |
 
 ## Where to write
@@ -39,6 +39,10 @@ one leaf per area, each opening with a **State today** paragraph. Follow its lin
 
 - Ruling, design, feature-log entry, research: `public/`.
 - Plan, kickoff, PR body, PR appendix, retro, epic, ledger, journal entry: `private/`.
+- A thought with no home yet: one dated line in `private/journal/inbox.md`, under **Mine** when
+  it is the user's, under **Candidates** when you propose it should become a ruling, a design
+  change or a feature-log line. The user promotes or drops each item; you file nothing from it on
+  your own.
 
 Write in the deepest matching branch. **Leaf + Contents row + tags is one action**; in the private
 tree it ends with one commit. Copy new branches from `templates/branch`, and new products from
@@ -80,16 +84,23 @@ The tree checks itself in two layers, and [HYGIENE.md](./HYGIENE.md) is the cont
   every link resolving, nothing under `public/` pointing into `private/`, every catalog in `.conf`
   present. A broken invariant is a FAIL and the exit code counts them; `--fast` skips the advisory
   scans.
-- `bash scripts/smell.sh` hunts what is probably wrong and needs judgement: a stale design leaf, a dead
-  tag, an index row that no longer matches its leaf's title, process vocabulary in `public/`, a
-  retired spelling. Every finding is a WARN to fix or to record a reason for.
+- `bash scripts/smell.sh` hunts what is probably wrong and needs judgement: a stale design or feature
+  leaf, a design or history leaf nothing cites, a dead tag, an index row that no longer matches its
+  leaf's title, process vocabulary in `public/`, a retired spelling, an inbox item left too long. Every
+  finding is a WARN to fix or to record a reason for.
+- `bash scripts/review.sh` prints the agenda the two imply in about thirty lines and writes nothing:
+  the verdict, the smell summary, the inbox, the stale and uncited leaves, the retro pressure, the
+  branches without an upstream, the newest journal entry; `--brief` is one line of counts.
+- `bash scripts/find.sh -b <leaf>` lists every file that cites a leaf (its index row marked), and
+  `-f <key>` the files carrying a `_<key>:_` marker line with its value (`-f reviewed`,
+  `-f 'reviewed<2026-01-01'`): what cites this, and what is due, without a grep.
 
 Both read `.conf` and treat an absent `private/` as normal. Run the linter after filing several
 leaves and before merging a branch: zero fails, every smell fixed or reasoned. The grammar the checks
 enforce is written out in [rules/](./rules/.index.md).
 
 The core files this tree received from the template (`scripts/`, `rules/`, `templates/`, `.vscode/`,
-this file, `HYGIENE.md`, `.conf.example`) are listed with their hashes in `.agentcontext` at the root,
+this file, `HYGIENE.md`, `README.md`, `.conf.example`) are listed with their hashes in `.agentcontext` at the root,
 with the release they came from. A later release is pulled in with the template's deployer in update
 mode, which replaces what was never edited here and reports what was; the procedure is the "How to
 update" section of the template's `SETUP.md`, at the `upstream=` address the manifest names. Nothing

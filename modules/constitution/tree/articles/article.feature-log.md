@@ -1,7 +1,7 @@
 # The feature log: the way in to a product, and the one crossing from private to shared
 
 _source:_ history/rulings/rulings.shared-and-private.md SP6–SP7, SP9–SP12; history/rulings/rulings.waves-and-close-out.md WK11
-_reviewed:_ 2026-11-02
+_reviewed:_ 2026-11-03
 
 Each product has `public/<catalog>/<Product>/features/`, one leaf per area of the product. It
 answers "what is the state of billing?" before "what happened in March?", which is why it is
@@ -35,6 +35,15 @@ who never saw how the work was run loses nothing.
 An entry may end with one citation of delivery: a merged pull request of the product's
 repository (`Invoicer #12`) or its change-log heading, as provenance and never as narrative
 (SP7). An unmerged branch or an open pull request is not yet history and is not cited.
+
+## Read again, as law is
+
+A feature-log leaf carries `_reviewed:_ YYYY-MM-DD` directly under its H1, beside State today:
+the date someone last read that paragraph against the product. State today is the one paragraph
+a newcomer trusts, so it is judged for freshness as `design/` is, at ninety days, and a leaf
+without the line is reported as a design leaf without provenance is. A research leaf may carry
+the line and is judged at a longer window, since a study only ages out of relevance. The windows
+and the two checks are the hygiene contract's S01 and S02.
 
 ## Written in two moments
 
