@@ -1,0 +1,10 @@
+{
+  "name": "lantern",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "LANTERN_PORT=9000 node src/index.ts",
+    "lint": "eslint src"
+  }
+}

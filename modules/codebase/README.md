@@ -14,7 +14,7 @@ Python 3.10 or later, standard library only. The extractors are line parsers wri
 
 ## Running it
 
-From the instance root, with the module copied to `common/modules/codebase/` (from a checkout of this template, `modules/codebase/` instead):
+From the instance root, with the module adopted at `common/modules/codebase/` by `bash init.sh --adopt codebase --target <instance>` from a release (from a checkout of this template, `modules/codebase/` instead):
 
 ```sh
     python common/modules/codebase/codebase.py --repo ../<repository> \

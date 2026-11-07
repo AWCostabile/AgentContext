@@ -1,0 +1,13 @@
+{
+  "name": "Winchbook",
+  "areas": [
+    {"name": "command", "paths": ["cmd/"]},
+    {"name": "flightlog", "paths": ["internal/flightlog/"]},
+    {"name": "queue", "paths": ["internal/queue/"]}
+  ],
+  "surfaces": {
+    "entry-points": true,
+    "exports-per-area": true,
+    "env-keys": true
+  }
+}
