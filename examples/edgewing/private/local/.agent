@@ -1,0 +1,12 @@
+# Agent Conduct — private/local
+
+- What lives here is the user's own: their thoughts, ideas and preferences. It sits in the
+  private tree, on this machine, and nowhere else.
+- Nothing from here is copied or paraphrased into `public/`, or anywhere shareable, without the
+  user's say in the current session.
+- Capture the user's ideas, never assessments of the user: no feedback about the user is stored
+  here.
+- The branch is freeform. Below its three branches, organise it however serves the user. The
+  linter never walks it (`common/scripts/lib-scopes.sh` lists `local` among the freeform private
+  branches); this file is its conduct.
+- When unsure whether something belongs here or in `public/`, ask.
