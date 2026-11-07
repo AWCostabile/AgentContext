@@ -108,7 +108,7 @@ cd <path> && git init -b main && git add -A && git commit -m "chore: a knowledge
 cp -R common/templates/product public/<catalog>/<Name>
 ```
 
-Then follow the comment at the top of the copy's `.index.md`: replace every `{{ }}` in every file of the copy, `.tags` included and inside backticks too; remove each file's guidance comment; and fill or remove the example rows of the Contents tables, the example term of `glossary.md` and the leaf `features/features.area.md`, which stand for leaves not yet written. Add the product's row to the Contents table of `public/<catalog>/.index.md`:
+Then follow the comment at the top of the copy's `.index.md`: replace every `{{ }}` in every file of the copy, `.tags` included and inside backticks too; remove each file's guidance comment; and deal with what stands for leaves not yet written: the example rows of the Contents tables are filled or removed; the leaf `features/features.area.md` is either removed or filled and renamed `features.<area>.md`, its row respelled to match; the example term of `glossary.md` is removed, since it links a design leaf that does not exist yet and `cure.sh` would fail the dead link. Add the product's row to the Contents table of `public/<catalog>/.index.md`:
 
 ```
 | [<Name>](./<Name>/.index.md) | <one-line purpose> |
@@ -258,7 +258,7 @@ bash common/modules/graphify/graphs.sh scan
 
 The install line is the user's: `graphify install` registers the `/graphify` skill with their assistant (`--platform <name>` for one other than its default), and the query server is registered once over `~/.graphify/global-graph.json`, which `scan` keeps current; `modules/graphify/README.md` says how. Pin the version `scan` reports with `GRAPHIFY_VERSION=` in `.conf` so every machine builds the same graph, then run `bash common/modules/graphify/graphs.sh scan` again so the index row carries the pin: each row of `graphs/.index.md` names the pinned version, or `unpinned`, and `check` compares the index with what `scan` would write now, so an index scanned before the pin drifts.
 
-**Check**: `bash common/modules/graphify/graphs.sh check` ends with 0 fails and the snapshot current; `graphs/.index.md` carries one row per repository with its counts and commit; in each repository `git status` shows only `.graphifyignore` and the `.gitignore` line as new, never `graphify-out/`; `cure.sh` still ends with 0 fails. Commit `graphs/` here and the two files there.
+**Check**: `bash common/modules/graphify/graphs.sh check` ends with 0 fails and the snapshot current; `graphs/.index.md` carries one row per repository with its counts and commit; in each repository `git status` shows only `.graphifyignore` and the `.gitignore` line as new, never `graphify-out/`; `cure.sh` still ends with 0 fails. Commit here everything the step changed (`graphs/`, the `.gitignore` block, the `AGENTS.md` row and `common/`), and the two files there.
 
 The snapshot is regenerated with `scan` at the landing of the change that moved the source, never hand-edited; the live layer may run ahead through the repository's hooks, and `check` says when it does.
 
@@ -278,7 +278,7 @@ Then the user adds its row to the Contents of `private/.index.md` (until they do
 | [Local](./local/.index.md) | personal: the user's own ideas, memories and plans; its .agent governs; never shared |
 ```
 
-and adds `local` to `PRIVATE_SCOPES` in `.conf` (`PRIVATE_SCOPES="<the words already there> local"`). The scope list is what `find.sh` and the search tools search by default; with `local` in it the branch is in every search on this machine, and without it only `find.sh -p`, which searches all of `private/` regardless, reaches it. `.conf` is this machine's, so the choice is made on each. The branch is committed in the private repository as any other filing.
+and adds `local` to `PRIVATE_SCOPES` in `.conf` (`PRIVATE_SCOPES="<the words already there> local"`). The scope list is what `find.sh` and the search tools search by default; with `local` in it the branch is in every search on this machine, and without it only `find.sh -p`, which searches all of `private/` regardless, reaches it. `.conf` is this machine's, so the choice is made on each. The branch and the row are committed in the private repository as any other filing; `common/.agentcontext`, which the adoption changed, is committed here.
 
 **Check**: `private/local/.index.md`, `private/local/.agent`, `private/local/ideas/`, `private/local/memories/` and `private/local/plans/` exist; `grep -x module=local common/.agentcontext` prints the line; `bash common/scripts/cure.sh` ends with 0 fails; `bash common/scripts/find.sh -l` lists the local branch's tags among the tree's.
 
@@ -295,7 +295,7 @@ bash common/modules/linkcheck/linkcheck.sh
 
 `--all` widens the run from the search scope to every private branch. A URL that is meant to fail or cannot be reached from where the check runs (an intranet host, a page behind a login) goes in `.linkcheckignore` at the instance root, one URL prefix per line, `#` comments allowed. That file is the user's to create when the first URL needs it, and it is committed with the tree, a fact shared by every clone; no mode of the deployer writes it. A leaf that rests on one outside source may name it in two marker lines under its H1, `_url:_ <the URL>` and `_accessed:_ YYYY-MM-DD`; `bash common/scripts/find.sh -f url` then lists every source, and `find.sh -f 'accessed<YYYY-MM-DD'` those last read before a date.
 
-**Check**: the run ends with its summary line, `linkcheck: N dead link(s) in N file(s), N url(s) asked, N ignored`, each dead link above it as `DEAD <code> <file>:<line> <url>`, and its exit code (`echo $?`) is the dead count (0 when none; 2 also for a refusal, told apart by the missing summary line); `grep -x module=linkcheck common/.agentcontext` prints the line.
+**Check**: the run ends with its summary line, `linkcheck: N dead link(s) in N file(s), N url(s) asked, N ignored`, each dead link above it as `DEAD <code> <file>:<line> <url>`, and its exit code (`echo $?`) is the dead count (0 when none; 2 also for a refusal, told apart by the missing summary line); `grep -x module=linkcheck common/.agentcontext` prints the line. Commit `common/`.
 
 ## How to update
 
