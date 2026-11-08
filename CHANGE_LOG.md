@@ -1,3 +1,26 @@
+## Feature | Local and Link-Check Modules [ _2026-11-08 14:40:59 UTC_ ]
+
+- docs: the constitution step names the private commit its ledger takes
+- docs: the run-sheet names what each adoption step commits and how the first product's leaves are filled
+- docs: the run-sheet commits the code map's profile where it lives and says what the link check reads
+- docs: the run-sheet lays the first product and says where each step runs from
+- test: the simulator adopts the local and linkcheck modules in both instances
+- docs: the edge example adopts the local and linkcheck modules and keeps an open-questions ledger
+- docs: the edge example takes the release's templates and agenda
+- docs: the run-sheet and the reader page pin v0.5.0
+- docs: the run-sheet adopts the local and linkcheck modules and copies the open-questions ledger
+- docs: the module list and the architecture describe the local and linkcheck modules
+- docs: the agenda's descriptions name the open questions
+- test: the fixture carries an open-questions ledger the agenda reads
+- feat: the review agenda counts the open questions and names the oldest
+- feat: the constitution ships bill, bills-branch and open-questions templates
+- refactor: the constitution's code-standards form moves beside the kickoff template
+- test: the deploy smoke adopts the local module and runs the linkcheck check
+- feat: the linkcheck module asks every URL once and honours .linkcheckignore
+- feat: the local module, a personal private branch with its own conduct
+- chore: the worked examples take the release's core through the deployer's update
+- docs: a kickoff prompt is rewritten until an agent has run from it, frozen after
+
 ## Feature | Module Adoption [ _2026-11-07 11:50:00 UTC_ ]
 
 - fix: the deploy smoke holds the fixture check's stdin open without waiting out the sleep
