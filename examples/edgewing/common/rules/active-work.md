@@ -21,8 +21,9 @@ invent one.
   the vocabulary of plans and pull requests is welcome in its subjects. A private remote is a
   backup only: push at close-out and at the end of a sitting that committed, never force, and
   report a failed push.
-- Append kickoff prompts below the last; never rewrite an earlier one. A scoping conversation
-  that produces a plan ends with its kickoff filed beside the plan in the product's mirror.
+- A kickoff prompt is rewritten in place until an agent has run from it; from then on it is
+  frozen, and a later prompt for the same plan goes below it. A scoping conversation that
+  produces a plan ends with its kickoff filed beside the plan in the product's mirror.
 - When an epic row flips to `[x]`, run the retrospective in the same action, or record in the
   journal entry why it is deferred, and until when. Never edit a filed retro.
 - While another session is active on this machine, write no shared private file (`latest.md`,

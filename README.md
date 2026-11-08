@@ -17,7 +17,7 @@ Hand the job to your coding agent. Paste this into a fresh session, with your ow
 
 ```
 Set up a knowledge tree for <organisation> at <path>, from the AgentContext template.
-Fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/v0.4.0/SETUP.md and follow
+Fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/v0.5.0/SETUP.md and follow
 it as a run-sheet: ask me its questions first, then run each step's command and confirm its
 check before moving on. If a step refuses, stop and show me what it said.
 ```

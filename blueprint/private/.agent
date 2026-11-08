@@ -14,9 +14,10 @@
   public rulings leaf, by decision, never by drift.
 - Links run one way: leaves here link into `public/` freely; a `public/` leaf never links
   to, or cites the path of, anything here.
-- `plans/`, `kickoffs/`, `prs/`, `appendices/` and `journal/retros/` are immutable
-  provenance, exactly as `public/**/history/` is: records are added verbatim with a manifest
-  row and never edited once landed.
+- `plans/`, `kickoffs/`, `prs/`, `appendices/` and `journal/retros/` are provenance, exactly
+  as `public/**/history/` is: records are added verbatim with a manifest row, and a record is
+  frozen once it has done its work (a plan landed, a kickoff run from, a pull-request body
+  stamped, an appendix or a retrospective filed) and never edited after.
 - This is a git repository of its own: trunk `main` only, ONE commit per filing action
   (leaf + row + tags), plan and PR vocabulary welcome in subjects, history never rewritten,
   `landed/<date>-<slug>` tags mark landings. Commit as the work is done.

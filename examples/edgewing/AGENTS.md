@@ -61,7 +61,8 @@ placeholder.
   repository.
 - **Immutable tiers, by path:** `public/**/history/`, and in the private tree `plans/`, `kickoffs/`,
   `prs/`, `appendices/` and `journal/retros/`. Records are added verbatim with a manifest row. A plan
-  is editable until its "Landed as" is filled; a kickoff leaf is append-only.
+  is editable until its "Landed as" is filled; a kickoff prompt is rewritten in place until an agent
+  has run from it, then frozen, a later prompt added below it.
 - **Corrections go forward.** Landed content that is wrong is corrected in current law, never in the
   record.
 - **The design tier is current law.** `design/` has one subject per leaf, at most about 120 lines,

@@ -11,7 +11,8 @@
 #
 # Each branch's own .index.md, .tags and .agent stay writable: manifest rows and tags
 # are authored. plans/ and kickoffs/ are not blocked here: an unlanded plan is still
-# editable and a kickoff leaf is append-only, both by rule rather than by path.
+# editable and a kickoff prompt is rewritten until an agent has run from it, both by rule
+# rather than by path.
 # Override: KNOWLEDGE_TREE_TIER_OVERRIDE=1 allows the write, for a deliberate, stated
 # exception.
 #

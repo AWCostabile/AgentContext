@@ -26,6 +26,11 @@ lint() {   # lint <instance> <log>: the instance's own linters, their verdict li
   printf '\n$ bash common/scripts/cure.sh && bash common/scripts/smell.sh --quiet\n' >> "$2"
   (cd "$1" && bash common/scripts/cure.sh | tail -n 1 && bash common/scripts/smell.sh --quiet | tail -n 1) >> "$2" 2>&1
 }
+local_by_hand() {   # local_by_hand <instance>: the local module's two hand steps, as SETUP.md's step 12 says
+  [ -d "$1/private/local" ] || return 0
+  printf '%s\n' "| [Local](./local/.index.md) | personal: the user's own ideas, memories and plans; its .agent governs; never shared |" >> "$1/private/.index.md" \
+    && sed -i 's/^PRIVATE_SCOPES="\(.*\)"$/PRIVATE_SCOPES="\1 local"/' "$1/.conf"
+}
 
 rm -rf "$DIST" && mkdir -p "$DIST" || exit 1
 sed -e 's/^CATALOGS=.*/CATALOGS="products projects"/' "$REPO/blueprint/common/.conf.example" > "$WORK/my.conf"
@@ -43,6 +48,7 @@ step "$LOG" "init.sh --target dist/fresh --conf my.conf --name Fresh --adapter c
 for m in "${MODULES[@]}"; do
   step "$LOG" "init.sh --adopt $m --target dist/fresh" bash "$INIT" --adopt "$m" --target "$F" --from "$REPO"
 done
+step "$LOG" "add the local row to private/.index.md and local to PRIVATE_SCOPES, as SETUP.md says" local_by_hand "$F"
 lint "$F" "$LOG"
 
 # -- migrated: an instance of the last release, modules copied in by hand, brought across ---------
@@ -63,9 +69,10 @@ else
     sh -c 'printf "%s\n" "" "A local note." >> "$1/rules/branch-grammar.md" && sed -i "s/^_status:_ seed.*$/_status:_ adopted 2026-01-01/" "$1/constitution/history/rulings/rulings.tree-structure.md"' _ "$M"
   step "$LOG" "init.sh --update --target dist/migrated --from <this working tree>" \
     bash "$INIT" --update --target "$M" --from "$REPO"
-  for m in graphify constitution; do
+  for m in graphify constitution local linkcheck; do
     step "$LOG" "init.sh --adopt $m --target dist/migrated" bash "$INIT" --adopt "$m" --target "$M" --from "$REPO"
   done
+  step "$LOG" "add the local row to private/.index.md and local to PRIVATE_SCOPES, as SETUP.md says" local_by_hand "$M"
   lint "$M" "$LOG"
 fi
 
@@ -76,9 +83,11 @@ Laid by \`bash tests/tools/simulate.sh\` from the working tree as it stood on $(
 git-ignored, rebuilt from scratch on every run. Each instance's deployer output is in the \`.log\` beside it.
 
 - \`fresh/\`: deployed with the Claude Code adapter, then every module but change-log adopted with
-  \`init.sh --adopt\`. Read \`common/.agentcontext\` for the \`module=\` lines and the hashes.
+  \`init.sh --adopt\`, the local module's row and scope then added by hand. Read \`common/.agentcontext\`
+  for the \`module=\` lines and the hashes.
 - \`migrated/\`: deployed by $OLDREL's own \`init.sh\`, graphify and the constitution copied in by hand,
-  one rule and one ruling edited, then \`--update\` and \`--adopt\` from the working tree. Its log shows
+  one rule and one ruling edited, then \`--update\` from the working tree, \`--adopt\` for those two and,
+  fresh, for local and linkcheck, and the local row and scope added by hand. Its log shows
   the \`moved\` and \`kept\` lines, the hand copy recorded or moved, and the guide named.
 
 Run an instance's own tools from inside it: \`bash common/scripts/cure.sh\`, \`bash common/scripts/find.sh -l\`.
