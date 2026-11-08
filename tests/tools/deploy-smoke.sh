@@ -488,11 +488,10 @@ check "every hash the manifest records verifies" '[ $hrc -eq 0 ]'
 (cd "$I9" && bash common/scripts/cure.sh >/dev/null 2>&1); crc=$?
 check "the instance with two adopted modules lints with 0 fails" '[ $crc -eq 0 ]'
 
-# (c) The refusals: exit 2 and nothing written. A second source carries a stand-in private-tree
-# module and a module with no payload, which this release does not ship.
+# (c) The refusals: exit 2 and nothing written. A second source carries a module with no payload,
+# which this release does not ship.
 SRC2="$TMP/src2"; cp -R "$SRC" "$SRC2"
-mkdir -p "$SRC2/modules/local/tree" "$SRC2/modules/empty"
-printf '%s\n' "# Local" > "$SRC2/modules/local/tree/.index.md"
+mkdir -p "$SRC2/modules/empty"
 printf '%s\n' "# Empty" > "$SRC2/modules/empty/README.md"
 before=$(tree_digest "$I9")
 refused=""
@@ -505,8 +504,8 @@ check "the four refusals wrote nothing" '[ "$(tree_digest "$I9")" = "$before" ]'
 err=$(bash "$INIT" --adopt change-log --target "$I9" --from "$SRC" 2>&1 >/dev/null)
 check "the change-log refusal points at a repository's .github/workflows/" 'printf "%s\n" "$err" | grep -q "\.github/workflows/"'
 before=$(tree_digest "$I2")
-err=$(bash "$INIT" --adopt local --target "$I2" --from "$SRC2" 2>&1 >/dev/null); rc=$?
-check "a private-tree module on an instance without a private tree refuses with exit 2 and writes nothing" \
+err=$(bash "$INIT" --adopt local --target "$I2" --from "$SRC" 2>&1 >/dev/null); rc=$?
+check "the local module on an instance without a private tree refuses with exit 2 and writes nothing" \
   '[ $rc -eq 2 ] && printf "%s\n" "$err" | grep -q "goes into the private tree" && [ "$(tree_digest "$I2")" = "$before" ]'
 
 # (d) An update from a source with one changed and one new module file, one removed, one changed
@@ -564,6 +563,31 @@ if [ -n "${OLD:-}" ] && [ -d "${I7:-}" ]; then
 else
   info "no $OLDREL instance: --adopt over a hand copy at the old place not run"
 fi
+
+# -- 20. the linkcheck and local modules: the link check's own check, and the local branch adopted --------
+# The linkcheck module's check proves the script over a stand-in curl, with no network. The local
+# module lays its tree into the first instance's private tree: byte for byte, recorded with a hash
+# per file, an orphan of the private root (C03) until the user adds its row, and clean after it.
+# Its refusal on an instance without a private tree is section 19 (c).
+out=$(bash "$SRC/modules/linkcheck/check.sh" 2>&1); rc=$?
+check "modules/linkcheck/check.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | tail -n 1))}" '[ $rc -eq 0 ]'
+err=$(bash "$INIT" --adopt no-such-module --target "$I1" --from "$SRC" 2>&1 >/dev/null); rc=$?
+check "the refusal of an unknown module lists the release's modules, linkcheck and local among them" \
+  '[ $rc -eq 2 ] && printf "%s\n" "$err" | grep -qx "  linkcheck" && printf "%s\n" "$err" | grep -qx "  local"'
+out=$(bash "$INIT" --adopt local --target "$I1" --from "$SRC" 2>&1); rc=$?
+check "--adopt local exits 0 and lays tree/ at private/local/ byte for byte, its README left in the release" \
+  '[ $rc -eq 0 ] && diff -r -q "$SRC/modules/local/tree" "$I1/private/local" >/dev/null && [ ! -e "$I1/private/local/README.md" ]'
+nlo=$(cd "$SRC/modules/local/tree" && find . -type f | wc -l | tr -d ' ')
+check "the manifest carries module=local and one hash for each of its $nlo files" \
+  'grep -qx "module=local" "$I1/common/.agentcontext" && [ "$(grep -c "  private/local/" "$I1/common/.agentcontext")" -eq "$nlo" ]'
+(cd "$I1" && grep "  private/local/" common/.agentcontext | sha256sum -c --quiet >/dev/null 2>&1); hrc=$?
+check "every hash recorded for private/local/ verifies" '[ $hrc -eq 0 ]'
+out=$(bash "$I1/common/scripts/cure.sh" --root "$I1" 2>&1); rc=$?
+check "before its row, cure.sh fails exactly the orphan: [FAIL] orphan (not in private/.index.md): private/local" \
+  '[ $rc -eq 1 ] && [ "$(printf "%s\n" "$out" | grep "^\[FAIL\]")" = "[FAIL] orphan (not in private/.index.md): private/local" ]'
+printf '%s\n' "| [Local](./local/.index.md) | the user's own ideas, memories and plans: read its \`.agent\` first |" >> "$I1/private/.index.md"
+out=$(bash "$I1/common/scripts/cure.sh" --root "$I1" 2>&1); rc=$?
+check "with the row appended to private/.index.md, cure.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
 
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL

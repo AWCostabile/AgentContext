@@ -171,7 +171,7 @@ check "find.sh <tag>: both trees' Lantern branches answer, each labelled with it
 # -- 4. review.sh: the agenda ------------------------------------------------------------------------------
 brief=$(bash "$REPO/scripts/review.sh" --root "$FX" --brief --today "$TODAY" 2>&1); rc=$?
 same "review.sh --brief: one line of counts" \
-  "review: cure 7 fail(s) · smells $n · inbox 2 (oldest 671d) · stale 2 · uncited 1 · overdue 1 · landed-since-retro 3 · unpushed 0 repo(s) · newest entry 2026-01-20" \
+  "review: cure 7 fail(s) · smells $n · inbox 2 (oldest 671d) · questions 2 (oldest 154d) · stale 2 · uncited 1 · overdue 1 · landed-since-retro 3 · unpushed 0 repo(s) · newest entry 2026-01-20" \
   "$brief"
 check "review.sh: the exit code is cure.sh's fail count" '[ $rc -eq 7 ]'
 full=$(bash "$REPO/scripts/review.sh" --root "$FX" --today "$TODAY" 2>&1)
@@ -179,6 +179,8 @@ check "review.sh: the agenda names the inbox, the retro pressure and the newest 
   'printf "%s\n" "$full" | grep -q "^Inbox: 2 item(s) (2 mine, 0 candidates); oldest 2025-01-01, 671 day(s) old$" && printf "%s\n" "$full" | grep -q "^Retro: 3 landed; no retro filed yet$" && printf "%s\n" "$full" | grep -q "^Journal: newest entry 2026-01-20 (private/journal/entries/2026-01/2026-01-20.wick-lit.md)$" && [ "$(printf "%s\n" "$full" | wc -l | tr -d " ")" -le 30 ]'
 check "review.sh: the stale, uncited and overdue lines carry their ages" \
   'printf "%s\n" "$full" | grep -q "^  S01  public/products/Lantern/design/design.stale.md (1037 days ago; the window is 90)$" && printf "%s\n" "$full" | grep -q "^  S20  public/products/Lantern/design/design.uncited.md$" && printf "%s\n" "$full" | grep -q "^  S21  private/journal/inbox.md (671 days old; the window is 14)$"'
+check "review.sh: the questions line counts the open lines only, oldest first, and names one past a quarter" \
+  'printf "%s\n" "$full" | grep -qx "Questions: 2 open; oldest 2026-06-01, 154 day(s) old — over a quarter (should a lantern carry a second glass — a bill)"'
 before=$(cd "$FX" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)
 check "review.sh wrote nothing to the fixture" '[ "$(cd "$FX" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)" = "$before" ]'
 

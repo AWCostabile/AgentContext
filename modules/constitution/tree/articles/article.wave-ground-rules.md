@@ -85,7 +85,7 @@ Subjects read as product updates (CP1); commits are small and made as the work g
 to unreleased work is a fixup folded at close-out (CP3); a rider's code and tests are separate
 commits (CP4); review fixes describe the fix (CP5); every commit is path-scoped (CP6); and the
 close-out check enforces what instruction alone did not (CP7). The prefix set and the refused
-trailers are each product's, in its [code standards](../process/code-standards.template.md).
+trailers are each product's, in its [code standards](../process/templates/code-standards.md).
 
 ## The wave's end
 

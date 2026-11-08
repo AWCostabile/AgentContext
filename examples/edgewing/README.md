@@ -25,13 +25,15 @@ From the template repository's root:
    (they/them), with the one catalog `products` and the lean orchestration budget.
 2. `bash init.sh --target examples/edgewing --conf <that .conf> --name Edgewing --adapter claude-code`
 3. `bash init.sh --adopt constitution --target examples/edgewing`, then the same with `codebase`,
-   `graphify` and `context-retention`. `--adopt change-log` was refused, by design: that workflow
-   belongs to a repository, not to the tree.
+   `graphify`, `context-retention`, `local` and `linkcheck`. `--adopt change-log` was refused, by
+   design: that workflow belongs to a repository, not to the tree.
 4. The private tree's own `.git`, which the deployer initialised, was removed and `.gitignore`
    reduced to a comment, so the snapshot commits `private/` and `.conf` as plain files, as
    Quillfeather does.
 5. The constitution was pruned, adopted and given its first bill (below), and the instance's
-   `AGENTS.md` given the constitution's row, as `SETUP.md` says.
+   `AGENTS.md` given the constitution's row, as `SETUP.md` says. By the same sheet, the local branch was
+   given its row in `private/.index.md` and `local` added to `PRIVATE_SCOPES`, the open-questions
+   ledger copied into the journal, and a `.linkcheckignore` written at the root.
 6. The code map was generated from the small invented repository beside this directory,
    [`examples/winchbook/`](../winchbook/README.md), with the repository's own module:
    `python modules/codebase/codebase.py --repo examples/winchbook --into examples/edgewing/public/products/Winchbook/codebase --profile examples/winchbook/codebase.profile.json --write-agent`
@@ -74,10 +76,12 @@ bill's clauses.
   filled; the agents-and-budgets leaf was deleted whole with its row, one ruling (CP12) was struck
   and one (WK10) amended. What the deleted leaf held is proposed again, smaller, as
   [Bill 2026-11-2](./constitution/bills/bill.2026-11-2.delegated-agents.md), and the articles and
-  ground rules that rested on it cite the bill as pending enactment. The code-standards form was
-  filled into Winchbook's design tier and retired from `process/`. `.conf` carries the review
-  loop's `ORCH_REVIEW_ROUNDS`. An update reports each of these files as changed locally and keeps
-  them.
+  ground rules that rested on it cite the bill as pending enactment. The code-standards form, in
+  `process/templates/`, was filled into Winchbook's design tier. `.conf` carries the review loop's
+  `ORCH_REVIEW_ROUNDS`. An update reports each of these files as changed locally and keeps them.
+  The open-questions ledger was copied from `process/templates/` to
+  [private/journal/ledgers/questions.md](./private/journal/ledgers/questions.md), with one
+  question open and one answered, and `common/scripts/review.sh` counts it.
 - **The codebase module** is at `common/modules/codebase/`, and its output is
   [Winchbook's code base tier](./public/products/Winchbook/codebase/.index.md): a map, the
   surfaces, one symbols leaf per area. The tier's `.agent` names the command that wrote it, run
@@ -87,6 +91,14 @@ bill's clauses.
   no `GRAPHS`, and there is no `graphs/` branch.
 - **The context-retention module** is at `common/modules/context-retention/`, adopted and not
   initialised: no folder carries an identity.
+- **The local module** is at [private/local/](./private/local/.index.md): its `.agent`, and the
+  ideas, memories and plans branches, empty. Its row was added to `private/.index.md` by hand and
+  `local` to `PRIVATE_SCOPES` in `.conf`, so search reaches it by default on this machine; the
+  linter checks that row and never walks the branch.
+- **The linkcheck module** is at `common/modules/linkcheck/`. The tree cites no outside page yet, so
+  `bash common/modules/linkcheck/linkcheck.sh` asks nothing and reports 0 dead links;
+  [`.linkcheckignore`](./.linkcheckignore) at the root names one prefix, the club's intranet, that
+  is never asked.
 
 ## What a committed example cannot hold
 
@@ -101,8 +113,6 @@ a user or a machine rather than to a tree anyone may clone:
 - **A `graphs/` snapshot.** The graphify module's `graphs.sh home` links a repository's
   `graphify-out/` into the tree through a junction or symlink, and `scan` writes a real graph;
   neither a link into a source repository nor a scan of an invented one belongs in a snapshot.
-
-The `local` and `linkcheck` modules join this example when the template ships them.
 
 ## The private tree is a snapshot
 

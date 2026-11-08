@@ -203,7 +203,7 @@ for tf in "${TAGFILES[@]}"; do
     }
     { if (length(left) == 0) exit; scan(tolower($0)) }
     END { for (t in left) print "S03\t" tagsfile ": tag \047" t "\047 never occurs in this branch\047s path, index, leaves, or child indexes" }
-  ' "${corpus[@]}")
+  ' "${corpus[@]}" /dev/null)   # /dev/null: a branch with no index and no leaf must not read stdin
 done
 
 # -- S04: tag fragmentation (singleton tags with a near-neighbour) -------------

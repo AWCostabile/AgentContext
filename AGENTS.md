@@ -13,6 +13,8 @@ Orientation for an agent working ON this template repository, not in a deployed 
 
 **The standing rule:** nothing in this repository may name a real organisation, its products or its people, and no file here knows of any: examples are fictional and generic, and `scripts/retired-terms.txt` ships empty.
 
+**Current law, stated plainly.** The blueprint, the modules and the adapters say what a rule IS, never what it used to be: no amendment lines, no "formerly", no history of a rule's change. An instance deployed tomorrow has no past to be told about; this repository's own commits and change log carry that history.
+
 Do not add a `.gitignore` directly under `blueprint/`: ignoring `private/` there would make this repository ignore `blueprint/private/`. An instance's own `.gitignore` is written when it is deployed.
 
 Commit subjects use exactly one of `chore:` `docs:` `feat:` `fix:` `refactor:` `style:` `test:`, with no scope; each becomes one bullet of `CHANGE_LOG.md`, which the post-merge workflow generates from a pull request's title and its commit subjects. Never edit that file by hand.

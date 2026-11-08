@@ -6,6 +6,7 @@
 #   the VERDICT of cure.sh --fast            is the structure sound?
 #   the summary table of smell.sh            what needs judgement, by id
 #   the inbox                                how many items wait, and the oldest one's age
+#   the open-questions ledger                how many are open, and the oldest one, named
 #   the S01, S20 and S21 findings            the stale leaves, the uncited law, the overdue items
 #   landed-since-retro (lib-manifest.sh)     how many landings since the newest retrospective
 #   the branches without an upstream         in the instance repository and the private tree
@@ -89,6 +90,32 @@ if has_mirror && [ -f "$INBOX" ]; then
   fi
 fi
 
+# -- the open questions ---------------------------------------------------------------
+QUESTIONS=private/journal/ledgers/questions.md
+questions_line="" questions_brief=""
+if has_mirror && [ -f "$QUESTIONS" ]; then
+  IFS=$'\t' read -r n_q q_oldest q_age q_text < <(awk -v today="$TODAY" '
+    BEGIN { if (today != "") { split(today, t, "-"); now = mktime(t[1] " " t[2] " " t[3] " 0 0 0") } else now = systime() }
+    { sub(/\r$/, "") }
+    /^- [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] / {   # an open question; a struck "- ~~" line is answered
+      n++; d = substr($0, 3, 10)
+      if (oldest == "" || d < oldest) { oldest = d; text = substr($0, 13); sub(/^ *— */, "", text) }
+    }
+    END {
+      age = 0
+      if (oldest != "") { split(oldest, o, "-"); age = int((now - mktime(o[1] " " o[2] " " o[3] " 0 0 0")) / 86400) }
+      if (length(text) > 60) text = substr(text, 1, 57) "..."
+      printf "%d\t%s\t%d\t%s\n", n + 0, (oldest == "" ? "-" : oldest), age, (text == "" ? "-" : text)
+    }' "$QUESTIONS")
+  if [ "$n_q" -eq 0 ]; then
+    questions_line="Questions: none open"; questions_brief="questions 0"
+  else
+    over=""; [ "$q_age" -gt 90 ] && over=" — over a quarter"
+    questions_line="Questions: $n_q open; oldest $q_oldest, $q_age day(s) old$over ($q_text)"
+    questions_brief="questions $n_q (oldest ${q_age}d)"
+  fi
+fi
+
 # -- the retro pressure --------------------------------------------------------------
 retro_line=""
 if has_mirror; then
@@ -121,7 +148,7 @@ fi
 
 # -- print ---------------------------------------------------------------------------------
 if [ $BRIEF -eq 1 ]; then
-  brief="review: cure $FAILS fail(s) · smells ${nsmell:-?} · $inbox_brief · stale $n01 · uncited $n20 · overdue $n21"
+  brief="review: cure $FAILS fail(s) · smells ${nsmell:-?} · $inbox_brief${questions_brief:+ · $questions_brief} · stale $n01 · uncited $n20 · overdue $n21"
   has_mirror && brief+=" · landed-since-retro ${landed:-0}"
   brief+=" · unpushed ${#unpushed[@]} repo(s)"
   [ -n "$journal_line" ] && brief+=" · newest entry $newest_date"
@@ -133,6 +160,7 @@ echo "== review — ${ROOT##*/} — $(date '+%Y-%m-%d')${TODAY:+ (as of $TODAY)}
 echo "Structure: ${verdict:-cure.sh gave no verdict}"
 printf '%s\n' "$summary" | sed 's/^== SUMMARY: /Smells: /; s/ ==$//'
 echo "$inbox_line"
+[ -n "$questions_line" ] && echo "$questions_line"
 if [ $((n01 + n20 + n21)) -gt 0 ]; then
   echo "Stale, uncited, overdue (S01, S20, S21):"
   findings "S01 S20 S21" | head -n 12

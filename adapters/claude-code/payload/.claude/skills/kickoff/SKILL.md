@@ -34,5 +34,5 @@ plan says).
 6. **Output** the prompt in one fenced block, then one line OUTSIDE it: the model
    recommendation and what the work gates on.
 7. **File it only when asked**, through `/file` (kind `kickoff`, beside its plan's month and
-   number). A later prompt for the same plan is appended below the earlier one, never
-   rewriting it.
+   number). A prompt no agent has run from yet is regenerated where it stands; one an agent
+   has run from is frozen, and a later prompt for the same plan goes below it.

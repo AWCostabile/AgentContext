@@ -18,3 +18,5 @@ WORKER.md .claude/process/WORKER.md
 CLOSEOUT.md .claude/process/CLOSEOUT.md
 .claude/agents/brainiac.md .claude/agents/historian.md
 .claude/agents/implementer-deep.md .claude/agents/principal.md
+# the constitution module's code-standards form moves beside the kickoff template
+constitution/process/code-standards.template.md constitution/process/templates/code-standards.md

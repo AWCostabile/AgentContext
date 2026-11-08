@@ -16,7 +16,7 @@ The journal's root holds `latest.md`, the status page, beside five branches (TS1
 | --- | --- |
 | `entries/<YYYY-MM>/` | one dated entry per finished wave, written at its close-out and never edited |
 | `epics/` | the epics, each grouping the waves of one programme |
-| `ledgers/` | what spans products and outlives a wave: a roadmap, a ledger of cross-repository breakages |
+| `ledgers/` | what spans products and outlives a wave: a roadmap, a ledger of cross-repository breakages, the open questions |
 | `retros/<YYYY-MM>/` | the retrospectives, by month of the run; append-only provenance |
 | `reflections/<YYYY-MM>/` | the sessions' own reflections, by month |
 
