@@ -7,13 +7,15 @@
   corrected where it stands with a dated `_amended <YYYY-MM-DD>:_` line beneath it, never
   by a new leaf. The owner enacts it (copied verbatim into the tree's `history/rulings/` as
   `rulings.<slug>.md`, the status becoming `enacted → <law path>`) or it is withdrawn.
-  A clause that states a mechanism is marked **verify first**. Replace every `{{ }}`,
+  The `_plan:_` field carries the plan counter alone, `2026-03-2`, never the word: the smell S18
+  reads a bill under `public/` and fires on the word before a digit. A clause that states a
+  mechanism is marked **verify first**. Replace every `{{ }}`,
   repeat the id prefix as each section's heading, and remove this comment.
 -->
 
 # Bill {{MM}}-{{n}} — {{title}}
 
-_status:_ bill · _plan:_ Plan {{MM}}-{{n}} · _proposed:_ {{YYYY-MM-DD}} by the owner in a scoping
+_status:_ bill · _plan:_ {{YYYY-MM}}-{{n}} · _proposed:_ {{YYYY-MM-DD}} by the owner in a scoping
 conversation · _enacted as:_ — ({{when it is enacted: at the walkthrough, or at the pull-request review of a docs-only wave}})
 
 {{One paragraph: the owner's purpose, in their words where they gave them, and what the bill

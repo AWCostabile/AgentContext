@@ -2,7 +2,8 @@
   _article:_ constitution/articles/article.bills-and-laws.md, constitution/articles/article.branch-grammar.md
   Bills-branch template: copy as the `.index.md` of a `bills/` branch (beside a `.tags`
   from `common/templates/branch/.tags`), replace every `{{ }}` and remove this comment. The
-  Contents carries the five bill columns; rows are newest first, and an enacted or
+  Contents carries the five bill columns, the Plan cell the counter alone (`2026-03-2`, never the
+  word, so the smell S18 stays quiet); rows are newest first, and an enacted or
   withdrawn bill keeps its row, "Enacted as" filled.
 -->
 
@@ -18,4 +19,4 @@ the law, {{the articles | the design tier}} updated in the same action — or it
 
 | File | Plan | Created | Status | Enacted as |
 | ---- | ---- | ------- | ------ | ---------- |
-| [Bill {{MM}}-{{n}} — {{title}}](./bill.{{YYYY-MM}}-{{n}}.{{slug}}.md) | Plan {{MM}}-{{n}} | {{YYYY-MM-DD}} | bill | — |
+| [Bill {{MM}}-{{n}} — {{title}}](./bill.{{YYYY-MM}}-{{n}}.{{slug}}.md) | {{YYYY-MM}}-{{n}} | {{YYYY-MM-DD}} | bill | — |
