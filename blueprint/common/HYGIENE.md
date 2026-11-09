@@ -352,6 +352,10 @@ line carries `landed-since-retro=<n>`. Ids are stable; a missing number is a ret
 - **Rectification:** triage the item with the user: file it properly (leaf, row and tags as one
   action, or the ruling, design change or feature-log line it was a candidate for) and remove
   the line, or drop it. Nothing is filed from the inbox by an agent on its own.
+- **Two retirement forms:** an inbox item is removed when it is promoted or dropped, since a
+  triaged thought is not worth keeping where it landed. The questions ledger
+  (`private/journal/ledgers/questions.md`, the constitution's) keeps the opposite form: an answered
+  question is struck through and dated, never deleted, because an answer is worth keeping.
 - **Deliberate exceptions:** none. An item that needs more time is a question for a ledger, not
   an inbox line.
 
