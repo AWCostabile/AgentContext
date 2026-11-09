@@ -33,11 +33,13 @@
 # overwritten; public/, private/, .conf, .gitignore, .gitattributes and the workspace file are
 # never touched. The paths a release moved are listed in its MOVES file, one "<old> <new>"
 # pair per line (a trailing / for a directory prefix): an untouched file at an old name is
-# moved, and its old name removed with any directory it leaves empty, the one deletion the
-# deployer makes; an edited one stays at its old name beside the release's copy at the new
-# one. When a file is kept, the template's migrations/<version>.md guides are named from the
-# instance's release onwards. A manifest at the instance root (an older release) is read
-# there and rewritten under common/.
+# moved, and its old name removed with any directory it leaves empty; an edited one stays at
+# its old name beside the release's copy at the new one. When a file is kept, the template's
+# migrations/<version>.md guides are named from the instance's release onwards. A manifest at
+# the instance root (an older release) is read there and rewritten under common/.
+# The deployer deletes only a file whose bytes equal a hash it holds (the recorded one on
+# --update, the release's on --adopt) and the root manifest it has just rewritten under
+# common/; nothing else, ever.
 #   --ref <tag>       fetch that release of the upstream repository
 #   --from <src>      take the release from a local directory or .tar.gz instead
 #   --dry-run         print the report, and write nothing
@@ -472,8 +474,8 @@ if [ "$MODE" = update ]; then
   if [ "$MAN_IN" != "$MANIFEST" ]; then
     rm -f "$TARGET/$MAN_IN" || die "removing the old $MAN_IN; $MANIFEST is written"
   fi
-  # The one deletion the deployer makes: an old name whose file was the recorded one,
-  # then any directory that leaves empty.
+  # The deletion rule: an old name whose bytes equal the recorded hash, then any directory
+  # that leaves empty; besides it, only the root manifest just rewritten under common/.
   for p in "${UNLINK[@]}"; do
     rm -f "$TARGET/$p" || die "removing $p; $MANIFEST is written"
     d=$(dirname "$p")

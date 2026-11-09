@@ -312,7 +312,7 @@ bash AgentContext-<tag without v>/init.sh --update --target <path> --ref <tag>
 
 **Check**: the report ends with `update: N moved, N replaced, N kept, N added, N removed-upstream` and then `manifest: ref=<tag>, N core files` (with `, N module files (<modules>)` when modules are adopted), one line per file above them; an adopted module's files take the same verbs as the core's:
 
-- `moved <old> -> <new>`: a core file the release moved (its `MOVES` file lists them), never edited by the user: written at the new path, the old one removed with any directory it leaves empty. It is the only thing the update deletes;
+- `moved <old> -> <new>`: a core file the release moved (its `MOVES` file lists them), never edited by the user: written at the new path, the old one removed with any directory it leaves empty. The deployer deletes only a file whose bytes equal a hash it holds (the recorded one on an update, the release's on an adoption) and the root manifest it has just rewritten under `common/`; nothing else, ever;
 - `kept <old> (changed locally; moved to <new>)`: a moved file the user edited; it stays at its old path, the release's copy is written at the new one, and the user brings the change across and deletes the old file;
 - `replaced`: a core file the user never edited, now the new release's version;
 - `kept … (changed locally)`: a core file the user edited; it is left as it was, and the user merges   the release's version by hand if they want it (`deleted locally` and `exists locally` are the same outcome for a file the user removed, or created before the release shipped one);
