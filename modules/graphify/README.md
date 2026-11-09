@@ -9,7 +9,8 @@ reproducible snapshot per repository.
 ```
 graphs/
   .index.md            authored prose, then one generated Contents row per graph
-  .tags  .agent
+  .tags                authored
+  .agent               a generated header block between two marks, anything below it authored
   <slug>/graph.json    the committed snapshot
   <slug>/live/         git-ignored: the working layer graphify reads and writes
 ```
@@ -49,9 +50,9 @@ From the instance root, with the module copied to `common/modules/graphify/`:
 
 | Verb | What it does |
 | ---- | ------------ |
-| `home` | seeds the repository's `.graphifyignore` (never rewritten once present), appends `graphify-out/` to its `.gitignore`, links its `graphify-out` into `graphs/<slug>/live/`, scaffolds `graphs/` (`.index.md`, `.tags`, `.agent`) and appends the `graphs/` block to the instance's own `.gitignore`. A standalone `graphify-out/` directory from before adoption is moved into `live/` and replaced by the link; a link pointing anywhere else is refused. |
-| `scan` | per homed repository: deletes the live graph, manifest and analysis, runs `graphify extract <repository> --code-only` (tree-sitter only, offline, no API key), copies `live/graph.json` up to `graphs/<slug>/graph.json`, registers the snapshot in the user's global graph (`graphify global add`, skipped with `--no-global`), and rewrites the index rows and `.agent`. `--force` bypasses graphify's parse cache too. |
-| `check` | the links, the tool and its pin, each snapshot against its repository's HEAD (stale is a warning), the index and `.agent` against the graphs on disk (drift is a fail). |
+| `home` | seeds the repository's `.graphifyignore` (never rewritten once present), appends `graphify-out/` to its `.gitignore`, links its `graphify-out` into `graphs/<slug>/live/`, scaffolds `graphs/` (`.index.md`, `.tags`, and `.agent`'s generated header block) and appends the `graphs/` block to the instance's own `.gitignore`. A standalone `graphify-out/` directory from before adoption is moved into `live/` and replaced by the link; a link pointing anywhere else is refused. |
+| `scan` | per homed repository: deletes the live graph, manifest and analysis, runs `graphify extract <repository> --code-only` (tree-sitter only, offline, no API key), copies `live/graph.json` up to `graphs/<slug>/graph.json`, registers the snapshot in the user's global graph (`graphify global add`, skipped with `--no-global`), and rewrites the index rows and `.agent`'s header block between its marks, leaving anything below the block as it is (a `.agent` without the marks gains the block at its top). `--force` bypasses graphify's parse cache too. |
+| `check` | the links, the tool and its pin, each snapshot against its repository's HEAD (stale is a warning), the index and `.agent`'s generated block alone against the graphs on disk (drift is a fail; the authored text below the block is never compared). |
 
 Options: `--root <dir>` the instance root (default the current directory). Exit 0 clean, the number
 of fails otherwise, 2 for a usage error or a refusal when nothing was written. An unhomed repository
