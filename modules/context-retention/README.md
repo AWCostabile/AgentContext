@@ -71,7 +71,7 @@ question answered without a prompt (a run with no terminal and neither answers n
 `--porcelain` with `check`, one tab-separated row per project (`ok`, `moved`, `new`, `copied`,
 `absent` or `bad`, the id, the path, and for a move or a copy the old path) for a hook to read.
 Exit 0 clean, the number of fails otherwise, 2 for a usage error or a refusal when nothing was
-written.
+written; `common/HYGIENE.md`'s "Exit codes" section says how a refusal is told from a count.
 
 ## The map
 

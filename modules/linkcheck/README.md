@@ -48,7 +48,7 @@ linkcheck: 1 dead link(s) in 1 file(s), 23 url(s) asked, 2 ignored
 The summary counts dead occurrences, the files holding them, and the distinct URLs asked and
 ignored. The exit code is the dead count, capped at 125; 2 for a refusal or a usage error with
 nothing asked: no `.conf` at the root, no `curl` on PATH, an unknown option, a path that does not
-exist. A run that reports two dead links also exits 2, and is told apart by its summary line.
+exist. `common/HYGIENE.md`'s "Exit codes" section says how a refusal is told from a count.
 
 ## .linkcheckignore
 

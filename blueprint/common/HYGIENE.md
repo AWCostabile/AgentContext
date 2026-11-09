@@ -14,7 +14,7 @@ or an agent following the rectifications below. Both take `--root <dir>` (the di
 `public/` and `.conf`; default the current directory). `cure.sh --fast` skips the advisory scans
 and keeps every FAIL; `smell.sh --quiet` prints the summary only, and `smell.sh --today YYYY-MM-DD`
 judges the calendar smells (S01, S21) as of that date. `cure.sh` exits with its FAIL count,
-`smell.sh` with its smell count (capped at 255). `bash common/scripts/review.sh` prints both verdicts and
+`smell.sh` with its smell count (capped at 255; every script's codes: [Exit codes](#exit-codes)). `bash common/scripts/review.sh` prints both verdicts and
 the agenda they imply in about thirty lines (`--brief` one line of counts); it writes nothing, makes
 no check of its own, and exits with the FAIL count. The conventions the checks enforce are
 stated in [AGENTS.md](../AGENTS.md) and the grammar documents under `common/rules/`:
@@ -401,3 +401,31 @@ next free `C` id and is retired here, never silently dropped.
 
 Record each standing smell in the review report with its one-line reason. A reason repeated in
 three reports running is a candidate for a deliberate-exception clause above.
+
+## Exit codes
+
+Every script the tree runs says how it ended in its exit code. The codes, script by script:
+
+| Script | Exit code | Summary line |
+| ------ | --------- | ------------ |
+| `common/scripts/cure.sh` | its FAIL count; 2 usage or refusal | the last line, `== VERDICT: N fail(s), N warning(s) ==` |
+| `common/scripts/smell.sh` | its smell count, capped at 255; 2 usage or refusal | `== SUMMARY: N smell(s) — landed-since-retro=N ==`, then its per-id table, whose last line ends `(rows landed since last retro: N)` |
+| `common/scripts/review.sh` | `cure.sh`'s FAIL count; 2 usage or refusal | the first line, `== review — <tree> — <date> ==`; with `--brief` the one line `review: cure N fail(s) · …` |
+| `common/scripts/find.sh` | 0 a result printed; 1 nothing found (no branch matches the tags, no keyword match, no file carries the field, nothing cites the leaf, no leaf of that name in scope, no index at the `-x` directory); 2 usage or refusal (no `public/`, a bad `--root`, no terms, a directory or a leaf path that does not exist, a leaf name that matches more than one leaf, `-f` without a key) | none: a result goes to stdout; nothing found and a refusal say so on stderr, and a call without terms prints the usage |
+| the template's `init.sh` | 0 done; 2 usage or refusal, nothing written; 1 a failure mid-way, what was written said | none needed: the codes do not overlap |
+| `common/modules/codebase/codebase.py` | 0 clean; 1 drift or a failure; 2 usage or refusal, nothing written | none needed: the codes do not overlap |
+| `common/modules/graphify/graphs.sh` | its FAIL count; 2 usage or refusal, nothing written | the last line, `== graphs: N fail(s), N warning(s) ==` |
+| `common/modules/context-retention/meta.sh` | its FAIL count; 2 usage or refusal, nothing written | the last line, `== context retention: N fail(s), N warning(s) ==`; with `--porcelain` none, one line per project instead |
+| `common/modules/linkcheck/linkcheck.sh` | its dead count, capped at 125; 2 usage or refusal | the last line, `linkcheck: N dead link(s) in N file(s), N url(s) asked, N ignored` |
+| `common/modules/<name>/check.sh` | its fail count; 1 or 2 when its throwaway fixture cannot be built, the reason said and no summary | the last line, `== <name> module check: N fail(s) ==` (the codebase module's: `== N fail(s) ==`) |
+
+**A refusal is told from a count by the summary line, never by the number alone.** A counting
+script can end with 2 because it counted two, or because it refused to run. A run that counts
+always prints its summary line; a refusal never does: it stops before the report starts, with its
+reason on stderr (a module script's reason begins `refused:` or `usage:`; a core script names what
+is wrong, such as `no public/ directory under …` or `unknown argument: …`). So a caller reads the
+code, then looks for the summary line: present, the code is a count; absent, it is a refusal. A
+`--porcelain` run of `meta.sh` prints one line per project, and a refusal prints none. The scripts
+whose codes do not overlap need no such reading: `find.sh`, `init.sh` and `codebase.py`, whose 2
+is always a refusal (`codebase.py` prints its reason as a `[FAIL]` line). The summary line is also
+the count to trust past 255: an exit status is one byte, so an uncapped count above it wraps.
