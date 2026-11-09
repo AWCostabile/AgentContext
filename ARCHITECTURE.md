@@ -107,7 +107,7 @@ An instance's root carries two short pages for two readers. `README.md` is for a
 
 An instance's root shows its trees and little else: `public/`, `private/`, an adopted `constitution/` and `graphs/`, the two pages above, `.conf`, the repository's own files and an adapter's directory. Everything the template ships and rolls forward sits in one directory, `common/`: the scripts, the rules, the templates, the hygiene document, the `.conf` example, adopted script modules and the manifest. An agent reads `AGENTS.md` and `.conf` and need not care about the rest of it.
 
-The manifest, `common/.agentcontext`, is what makes updates safe. It names the release installed and hashes every core file: everything under `common/`, the editor settings, the instruction and the reader page. `init.sh --update --ref <tag>` fetches a later release and, file by file, replaces what you never edited, keeps what you did and tells you so, adds what is new, and reports what the release dropped. It never touches `public/`, `private/`, `.conf` or the workspace file.
+The manifest, `common/.agentcontext`, is what makes updates safe. It names the release installed and hashes every core file: everything under `common/`, the editor settings, the instruction, the reader page, an adapter's payload and every module adopted with `--adopt`. `init.sh --update --ref <tag>` fetches a later release and, file by file, replaces what you never edited, keeps what you did and tells you so, adds what is new, and reports what the release dropped. It never touches `public/`, `private/`, `.conf` or the workspace file.
 
 A release that moves a core file says so in `MOVES`, one old and new path per line, kept cumulative so an instance that skipped a release still catches up. The update moves an untouched file to its new path and removes the old one, with any directory that leaves empty. The deployer deletes only a file whose bytes equal a hash it holds, the recorded one on an update and the release's on an adoption, and the root manifest it has just rewritten under `common/`; nothing else, ever. An edited file stays where it is, beside the release's copy at the new path. When the update keeps a file, it names the migration guides in `migrations/`, one per release, which say what is left to do by hand.
 
@@ -142,9 +142,11 @@ The core works without any adapter. The linter and convention replace pre-write 
 
 **The linkcheck module** asks every `http://` and `https://` URL the tree cites, once each, and reports the dead ones by file and line, so a leaf whose outside source has vanished is found rather than trusted. It needs `curl` and the network, which no core script does, and gives a different answer tomorrow for the same tree, so it is run by hand or on a schedule, never as a gate. A `.linkcheckignore` at the instance root, committed with the tree, lists the URL prefixes never asked; a leaf that rests on one outside source may name it in `_url:_` and `_accessed:_` marker lines, which the core's field query already reads.
 
-## The worked example
+## The worked examples
 
 `examples/quillfeather/` is a small fictional startup's filled tree, deployed by the deployer and then filled by hand, so that you can see what the indexes look like with something in them: start at [its reader page](./examples/quillfeather/README.md). Its two products carry generated code maps, made by the codebase module from the two fictional source repositories beside it, `examples/tillwright/` and `examples/spinecard/`.
+
+`examples/edgewing/` is the edge of the template: a two-person gliding-club company whose tree carries everything an instance can, the Claude Code adapter, the constitution pruned and adopted with its first bill, and every module an instance can adopt, its code map generated from `examples/winchbook/` beside it. Start at [its reader page](./examples/edgewing/README.md).
 
 ## How this repository checks itself
 

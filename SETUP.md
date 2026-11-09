@@ -338,6 +338,7 @@ The skeleton carries `{{ }}` placeholders. The deployer resolves every one outsi
 | --- | --- |
 | `{{catalog}}`, `{{Catalog}}` | one branch per `CATALOGS` entry, under `public/` and `private/`, the placeholder `catalog/` removed |
 | `{{REPOSITORY_NAME}}` | the workspace file's name; a sibling repository folder only with `--sibling <name>` |
+| `{{TREE_NAME}}` | the repository name (`--name`, or the target directory's basename) in the reader page `README.md`'s H1; an update reads it back from the instance's workspace file's name, or the target's basename without one |
 | `{{YYYY-MM-DD}}` | the install date, in the journal |
 | the status page's fields | `nothing yet`, and `none` for unpushed branches |
 | an example Contents row whose target is a placeholder | removed; the table keeps its header |

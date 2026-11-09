@@ -101,8 +101,9 @@ leaves and before merging a branch: zero fails, every smell fixed or reasoned. T
 enforce is written out in [common/rules/](./common/rules/.index.md).
 
 The core files this tree received from the template (`common/scripts/`, `common/rules/`, `common/templates/`, `.vscode/`,
-this file, `common/HYGIENE.md`, `README.md`, `common/.conf.example`) are listed with their hashes in `common/.agentcontext`,
-with the release they came from. A later release is pulled in with the template's deployer in update
-mode, which replaces what was never edited here and reports what was; the procedure is the "How to
-update" section of the template's `SETUP.md`, at the `upstream=` address the manifest names. Nothing
-filed in `public/` or `private/` is ever touched by it.
+this file, `common/HYGIENE.md`, `README.md`, `common/.conf.example`, an adapter's payload where one was laid, and every
+module adopted: `common/modules/<name>/`, `constitution/`, `private/local/`) are listed with their hashes in
+`common/.agentcontext`, with the release they came from. A later release is pulled in with the template's deployer in
+update mode, which replaces what was never edited here and reports what was; the procedure is the "How to update"
+section of the template's `SETUP.md`, at the `upstream=` address the manifest names. Nothing filed in `public/` or
+`private/` is ever touched by it.

@@ -35,9 +35,9 @@ git clone https://github.com/AWCostabile/AgentContext.git
 - **The scripts**, in `scripts/` (an instance's `common/scripts/`): `cure.sh` fails on a broken invariant, `smell.sh` warns on what needs judgement, `find.sh` resolves tags and keywords to the right leaf. `blueprint/common/HYGIENE.md` lists every check; `blueprint/common/rules/` states the grammar.
 - **A deployer**, `init.sh`, with an update mode that replaces the core files you never edited and keeps the ones you did, through a manifest it records at install.
 - **An instruction for agents**, `blueprint/AGENTS.md`, that an instance carries at its root; the core never names a harness.
-- **Modules**, optional: a constitution (seed rulings, articles and the process half of agent-led work), a code-map generator with TypeScript and Go extractors, a GitHub Actions workflow that turns every merged pull request into a squash commit and a change-log entry, and a Graphify knowledge graph per repository, kept in the tree and linked back into each repository.
+- **Modules**, optional: a constitution (seed rulings, articles and the process half of agent-led work), a code-map generator with TypeScript and Go extractors, a GitHub Actions workflow that turns every merged pull request into a squash commit and a change-log entry, a Graphify knowledge graph per repository, kept in the tree and linked back into each repository, a per-clone identity so an agent keeps a project's memory when its folder moves, a personal branch of the private tree for the user's own notes, and a link check over every URL the tree cites.
 - **Adapters**, keyed by harness: Claude Code written (a pre-write guard on the immutable tiers, a lint after every write, orientation at session start, skills and agent profiles); Codex, Cursor and Gemini CLI as porting specs.
-- **A worked example**, `examples/quillfeather/`, a fictional startup's filled tree with generated code maps, so you can see the indexes with something in them.
+- **Two worked examples**: `examples/quillfeather/`, a fictional startup's filled tree with generated code maps, so you can see the indexes with something in them; and `examples/edgewing/`, a two-person gliding-club company carrying everything an instance can: the Claude Code adapter, the constitution pruned and adopted with its first bill, and every module an instance can adopt.
 
 ## If Claude Code is your agent
 
@@ -50,7 +50,8 @@ The Claude Code adapter gives an instance its guard on the immutable tiers, its 
 - [SETUP.md](./SETUP.md): the run-sheet, deploying and updating.
 - [blueprint/AGENTS.md](./blueprint/AGENTS.md): what an instance tells an agent.
 - [blueprint/common/HYGIENE.md](./blueprint/common/HYGIENE.md): every check, what it means and how to fix it.
-- [The example's reader page](./examples/quillfeather/README.md): a filled tree, and what to open first.
+- [Quillfeather's reader page](./examples/quillfeather/README.md): a filled tree, and what to open first.
+- [Edgewing's reader page](./examples/edgewing/README.md): an instance with the adapter, the constitution and every module an instance can adopt.
 
 ## Licence
 
