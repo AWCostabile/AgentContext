@@ -90,7 +90,7 @@ The tree checks itself in two layers, and [HYGIENE.md](./common/HYGIENE.md) is t
   leaf's title, process vocabulary in `public/`, a retired spelling, an inbox item left too long. Every
   finding is a WARN to fix or to record a reason for.
 - `bash common/scripts/review.sh` prints the agenda the two imply in about thirty lines and writes nothing:
-  the verdict, the smell summary, the inbox, the stale and uncited leaves, the retro pressure, the
+  the verdict, the smell summary, the inbox, the open questions, the stale and uncited leaves, the retro pressure, the
   branches without an upstream, the newest journal entry; `--brief` is one line of counts.
 - `bash common/scripts/find.sh -b <leaf>` lists every file that cites a leaf (its index row marked), and
   `-f <key>` the files carrying a `_<key>:_` marker line with its value (`-f reviewed`,
@@ -101,8 +101,9 @@ leaves and before merging a branch: zero fails, every smell fixed or reasoned. T
 enforce is written out in [common/rules/](./common/rules/.index.md).
 
 The core files this tree received from the template (`common/scripts/`, `common/rules/`, `common/templates/`, `.vscode/`,
-this file, `common/HYGIENE.md`, `README.md`, `common/.conf.example`) are listed with their hashes in `common/.agentcontext`,
-with the release they came from. A later release is pulled in with the template's deployer in update
-mode, which replaces what was never edited here and reports what was; the procedure is the "How to
-update" section of the template's `SETUP.md`, at the `upstream=` address the manifest names. Nothing
-filed in `public/` or `private/` is ever touched by it.
+this file, `common/HYGIENE.md`, `README.md`, `common/.conf.example`, an adapter's payload where one was laid, and every
+module adopted: `common/modules/<name>/`, `constitution/`, `private/local/`) are listed with their hashes in
+`common/.agentcontext`, with the release they came from. A later release is pulled in with the template's deployer in
+update mode, which replaces what was never edited here and reports what was; the procedure is the "How to update"
+section of the template's `SETUP.md`, at the `upstream=` address the manifest names. Nothing filed in `public/` or
+`private/` is ever touched by it.

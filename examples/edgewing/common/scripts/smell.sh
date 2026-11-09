@@ -519,9 +519,10 @@ if [ ${#S20_LEAVES[@]} -gt 0 ]; then
 fi
 
 # -- S21: an inbox item past its window ------------------------------------------------
-# private/journal/inbox.md is the one cheap landing for a thought mid-session: append-only,
-# `- YYYY-MM-DD — <text>` under ## Mine and ## Candidates. An item is promoted (filed) or
-# dropped when triaged; one older than 14 days has been neither. Private tree only.
+# private/journal/inbox.md is the one cheap landing for a thought mid-session, one dated line
+# `- YYYY-MM-DD — <text>` per item under ## Mine and ## Candidates, appended between triages and
+# removed when the item is promoted (filed) or dropped; one older than 14 days has been neither.
+# Private tree only.
 INBOX=private/journal/inbox.md
 if has_mirror && [ -f "$INBOX" ]; then
   emit < <(awk -v today="$TODAY" -v file="$INBOX" '
