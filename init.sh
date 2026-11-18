@@ -36,12 +36,13 @@
 # moved, and its old name removed with any directory it leaves empty; an edited one stays at
 # its old name beside the release's copy at the new one. When a file is kept, the template's
 # migrations/<version>.md guides are named from the instance's release onwards, and each one
-# named is copied to common/reference/migrations/<version>.md. A run that changed something
-# (any count above zero, or another release) appends one line to the ledger
-# common/reference/updates.md: "- YYYY-MM-DD — update <from> → <to>: <the counts>"; the
-# ledger is the one file the deployer appends to, and neither it nor the guides are in the
-# manifest. A manifest at the instance root (an older release) is read there and rewritten
-# under common/.
+# named is copied to common/reference/migrations/<version>.md. A run that wrote a file or
+# changed what the manifest records (a move, a replacement, an addition, a removal upstream,
+# a guide copied in), or that came from another release, appends one line to the ledger
+# common/reference/updates.md: "- YYYY-MM-DD — update <from> → <to>: <the counts>"; a run
+# that only kept files appends nothing. The ledger is the one file the deployer appends to,
+# and neither it nor the guides are in the manifest. A manifest at the instance root (an
+# older release) is read there and rewritten under common/.
 # The deployer deletes only a file whose bytes equal a hash it holds (the recorded one on
 # --update, the release's on --adopt) and the root manifest it has just rewritten under
 # common/; nothing else, ever.
@@ -502,14 +503,18 @@ if [ "$MODE" = update ]; then
     d=$(dirname "$p")
     while [ "$d" != . ] && rmdir "$TARGET/$d" 2>/dev/null; do d=$(dirname "$d"); done
   done
-  # The reference branch: each guide named is copied in, and a run that changed something
-  # (a count above zero, or another release) appends its line to the ledger.
+  # The reference branch: each guide named is copied in unless it is there already, and a run
+  # that wrote a file or changed the manifest's records, or came from another release, appends
+  # its line to the ledger; a run that only kept files appends nothing.
+  n_guides=0
   while IFS= read -r v; do
     [ -n "$v" ] || continue
+    cmp -s "$SRC/migrations/$v.md" "$TARGET/$GUIDES/$v.md" && continue
     { mkdir -p "$TARGET/$GUIDES" && cp "$SRC/migrations/$v.md" "$TARGET/$GUIDES/$v.md"; } \
       || die "copying the guide migrations/$v.md into $GUIDES/; $MANIFEST is written"
+    n_guides=$((n_guides + 1))
   done < <(guide_versions)
-  if [ $((n_mv + n_rep + n_kept + n_add + n_rm)) -gt 0 ] || [ "${HEADER[ref]:-}" != "$SRC_REF" ]; then
+  if [ $((${#WRITE[@]} + n_add + n_rm + n_guides)) -gt 0 ] || [ "${HEADER[ref]:-}" != "$SRC_REF" ]; then
     ledger "update ${HEADER[ref]:-unknown} → $SRC_REF: ${summary#update: }" \
       || die "appending to $LEDGER; $MANIFEST is written"
   fi

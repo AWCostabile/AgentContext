@@ -320,7 +320,7 @@ bash AgentContext-<tag without v>/init.sh --update --target <path> --ref <tag>
 - `removed-upstream`: a core file the release no longer ships; the local copy stays;
 - `removed-upstream module <name> (its files stay)`: an adopted module the release no longer ships; its `module=` line leaves the manifest and its files stay where they are.
 
-After the summary, `run bash common/scripts/cure.sh: N kept file(s) may name moved paths` means an edited root document (an `AGENTS.md`, say) still names old paths, and `guide: migrations/<version>.md` names each guide to read, copied into `common/reference/migrations/`. An update that changed something (any count above zero, or another release) has appended one line to `common/reference/updates.md`, `- YYYY-MM-DD — update <from> → <to>:` and the counts; `tail -n 1 common/reference/updates.md` shows it. Then run step 4 again (`cure.sh` at 0 fails) and commit:
+After the summary, `run bash common/scripts/cure.sh: N kept file(s) may name moved paths` means an edited root document (an `AGENTS.md`, say) still names old paths, and `guide: migrations/<version>.md` names each guide to read, copied into `common/reference/migrations/`. An update that wrote something, or came from another release, has appended one line to `common/reference/updates.md`, `- YYYY-MM-DD — update <from> → <to>:` and the counts; `tail -n 1 common/reference/updates.md` shows it. Then run step 4 again (`cure.sh` at 0 fails) and commit:
 
 ```
 cd <path> && git add -A && git commit -m "chore: core files updated to <tag>"
@@ -347,7 +347,7 @@ The skeleton carries `{{ }}` placeholders. The deployer resolves every one outsi
 
 `common/templates/` keeps its placeholders on purpose: those files are copied by hand when a branch or a product is added, and the linter never reads them as part of the tree.
 
-Besides the core it lays, the deployer keeps two things of its own in `common/reference/`, neither shipped nor recorded in the manifest: `updates.md`, the ledger it appends one line to per update that changed something and per adoption (the one file it appends to rather than replaces), and `migrations/`, the guides an update named. Both appear with the first run that writes them.
+Besides the core it lays, the deployer keeps two things of its own in `common/reference/`, neither shipped nor recorded in the manifest: `updates.md`, the ledger it appends one line to per update that wrote something or came from another release and per adoption (the one file it appends to rather than replaces), and `migrations/`, the guides an update named. Both appear with the first run that writes them.
 
 ## When a step refuses
 
