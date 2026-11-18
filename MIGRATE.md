@@ -2,7 +2,7 @@
 
 This is a run-sheet for bringing an instance across a release that moves things. It is written for a coding agent working on a user's machine, and it reads just as well for a person at a terminal. Every step has a **Run** line and a **Check** line: run the command, then confirm the check against what is now on disk before moving to the next step. Nothing here asks you to read another file and work out what to do; when a step refuses, stop and tell the user what it said.
 
-The migration never changes the user's working branch: the release's tree is staged first, the changes land on a branch of their own, and the user walks that branch and merges it. Every report it writes stays in the instance's staging directory, `common/staging/`, which ignores its own contents, so nothing of the private tree reaches the shared one.
+The migration never changes the user's working branch: the release's tree is staged first, the changes land on a branch of their own, and the user walks that branch and merges it. Every report it writes stays in the scratch directory or in the instance's staging directory, `common/staging/`, which ignores its own contents, so nothing of the private tree reaches the shared one.
 
 The pinned release is `v0.6.0`. Replace it everywhere below if the user names another (`AgentContext-0.6.0` drops the `v`).
 
@@ -17,6 +17,14 @@ git -C <path> status --short; [ -d <path>/private/.git ] && git -C <path>/privat
 ```
 
 **Check**: it prints nothing. Anything listed is the user's work in progress: stop and ask them to commit or set it aside, then run it again.
+
+**Run** (the linter on the instance as the user has it, saved in the scratch directory: the baseline step 4 holds the migrated tree to)
+
+```
+(cd <path> && if [ -f common/scripts/cure.sh ]; then bash common/scripts/cure.sh; else bash scripts/cure.sh; fi) > cure-before.txt; tail -n 1 cure-before.txt
+```
+
+**Check**: it prints the linter's verdict, `== VERDICT: N fail(s), N warning(s) ==` (an instance older than the common directory has its linter at `scripts/cure.sh`, and the command runs that one). Its fails are the user's own, not this sheet's to cure: tell the user the count.
 
 **Run** (fetch the release from the instance's own upstream; it unpacks into `AgentContext-0.6.0/`, the directory every command below spells, and names its release from its own `RELEASE` stamp, whatever the directory is called)
 
@@ -96,10 +104,11 @@ git -C <path> add public && { git -C <path> diff --cached --quiet || git -C <pat
 ```
 grep -vxFf <path>/common/staging/refs.md <path>/common/staging/respelled.md
 { git -C <path> diff --name-only "$(cut -d' ' -f1 <path>/common/staging/base.txt)" HEAD -- public private; [ -f <path>/common/staging/base-private.txt ] && git -C <path>/private diff --name-only "$(cut -d' ' -f1 <path>/common/staging/base-private.txt)" HEAD | sed 's|^|private/|'; } | LC_ALL=C sort -u | diff - <(cut -f1 <path>/common/staging/respelled.md | sed 's/:[0-9]*$//' | LC_ALL=C sort -u)
-(cd <path> && bash common/scripts/cure.sh | tail -n 1)
+(cd <path> && bash common/scripts/cure.sh) > cure-after.txt; awk '/^== VERDICT: / { n[++k] = $3 } END { if (k != 2) print "UNREADABLE"; else print (n[2] > n[1] ? "HIGHER" : n[2] < n[1] ? "LOWER" : "SAME") ": " n[1] " fail(s) before, " n[2] " now" }' cure-before.txt cure-after.txt
+grep '^\[FAIL\]' cure-after.txt | grep -vxFf <(grep '^\[FAIL\]' cure-before.txt)
 ```
 
-The first two commands print nothing: every respelled hit is a line of `refs.md`, and the files changed under `public/` and `private/` since the starting point are exactly the files `respelled.md` names. `cure.sh` ends with `== VERDICT: 0 fail(s), …`. `git -C <path> status --short` prints nothing, and so does `git -C <path>/private status --short`.
+The first two commands print nothing: every respelled hit is a line of `refs.md`, and the files changed under `public/` and `private/` since the starting point are exactly the files `respelled.md` names. The third prints `SAME` or `LOWER` and the two fail counts: the migrated tree fails no more than the user's did. `LOWER` is the respelling at work: links that were dead because they named a moved path now reach it. `HIGHER`, or `UNREADABLE` when a run did not end with its verdict, means stop: show the user the fourth command's lines, every `[FAIL]` line the baseline did not have (a check the release's linter adds is among them too), and go on only when they say so. `git -C <path> status --short` prints nothing, and so does `git -C <path>/private status --short`.
 
 ## 5. Hand over
 
