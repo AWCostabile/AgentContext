@@ -1,3 +1,11 @@
+## Feature | Reference Branch [ _2026-11-18 12:01:37 UTC_ ]
+
+- docs: the reference branch, the deployer's ledger, path references and the citation rule are documented
+- feat: a public leaf names a tool rather than its path, stated at session start and smelled as S22
+- feat: find.sh --refs lists every link and mention of a path, with its new spelling from a moves file
+- feat: the deployer keeps a ledger of its updates and adoptions and copies the migration guides it names
+- feat: every instance carries a reference branch holding the deployer's refusal table
+
 ## Fix | Documents Match the Scripts [ _2026-11-18 10:59:53 UTC_ ]
 
 - chore: the examples re-laid from the working tree and the pin moved to v0.5.1
