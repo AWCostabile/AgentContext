@@ -1,14 +1,15 @@
 # Bill 2026-11-2 — delegated agents
 
-_status:_ bill · _plan:_ 2026-11-2, the plan after the first, not yet written · _proposed:_ 2026-11-04 by the owner, at the constitution's adoption
+_status:_ bill · _plan:_ 2026-11-2 · _proposed:_ 2026-11-04 by the owner, at the constitution's adoption
 
 Edgewing adopted seven of the template's eight seed rulings leaves and deleted the eighth, agents
 and budgets, whole. Its numbers were written for a larger team with longer sessions than
 Edgewing runs, and several of its rulings answer problems Edgewing does not have: long-running
 servers behind a time cap, idle notifications, keeping a cold prompt cache warm. This bill
 proposes the delegation law Edgewing will hold instead, smaller and with its own numbers, to be
-proven by the first plan that runs under it and enacted at that plan's walk. Until then the
-articles and the process files cite it as a bill pending enactment.
+proven by the first plan that runs under it, `2026-11-2`, the plan after the first, not yet
+written, and enacted at that plan's walk. Until then the articles and the process files cite it
+as a bill pending enactment.
 
 ## DA — how a delegated agent works
 
