@@ -98,7 +98,7 @@ check ".conf gained the derived PRIVATE_SCOPES and ORCH_BUDGET" \
 check "README.md is the reader page, named after the instance, with no placeholder left" \
   '[ -f "$I1/README.md" ] && [ "$(head -n 1 "$I1/README.md")" = "# Example" ] && ! grep -q "{{" "$I1/README.md"'
 check "README.md is listed in the manifest as a core file" 'grep -q "  README.md$" "$I1/common/.agentcontext"'
-check "no tests/ directory is laid into an instance" '[ ! -e "$I1/tests" ]'
+check "no tests/ directory and no MIGRATE.md are laid into an instance" '[ ! -e "$I1/tests" ] && [ ! -e "$I1/MIGRATE.md" ]'
 root1=$(ls -A "$I1" | LC_ALL=C sort | tr '\n' ' ')   # the fresh root, judged in section 18
 
 # -- 4. the instance lints clean ----------------------------------------------------------------

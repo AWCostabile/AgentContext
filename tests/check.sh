@@ -226,8 +226,10 @@ check "review.sh: the questions line counts the open lines only, oldest first, a
 before=$(cd "$FX" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)
 check "review.sh wrote nothing to the fixture" '[ "$(cd "$FX" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)" = "$before" ]'
 
-# -- 5. the fixture is never laid into an instance ----------------------------------------------------------
+# -- 5. the fixture and the migration sheet are never laid into an instance ----------------------------------------------------------
 check "init.sh's core lists do not name tests/" '! grep -E "^CORE_(DIRS|FILES)=" "$REPO/init.sh" | grep -q tests'
+check "the migration sheet is never laid: init.sh's core lists do not name MIGRATE.md and the skeleton holds none" \
+  '! grep -E "^CORE_(DIRS|FILES)=" "$REPO/init.sh" | grep -q MIGRATE && [ -z "$(find "$REPO/blueprint" -name MIGRATE.md)" ]'
 
 echo "== script check: $FAIL fail(s) =="
 exit $FAIL
