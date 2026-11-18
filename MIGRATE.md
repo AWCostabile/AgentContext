@@ -133,3 +133,35 @@ find <path>/common/staging -mindepth 1 -maxdepth 1 ! -name .gitignore -exec rm -
 ```
 
 **Check**: `ls -A <path>/common/staging` prints `.gitignore` alone, and `git -C <path> status --short` prints nothing. The deployer never empties this directory; this step does, and only after the merge.
+
+## If the user does not go ahead
+
+The migration can be abandoned after any step, up to the merge: each repository goes back to the branch and the commit it started from, the migration branch is deleted, and the staging directory is emptied. Nothing the user committed is touched: `migrate/v0.6.0` holds only this sheet's work.
+
+**Run** (a step left half-made is discarded, on the migration branch only; then each repository goes back to the branch `base.txt` or `base-private.txt` names and the migration branch is deleted, with `-D` because it was never merged. Before step 4 there is no `base.txt` and no branch, and these lines do nothing)
+
+```
+[ "$(git -C <path> branch --show-current)" = migrate/v0.6.0 ] && git -C <path> reset -q --hard && git -C <path> clean -fdq -e /common/staging/
+[ -d <path>/private/.git ] && [ "$(git -C <path>/private branch --show-current)" = migrate/v0.6.0 ] && git -C <path>/private reset -q --hard && git -C <path>/private clean -fdq
+[ -f <path>/common/staging/base.txt ] && git -C <path> switch -q "$(cut -d' ' -f2 <path>/common/staging/base.txt)" && git -C <path> branch -D migrate/v0.6.0
+[ -f <path>/common/staging/base-private.txt ] && git -C <path>/private switch -q "$(cut -d' ' -f2 <path>/common/staging/base-private.txt)" && git -C <path>/private branch -D migrate/v0.6.0
+```
+
+**Check** (each repository where it started)
+
+```
+[ -f <path>/common/staging/base.txt ] && printf '%s %s\n' "$(git -C <path> rev-parse HEAD)" "$(git -C <path> branch --show-current)" | diff - <path>/common/staging/base.txt
+[ -f <path>/common/staging/base-private.txt ] && printf '%s %s\n' "$(git -C <path>/private rev-parse HEAD)" "$(git -C <path>/private branch --show-current)" | diff - <path>/common/staging/base-private.txt
+git -C <path> branch --list migrate/v0.6.0; [ -d <path>/private/.git ] && git -C <path>/private branch --list migrate/v0.6.0
+```
+
+These print nothing: each repository is on the branch it was on, at the commit it recorded, and no `migrate/v0.6.0` is left.
+
+**Run** (the staging directory emptied as step 5 empties it; an instance older than the staging directory, whose own commit holds no `common/staging/.gitignore`, loses the directory step 2 made)
+
+```
+[ -d <path>/common/staging ] && find <path>/common/staging -mindepth 1 -maxdepth 1 ! -name .gitignore -exec rm -rf {} +
+git -C <path> ls-files --error-unmatch common/staging/.gitignore >/dev/null 2>&1 || rm -rf <path>/common/staging
+```
+
+**Check**: `git -C <path> status --short` prints nothing, and so does `git -C <path>/private status --short` when there is a private repository; `ls -A <path>/common/staging` prints `.gitignore` alone or, for an instance older than the staging directory, `<path>/common/staging` no longer exists. The scratch directory is the user's to delete.
