@@ -71,6 +71,13 @@
 #   --from <src>      take it from a local directory or .tar.gz instead
 #   --dry-run         print the report, and write nothing
 #
+# The release a run comes from (the manifest's ref=, the ledger line, the guides an update
+# names, the staged tree's directory) is --ref <tag> when given; else the release tag the
+# source's RELEASE file names, which git archive fills in for an archive of a tagged commit
+# (of several, the one the source's name spells, else the highest); else the source's name,
+# AgentContext-<x> naming v<x> (an archive's file name, or an extracted directory's); else
+# working-tree, as for a checkout.
+#
 # Exit: 0 done; 2 usage or refusal (the reason on stderr, nothing written); 1 failure
 # mid-way (what was written is said).
 
@@ -176,7 +183,15 @@ extract_archive() {
   done
   printf '%s' "$t"
 }
-SRC_REF=working-tree
+# stamp_tags <dir>: the release tags the release stamp names, one per line. RELEASE, at a
+# release's root, is marked export-subst: git archive, and so a host's tarball of a tag, fills
+# its refs= line with the archived commit's ref names, "(HEAD -> main, tag: v1.2.0)"; a checkout
+# holds the placeholder, which names none.
+stamp_tags() {
+  [ -f "$1/RELEASE" ] || return 0
+  sed -n 's/^refs=//p' "$1/RELEASE" | tr -d '\r' | tr ',()' '\n\n\n' | sed -n 's/^ *tag: \(v[0-9][^ ]*\) *$/\1/p'
+}
+SRC_REF=working-tree NAMED=""
 if [ -z "$FROM" ] && [ -z "$REF" ]; then
   SRC=$SELF_DIR
 elif [ -n "$REF" ]; then
@@ -189,7 +204,7 @@ elif [ -n "$REF" ]; then
 elif [ -f "$FROM" ]; then
   case "$FROM" in *.tar.gz|*.tgz) ;; *) refuse "--from must be a directory or a .tar.gz: $FROM" ;; esac
   SRC=$(extract_archive "$FROM")
-  SRC_REF=$(release_name "$(basename "$FROM")")
+  NAMED=$(release_name "$(basename "$FROM")")
 elif [ -d "$FROM" ]; then
   SRC=$(cd "$FROM" && pwd)
 else
@@ -198,7 +213,18 @@ fi
 [ -f "$SRC/blueprint/AGENTS.md" ] || refuse "not a template source (no blueprint/AGENTS.md): ${FROM:-$SRC}"
 # An extracted release directory (no .git) named AgentContext-<x> names its release.
 if [ -z "$REF" ] && [ ! -f "$FROM" ] && [ ! -e "$SRC/.git" ]; then
-  case "$(basename "$SRC")" in AgentContext-?*) SRC_REF=$(release_name "$(basename "$SRC")") ;; esac
+  case "$(basename "$SRC")" in AgentContext-?*) NAMED=$(release_name "$(basename "$SRC")") ;; esac
+fi
+# Without --ref the stamp names the release: of several tags, the one the source's name
+# spells, else the highest. A stamp naming none leaves the name, else working-tree.
+if [ -z "$REF" ]; then
+  STAMPED=$(stamp_tags "$SRC")
+  if [ -n "$STAMPED" ]; then
+    if [ -n "$NAMED" ] && printf '%s\n' "$STAMPED" | grep -qxF -- "$NAMED"; then SRC_REF=$NAMED
+    else SRC_REF=$(printf '%s\n' "$STAMPED" | sort -V | tail -n 1); fi
+  elif [ -n "$NAMED" ]; then
+    SRC_REF=$NAMED
+  fi
 fi
 
 # -- adapters -----------------------------------------------------------------------
