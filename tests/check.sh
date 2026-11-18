@@ -24,7 +24,7 @@
 # carries the defect rather than a leaf: S06 and S16 name the index holding the row, S17 the
 # retros branch, S12 the duplicated basename. One ruling of the verbatim history tier carries
 # the pair --refs is proved on, a link and a bare mention of scripts/ (which MOVES reaches):
-# verbatim, so its dead link and its path trip no check.
+# verbatim, so its dead link and its path trip no check, and --refs marks both hits verbatim.
 #
 # Usage: bash tests/check.sh   (from anywhere; no arguments)
 # Exit: the number of failed assertions.
@@ -174,12 +174,15 @@ check "find.sh <tag>: both trees' Lantern branches answer, each labelled with it
 same "find.sh <tag>: common/reference/ is in the default scope, labelled common" \
   "common/reference  (reference, refusal)  [1/1 tags, 0 hits]  common" "$(F refusal)"
 FLAME=public/products/Lantern/history/rulings.flame.md
-same "find.sh --refs: the planted link and bare mention of scripts/, each marked" \
-  "$(printf '%s\t%s\t%s\n' "$FLAME:7" link ../../../../scripts/cure.sh "$FLAME:8" mention scripts/cure.sh)" \
+same "find.sh --refs: the planted link and bare mention of scripts/, each marked, and verbatim" \
+  "$(printf '%s\t%s\t%s\n' "$FLAME:7" 'link (verbatim)' ../../../../scripts/cure.sh "$FLAME:8" 'mention (verbatim)' scripts/cure.sh)" \
   "$(F --refs scripts/)"
 same "find.sh --refs --moves: the respelling MOVES gives each hit beside it" \
-  "$(printf '%s\t%s\t%s\t%s\n' "$FLAME:7" link ../../../../scripts/cure.sh ../../../../common/scripts/cure.sh "$FLAME:8" mention scripts/cure.sh common/scripts/cure.sh)" \
+  "$(printf '%s\t%s\t%s\t%s\n' "$FLAME:7" 'link (verbatim)' ../../../../scripts/cure.sh ../../../../common/scripts/cure.sh "$FLAME:8" 'mention (verbatim)' scripts/cure.sh common/scripts/cure.sh)" \
   "$(F --refs scripts/ --moves "$REPO/MOVES")"
+same "find.sh --refs: a hit in an authored leaf or index carries no verbatim mark" \
+  "$(printf '%s\t%s\t%s\n' public/misc/leaves/.index.md:19 mention common/ public/misc/leaves/toolpath.md:5 mention common/scripts/cure.sh)" \
+  "$(F --refs common/)"
 out=$(F --refs no-such-prefix/); rc=$?
 check "find.sh --refs: no hit prints nothing and exits 0" '[ $rc -eq 0 ] && [ -z "$out" ]'
 F --refs >/dev/null; rc=$?
