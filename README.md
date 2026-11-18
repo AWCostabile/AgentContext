@@ -48,6 +48,7 @@ The Claude Code adapter gives an instance its guard on the immutable tiers, its 
 - [ARCHITECTURE.md](./ARCHITECTURE.md): the method in full, section by section.
 - [CHANGE_LOG.md](./CHANGE_LOG.md): what each release landed, generated from the pull requests.
 - [SETUP.md](./SETUP.md): the run-sheet, deploying and updating.
+- [MIGRATE.md](./MIGRATE.md): the run-sheet for a release that moves things, staged and brought across on a branch of its own.
 - [blueprint/AGENTS.md](./blueprint/AGENTS.md): what an instance tells an agent.
 - [blueprint/common/HYGIENE.md](./blueprint/common/HYGIENE.md): every check, what it means and how to fix it.
 - [Quillfeather's reader page](./examples/quillfeather/README.md): a filled tree, and what to open first.

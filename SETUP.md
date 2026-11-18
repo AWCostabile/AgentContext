@@ -299,9 +299,11 @@ bash common/modules/linkcheck/linkcheck.sh
 
 ## How to update
 
-A release of the template changes the core files an instance received: everything under `common/` (`scripts/`, `rules/`, `templates/`, `reference/`, `HYGIENE.md`, `.conf.example`), `.vscode/`, `AGENTS.md`, `README.md`, an adapter's payload, and every module adopted with `--adopt` (the steps above), file by file as the core. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `common/.agentcontext` records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone. (An instance deployed before the common directory keeps its manifest at the root; the update reads it there and rewrites it under `common/`.)
+A release of the template changes the core files an instance received: everything under `common/` (`scripts/`, `rules/`, `templates/`, `reference/`, `staging/.gitignore`, `HYGIENE.md`, `.conf.example`), `.vscode/`, `AGENTS.md`, `README.md`, an adapter's payload, and every module adopted with `--adopt` (the steps above), file by file as the core. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `common/.agentcontext` records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone. (An instance deployed before the common directory keeps its manifest at the root; the update reads it there and rewrites it under `common/`.)
 
 Always run the update with the **new** release's `init.sh`: an older one cannot read a newer layout. When the update keeps a file, it names the migration guides that apply (`migrations/<version>.md` in the template repository, one per release, read in order from the instance's own) and copies each into the instance as `common/reference/migrations/<version>.md`; they say what to finish by hand.
+
+A release that moves things (its `MOVES` file lists a pair the instance has not crossed) is brought across with the migration sheet instead of the steps below: fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/<tag>/MIGRATE.md and follow it as a run-sheet, as this one is followed. It stages the release with `init.sh --update --stage`, which prints the report below and writes the release's tree to `common/staging/<tag>/` and nothing else, then makes the update and respells the moved paths on a branch named for the release, for the user to walk and merge.
 
 **Run** (with the new tag; the deployer fetches that release itself)
 
@@ -347,7 +349,7 @@ The skeleton carries `{{ }}` placeholders. The deployer resolves every one outsi
 
 `common/templates/` keeps its placeholders on purpose: those files are copied by hand when a branch or a product is added, and the linter never reads them as part of the tree.
 
-Besides the core it lays, the deployer keeps two things of its own in `common/reference/`, neither shipped nor recorded in the manifest: `updates.md`, the ledger it appends one line to per update that wrote something or came from another release and per adoption (the one file it appends to rather than replaces), and `migrations/`, the guides an update named. Both appear with the first run that writes them.
+Besides the core it lays, the deployer keeps two things of its own in `common/reference/`, neither shipped nor recorded in the manifest: `updates.md`, the ledger it appends one line to per update that wrote something or came from another release and per adoption (the one file it appends to rather than replaces), and `migrations/`, the guides an update named. Both appear with the first run that writes them. Beside it, `common/staging/` is a working directory: only its `.gitignore` is laid and recorded, it ignores everything else in it, `--stage` writes a release's tree there, and the deployer never empties it.
 
 ## When a step refuses
 
