@@ -34,7 +34,7 @@ bash AgentContext-0.6.0/init.sh --update --dry-run --target <path> --from AgentC
 { sed -n 's/^kept \([^ ]*\) (.*/\1/p' assess.txt | while IFS= read -r f; do [ -f "<path>/$f" ] && wc -c < "<path>/$f" | awk '{ print $1 * 2 }'; done; sed -n 's/^guide: //p' assess.txt | while IFS= read -r g; do wc -c < "AgentContext-0.6.0/$g"; done; } | awk '{ s += $1 } END { printf "%d bytes, about %d tokens to read\n", s, s / 4 }'
 ```
 
-**Check**: the first command prints the release's `<old> <new>` pairs (they are cumulative: a pair the instance crossed in an earlier release is still listed); `assess.txt` ends with `update: N moved, N replaced, N kept, N added, N removed-upstream` and the last line says `dry-run: nothing written to <path>`; the third prints one line of bytes and tokens. Each `kept` line of `assess.txt` is a file the user edited, which the release will not overwrite: reading it means reading it beside the release's copy, so the estimate counts it twice, and each `guide:` line once. Tell the user the pairs, the kept files and the estimate before going on.
+**Check**: the first command prints the release's `<old> <new>` pairs (they are cumulative: a pair the instance crossed in an earlier release is still listed); `assess.txt` ends with the summary line `update: N moved, N replaced, N kept, N added, N removed-upstream`, then one `guide: migrations/<version>.md` line per guide when a file is kept, and last `dry-run: nothing written to <path>`; the third prints one line of bytes and tokens. Each `kept` line of `assess.txt` is a file the user edited, which the release will not overwrite: reading it means reading it beside the release's copy, so the estimate counts it twice, and each `guide:` line once. Tell the user the pairs, the kept files and the estimate before going on.
 
 ## 2. Stage
 
@@ -55,9 +55,9 @@ grep -vE '^[[:space:]]*(#|$)' AgentContext-0.6.0/MOVES | awk '{ print $1 }' | LC
 cut -f2 <path>/common/staging/refs.md | LC_ALL=C sort | uniq -c
 ```
 
-**Check**: `<path>/common/staging/refs.md` exists (it may be empty: then nothing needs respelling), one hit per line: `<file>:<line>`, a tab, `link` or `mention`, a tab, the spelling found, a tab, the spelling the release gives it. The count lists how many of each kind. A hit marked `(verbatim)` is inside a record kept as it was written (a provenance tier, or a leaf a landed manifest lists): it is listed and left, and this sheet never respells it. A hit in a root document (`AGENTS.md`, `README.md`, any file at the instance root) is the update's to replace or the user's to merge, never respelled here. Every other hit under `public/` or `private/` is respelled in step 4.
+**Check**: `<path>/common/staging/refs.md` exists (it may be empty: then nothing needs respelling), one hit per line: `<file>:<line>`, a tab, the kind (`link` or `mention`, written `link (verbatim)` or `mention (verbatim)` for a hit inside a record), a tab, the spelling found, a tab, the spelling the release gives it. The count lists how many of each kind. A hit whose kind ends `(verbatim)` is inside a record kept as it was written (a provenance tier, or a leaf a landed manifest lists): it is listed and left, and this sheet never respells it. A hit in a root document (`AGENTS.md`, `README.md`, any file at the instance root) is the update's to replace or the user's to merge, never respelled here. Every other hit under `public/` or `private/` is respelled in step 4.
 
-The report settles everything but the kept files. When `report.txt` has `kept` lines and you can delegate, hand each kept file to its own delegated agent with the two paths, `<path>/<file>` and `<path>/common/staging/v0.6.0/<file>` (for `kept <old> (changed locally; moved to <new>)`, `<path>/<old>` and `<path>/common/staging/v0.6.0/<new>`), and ask for a summary of under twenty lines: what the release changed in the file and what the user changed, and whether the two touch the same lines. Keep the summaries for step 5 and read no tree yourself. Without delegation, `diff` each pair and summarise it the same way.
+The report settles everything but the kept files. When `report.txt` has `kept` lines and you can delegate, hand each kept file to its own delegated agent with the two paths, `<path>/<file>` and `<path>/common/staging/v0.6.0/<file>` (for `kept <old> (changed locally; moved to <new>)`, `<path>/<old>` and `<path>/common/staging/v0.6.0/<new>`), and ask for a summary of under twenty lines: what the release changed in the file and what the user changed, and whether the two touch the same lines. Keep the summaries for step 5 and read no tree yourself. Without delegation, run `diff <path>/<file> <path>/common/staging/v0.6.0/<file>` for each pair and summarise it the same way.
 
 **Check**: one summary per `kept` line of `report.txt`.
 
@@ -81,7 +81,7 @@ bash AgentContext-0.6.0/init.sh --update --target <path> --from AgentContext-0.6
 git -C <path> add -A && git -C <path> commit -m "chore: core files updated to v0.6.0"
 ```
 
-**Check**: `grep '^update: ' <path>/common/staging/update.txt` is the same line as `grep '^update: ' <path>/common/staging/report.txt`; the loop prints nothing: every staged file the report did not keep is now byte for byte in the instance; `grep '^ref=' <path>/common/.agentcontext` prints `ref=v0.6.0`; `git -C <path> status --short` prints nothing.
+**Check**: `grep '^update: ' <path>/common/staging/update.txt` is the same line as `grep '^update: ' <path>/common/staging/report.txt`; the loop prints nothing: every staged file the report did not keep is now byte for byte in the instance; `grep '^ref=' <path>/common/.agentcontext` prints `ref=v0.6.0`; beside the files `update.txt` reports line by line, the commit holds the rewritten manifest `common/.agentcontext` (the report's last line, `manifest: ref=v0.6.0, …`) and two things the update keeps for itself and never reports as `added`: `common/reference/updates.md`, with its one new ledger line, and each guide a `guide:` line names, copied to `common/reference/migrations/`; `git -C <path> status --short` prints nothing.
 
 **Run** (every hit of `refs.md` that is no verbatim record and lies under `public/` or `private/`, respelled in place; then one commit per repository that changed)
 
@@ -96,7 +96,7 @@ git -C <path> add public && { git -C <path> diff --cached --quiet || git -C <pat
 ```
 grep -vxFf <path>/common/staging/refs.md <path>/common/staging/respelled.md
 { git -C <path> diff --name-only "$(cut -d' ' -f1 <path>/common/staging/base.txt)" HEAD -- public private; [ -f <path>/common/staging/base-private.txt ] && git -C <path>/private diff --name-only "$(cut -d' ' -f1 <path>/common/staging/base-private.txt)" HEAD | sed 's|^|private/|'; } | LC_ALL=C sort -u | diff - <(cut -f1 <path>/common/staging/respelled.md | sed 's/:[0-9]*$//' | LC_ALL=C sort -u)
-cd <path> && bash common/scripts/cure.sh | tail -n 1
+(cd <path> && bash common/scripts/cure.sh | tail -n 1)
 ```
 
 The first two commands print nothing: every respelled hit is a line of `refs.md`, and the files changed under `public/` and `private/` since the starting point are exactly the files `respelled.md` names. `cure.sh` ends with `== VERDICT: 0 fail(s), …`. `git -C <path> status --short` prints nothing, and so does `git -C <path>/private status --short`.
@@ -108,11 +108,12 @@ The first two commands print nothing: every respelled hit is a line of `refs.md`
 ```
 git -C <path> log --oneline "$(cut -d' ' -f1 <path>/common/staging/base.txt)"..migrate/v0.6.0
 [ -f <path>/common/staging/base-private.txt ] && git -C <path>/private log --oneline "$(cut -d' ' -f1 <path>/common/staging/base-private.txt)"..migrate/v0.6.0
-grep -E '^kept |^guide: ' <path>/common/staging/report.txt; grep -F '(verbatim)' <path>/common/staging/refs.md; grep -vE '^(public|private)/' <path>/common/staging/refs.md
-cd <path> && bash common/scripts/smell.sh --quiet | head -n 1
+grep -E '^kept |^guide: ' <path>/common/staging/report.txt; grep -F '(verbatim)' <path>/common/staging/refs.md
+grep -vE '^[[:space:]]*(#|$)' AgentContext-0.6.0/MOVES | awk '{ print $1 }' | LC_ALL=C sort -u | while IFS= read -r old; do bash AgentContext-0.6.0/scripts/find.sh --root <path> --refs "$old" --moves AgentContext-0.6.0/MOVES; done | LC_ALL=C sort -u | grep -vE '^(public|private)/'
+(cd <path> && bash common/scripts/smell.sh | grep -E '^== SUMMARY|^\[SMELL S22\]')
 ```
 
-Tell the user, in this order: the branch `migrate/v0.6.0` in the instance and, when there is one, in the private repository, with its one or two commits; that the reports beside it are in `<path>/common/staging/` (`report.txt` the deployer's, `refs.md` every mention found, `respelled.md` what was changed), local to this machine and never committed; each kept file with its summary from step 3, the release's copy at `common/staging/v0.6.0/<file>`, to merge by hand on the branch if they want the release's change; each guide named, now in `common/reference/migrations/`; the verbatim hits, left as written; the hits in root documents; and the smells line (a respelled `public/` leaf may now be reported for spelling a `common/` path, which is the user's to reword as the tool's name). The user walks `git -C <path> diff <the commit in base.txt> migrate/v0.6.0` and merges the branch into the one `base.txt` names, in each repository, as they merge any branch.
+Tell the user, in this order: the branch `migrate/v0.6.0` in the instance and, when there is one, in the private repository, with its one or two commits; that the reports beside it are in `<path>/common/staging/` (`report.txt` the deployer's, `refs.md` every mention found, `respelled.md` what was changed), local to this machine and never committed; each kept file with its summary from step 3, the release's copy at `common/staging/v0.6.0/<file>`, to merge by hand on the branch if they want the release's change; each guide named, now in `common/reference/migrations/`; the verbatim hits, left as written; the hits the third command still finds in root documents, searched again now that the update has replaced the ones it owns (read each line before reporting it: a mention can be a link's own text beside a target that is already right, and then nothing is left to do); and the smells: the summary line, and each `[SMELL S22]` line under it, a `public/` leaf reported for spelling a `common/` path (a respelled leaf now does), which is the user's to reword as the tool's name. The user walks `git -C <path> diff <the commit in base.txt> migrate/v0.6.0` and merges the branch into the one `base.txt` names, in each repository, as they merge any branch.
 
 **Check**: the user has the branch names and the list above, and has said they will walk and merge.
 
