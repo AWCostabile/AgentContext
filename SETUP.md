@@ -116,7 +116,7 @@ Then follow the comment at the top of the copy's `.index.md`: replace every `{{ 
 
 **Check**: `grep -rn '{{' public/<catalog>/<Name>` prints nothing; `bash common/scripts/cure.sh` ends with 0 fails. Commit.
 
-The steps below are optional modules, in the order they are best adopted: what concerns the instance and this machine first, then the process law, then the repository's workflow, then the two generated tiers with their installs, and last the user's own private branch and the link check. Each is laid down by the deployer, `init.sh --adopt <module>`, run from the scratch directory as in step 3: it copies the module to its place and records it in `common/.agentcontext`, so a later update refreshes it file by file as it does the core. The change-log module alone is copied by hand, because it belongs to each repository rather than to the tree.
+The steps below are optional modules, in the order they are best adopted: what concerns the instance and this machine first, then the process law, then the repository's workflow, then the two generated tiers with their installs, and last the user's own private branch and the link check. Each is laid down by the deployer, `init.sh --adopt <module>`, run from the scratch directory as in step 3: it copies the module to its place and records it in `common/.agentcontext` (the ledger `common/reference/updates.md` gains a line naming it), so a later update refreshes it file by file as it does the core. The change-log module alone is copied by hand, because it belongs to each repository rather than to the tree.
 
 ## 7. Project context retention (optional)
 
@@ -299,9 +299,9 @@ bash common/modules/linkcheck/linkcheck.sh
 
 ## How to update
 
-A release of the template changes the core files an instance received: everything under `common/` (`scripts/`, `rules/`, `templates/`, `HYGIENE.md`, `.conf.example`), `.vscode/`, `AGENTS.md`, `README.md`, an adapter's payload, and every module adopted with `--adopt` (the steps above), file by file as the core. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `common/.agentcontext` records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone. (An instance deployed before the common directory keeps its manifest at the root; the update reads it there and rewrites it under `common/`.)
+A release of the template changes the core files an instance received: everything under `common/` (`scripts/`, `rules/`, `templates/`, `reference/`, `HYGIENE.md`, `.conf.example`), `.vscode/`, `AGENTS.md`, `README.md`, an adapter's payload, and every module adopted with `--adopt` (the steps above), file by file as the core. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `common/.agentcontext` records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone. (An instance deployed before the common directory keeps its manifest at the root; the update reads it there and rewrites it under `common/`.)
 
-Always run the update with the **new** release's `init.sh`: an older one cannot read a newer layout. When the update keeps a file, it names the migration guides that apply (`migrations/<version>.md` in the template repository, one per release, read in order from the instance's own); they say what to finish by hand.
+Always run the update with the **new** release's `init.sh`: an older one cannot read a newer layout. When the update keeps a file, it names the migration guides that apply (`migrations/<version>.md` in the template repository, one per release, read in order from the instance's own) and copies each into the instance as `common/reference/migrations/<version>.md`; they say what to finish by hand.
 
 **Run** (with the new tag; the deployer fetches that release itself)
 
@@ -320,13 +320,13 @@ bash AgentContext-<tag without v>/init.sh --update --target <path> --ref <tag>
 - `removed-upstream`: a core file the release no longer ships; the local copy stays;
 - `removed-upstream module <name> (its files stay)`: an adopted module the release no longer ships; its `module=` line leaves the manifest and its files stay where they are.
 
-After the summary, `run bash common/scripts/cure.sh: N kept file(s) may name moved paths` means an edited root document (an `AGENTS.md`, say) still names old paths, and `guide: migrations/<version>.md` names each guide to read. Then run step 4 again (`cure.sh` at 0 fails) and commit:
+After the summary, `run bash common/scripts/cure.sh: N kept file(s) may name moved paths` means an edited root document (an `AGENTS.md`, say) still names old paths, and `guide: migrations/<version>.md` names each guide to read, copied into `common/reference/migrations/`. An update that changed something (any count above zero, or another release) has appended one line to `common/reference/updates.md`, `- YYYY-MM-DD — update <from> → <to>:` and the counts; `tail -n 1 common/reference/updates.md` shows it. Then run step 4 again (`cure.sh` at 0 fails) and commit:
 
 ```
 cd <path> && git add -A && git commit -m "chore: core files updated to <tag>"
 ```
 
-`--dry-run` before `--target` prints the report and writes nothing, which is the way to preview.
+`--dry-run` before `--target` prints the report and writes nothing, the ledger included, which is the way to preview.
 
 **A module copied in by hand** (every module before `--adopt` existed) is not in the manifest, so the update leaves it alone. After the update, run the same `--adopt <module>` its step names, with the same release: a module already at its place is recorded with nothing copied, each file reported `matches` or `differs` (a differing file is then kept by every update, as an edited core file is); one still at the old place `modules/<name>/` is moved to `common/modules/<name>/` file by file, as the update moves the core, an edited file staying at its old path beside the release's copy.
 
@@ -346,6 +346,8 @@ The skeleton carries `{{ }}` placeholders. The deployer resolves every one outsi
 | the skeleton's set-up comments | removed; the deployer did what they describe |
 
 `common/templates/` keeps its placeholders on purpose: those files are copied by hand when a branch or a product is added, and the linter never reads them as part of the tree.
+
+Besides the core it lays, the deployer keeps two things of its own in `common/reference/`, neither shipped nor recorded in the manifest: `updates.md`, the ledger it appends one line to per update that changed something and per adoption (the one file it appends to rather than replaces), and `migrations/`, the guides an update named. Both appear with the first run that writes them.
 
 ## When a step refuses
 
