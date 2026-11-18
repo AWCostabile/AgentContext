@@ -18,7 +18,7 @@ git -C <path> status --short; [ -d <path>/private/.git ] && git -C <path>/privat
 
 **Check**: it prints nothing. Anything listed is the user's work in progress: stop and ask them to commit or set it aside, then run it again.
 
-**Run** (fetch the release from the instance's own upstream, into a directory named for the release: a release extracted under another name records `ref=working-tree` instead of its version)
+**Run** (fetch the release from the instance's own upstream; it unpacks into `AgentContext-0.6.0/`, the directory every command below spells, and names its release from its own `RELEASE` stamp, whatever the directory is called)
 
 ```
 curl -fsSL "$(cat <path>/common/.agentcontext <path>/.agentcontext 2>/dev/null | sed -n 's/^upstream=//p' | head -n 1)/archive/refs/tags/v0.6.0.tar.gz" | tar xz
