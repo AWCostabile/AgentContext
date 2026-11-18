@@ -32,6 +32,7 @@ one leaf per area, each opening with a **State today** paragraph. Follow its lin
 | [Templates](./common/templates/.index.md) | copy these to make a new branch, leaf or product |
 | [Scripts](./common/scripts/.index.md) | `find.sh` search; `cure.sh` the linter; `smell.sh` the smells; `review.sh` the agenda |
 | [Rules](./common/rules/.index.md) | the grammar and tier rules as plain documents |
+| [Reference](./common/reference/.index.md) | lookups: the deployer's refusals, its ledger of updates to this tree, the migration guides that applied |
 
 ## Where to write
 
@@ -100,7 +101,7 @@ Both read `.conf` and treat an absent `private/` as normal. Run the linter after
 leaves and before merging a branch: zero fails, every smell fixed or reasoned. The grammar the checks
 enforce is written out in [common/rules/](./common/rules/.index.md).
 
-The core files this tree received from the template (`common/scripts/`, `common/rules/`, `common/templates/`, `.vscode/`,
+The core files this tree received from the template (`common/scripts/`, `common/rules/`, `common/templates/`, `common/reference/`, `.vscode/`,
 this file, `common/HYGIENE.md`, `README.md`, `common/.conf.example`, an adapter's payload where one was laid, and every
 module adopted: `common/modules/<name>/`, `constitution/`, `private/local/`) are listed with their hashes in
 `common/.agentcontext`, with the release they came from. A later release is pulled in with the template's deployer in

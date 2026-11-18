@@ -1,6 +1,6 @@
 # Modules
 
-Optional additions, adopted or deleted per instance. `init.sh --adopt <module> --target <instance>` lays a module at its place and records it in the instance's manifest, so `--update` refreshes it file by file as it does the core. The core never depends on one, and no module names an agent harness.
+Optional additions, adopted or deleted per instance. `init.sh --adopt <module> --target <instance>` lays a module at its place and records it in the instance's manifest, so `--update` refreshes it file by file as it does the core; the instance's ledger, `common/reference/updates.md`, gains a line naming it. The core never depends on one, and no module names an agent harness.
 
 | Module | What it adds |
 | ------ | ------------ |

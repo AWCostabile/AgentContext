@@ -3,7 +3,8 @@
 # instances from the COMMITTED tree, lints them, updates one, proves the refusals, lints
 # every worked example as of its snapshot date, runs tests/check.sh, the scripts' own
 # check over the fixture tree, updates instances of the last release through the move
-# rule onto the common directory, and adopts modules into instances and updates over them.
+# rule onto the common directory, adopts modules into instances and updates over them, and
+# proves the reference branch's ledger and copied guides.
 #
 # Usage: bash tests/tools/deploy-smoke.sh   (from anywhere; no arguments)
 #
@@ -588,6 +589,46 @@ check "before its row, cure.sh fails exactly the orphan: [FAIL] orphan (not in p
 printf '%s\n' "| [Local](./local/.index.md) | the user's own ideas, memories and plans: read its \`.agent\` first |" >> "$I1/private/.index.md"
 out=$(bash "$I1/common/scripts/cure.sh" --root "$I1" 2>&1); rc=$?
 check "with the row appended to private/.index.md, cure.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
+
+# -- 21. the reference branch: the ledger and the copied guides ------------------------------------------------
+# A fresh instance carries common/reference/ and no ledger. An update that changes nothing and
+# every dry run append nothing; an update that keeps a file from a versioned ref appends exactly
+# one well-formed line and copies the guide it names into common/reference/migrations/; --adopt
+# appends its line, 0 file(s) for a module recorded in place. Outside common/ nothing moves.
+outside() { (cd "$1" && find . -type f ! -path './common/*' ! -path './private/.git/*' -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum); }
+I11="$TMP/instance11"; L11="$I11/common/reference/updates.md"
+bash "$INIT" --from "$SRC" --target "$I11" --conf "$CONF" >/dev/null 2>&1
+check "a fresh instance carries common/reference/ with its index and the refusal table, and no ledger" \
+  '[ -f "$I11/common/reference/.index.md" ] && [ -f "$I11/common/reference/refusals.md" ] && [ ! -e "$L11" ] && [ ! -e "$I11/common/reference/migrations" ]'
+lines() { grep -c '^- ' "$L11" 2>/dev/null || true; }
+o0=$(outside "$I11")
+out=$(bash "$INIT" --update --target "$I11" --from "$SRC" 2>&1); rc=$?
+check "an update that changes nothing appends nothing: no ledger written" '[ $rc -eq 0 ] && [ ! -e "$L11" ]'
+sed -i 's/^ref=.*/ref=v0.5.0/' "$I11/common/.agentcontext"
+printf '%s\n' "A local note." >> "$I11/common/rules/design-tier.md"
+out=$(bash "$INIT" --update --target "$I11" --from "$SRC" --dry-run 2>&1); rc=$?
+check "a dry run appends nothing and copies no guide" '[ $rc -eq 0 ] && [ ! -e "$L11" ] && [ ! -e "$I11/common/reference/migrations" ]'
+out=$(bash "$INIT" --update --target "$I11" --from "$SRC" 2>&1); rc=$?
+re='^- [0-9]{4}-[0-9]{2}-[0-9]{2} — update v0\.5\.0 → working-tree: 0 moved, 0 replaced, 1 kept, 0 added, 0 removed-upstream$'
+check "an update that changed something appends exactly one well-formed line ($(tail -n 1 "$L11" 2>/dev/null))" \
+  '[ $rc -eq 0 ] && [ "$(lines)" = 1 ] && grep -qE "$re" "$L11"'
+check "the guide the update named is copied byte for byte into common/reference/migrations/" \
+  'printf "%s\n" "$out" | grep -qx "guide: migrations/0.5.0.md" && cmp -s "$SRC/migrations/0.5.0.md" "$I11/common/reference/migrations/0.5.0.md" && [ "$(ls "$I11/common/reference/migrations")" = 0.5.0.md ]'
+check "neither the ledger nor the guide is in the manifest" '! grep -qE "  common/reference/(updates\.md|migrations/)" "$I11/common/.agentcontext"'
+n1=$(lines)
+out=$(bash "$INIT" --adopt codebase --target "$I11" --from "$SRC" --dry-run 2>&1); rc=$?
+check "an --adopt dry run appends nothing" '[ $rc -eq 0 ] && [ "$(lines)" = "$n1" ]'
+ncb=$(cd "$SRC/modules/codebase" && find . -type f | wc -l | tr -d ' ')
+out=$(bash "$INIT" --adopt codebase --target "$I11" --from "$SRC" 2>&1); rc=$?
+check "--adopt appends one line naming the module and the $ncb file(s) it wrote" \
+  '[ $rc -eq 0 ] && [ "$(lines)" = $((n1 + 1)) ] && tail -n 1 "$L11" | grep -qE "^- [0-9]{4}-[0-9]{2}-[0-9]{2} — adopt codebase: $ncb file\(s\)$"'
+mkdir -p "$I11/common/modules" && cp -R "$SRC/modules/graphify" "$I11/common/modules/graphify"
+out=$(bash "$INIT" --adopt graphify --target "$I11" --from "$SRC" 2>&1); rc=$?
+check "--adopt of a module already in place appends 0 file(s)" \
+  '[ $rc -eq 0 ] && tail -n 1 "$L11" | grep -qE "^- [0-9]{4}-[0-9]{2}-[0-9]{2} — adopt graphify: 0 file\(s\)$"'
+check "outside common/ the instance is byte-identical after every update and adoption" '[ "$(outside "$I11")" = "$o0" ]'
+(cd "$I11" && bash common/scripts/cure.sh >/dev/null 2>&1); crc=$?
+check "the instance with a ledger and a copied guide lints with 0 fails" '[ $crc -eq 0 ]'
 
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL
