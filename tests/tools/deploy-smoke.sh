@@ -329,14 +329,19 @@ check "no identity file anywhere in the committed tree, and the deployer wrote n
 # SETUP.md names one release and reads every file out of that release's archive; README.md's
 # prompt fetches the same release's SETUP.md. A path the sheet names must exist in the release
 # it pins: in the tag when it has been cut, in HEAD before it is (the tag is cut from HEAD).
+# MIGRATE.md, the migration sheet, pins the same release and reads out of the same archive.
 PIN=$(sed -n 's/^The pinned release is `\(v[0-9][0-9.]*\)`.*/\1/p' SETUP.md | head -n 1)
 check "SETUP.md declares one pinned release${PIN:+ ($PIN)}" '[ -n "$PIN" ]'
+MPIN=$(sed -n 's/^The pinned release is `\(v[0-9][0-9.]*\)`.*/\1/p' MIGRATE.md | head -n 1)
+check "MIGRATE.md declares the same pinned release (found: ${MPIN:-none})" '[ -n "$MPIN" ] && [ "$MPIN" = "$PIN" ]'
 others=$(grep -ohE 'AgentContext-[0-9]+\.[0-9]+\.[0-9]+|AgentContext/v[0-9]+\.[0-9]+\.[0-9]+|tags/v[0-9]+\.[0-9]+\.[0-9]+' README.md SETUP.md \
   | sed -E 's/.*[-/]v?//' | sort -u | tr '\n' ' ')
 check "README.md and SETUP.md name no release but the pinned one (found: ${others:-none})" '[ "$others" = "${PIN#v} " ]'
+others=$(grep -ohE 'AgentContext-[0-9]+\.[0-9]+\.[0-9]+|v[0-9]+\.[0-9]+\.[0-9]+' MIGRATE.md | sed -E 's/^(AgentContext-|v)//' | sort -u | tr '\n' ' ')
+check "MIGRATE.md names no release but the pinned one (found: ${others:-none})" '[ "$others" = "${PIN#v} " ]'
 if git rev-parse -q --verify "refs/tags/$PIN^{commit}" >/dev/null 2>&1; then REL="$PIN"; else REL=HEAD; info "$PIN is not tagged yet: its paths are checked against HEAD"; fi
 missing=""
-for p in $(grep -ohE "AgentContext-${PIN#v}/[A-Za-z0-9_./-]+" SETUP.md | sed "s|^AgentContext-${PIN#v}/||" | sort -u) \
+for p in $(grep -ohE "AgentContext-${PIN#v}/[A-Za-z0-9_./-]+" SETUP.md MIGRATE.md | sed "s|^AgentContext-${PIN#v}/||" | sort -u) \
          $(grep -ohE "AgentContext/$PIN/[A-Za-z0-9_./-]+" README.md | sed "s|^AgentContext/$PIN/||" | sort -u); do
   git ls-tree -r --name-only "$REL" -- "$p" | grep -q . || missing="$missing $p"
 done
