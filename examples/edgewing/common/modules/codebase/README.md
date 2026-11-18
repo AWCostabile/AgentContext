@@ -30,7 +30,7 @@ From the instance root, with the module adopted at `common/modules/codebase/` by
 | `--check` | compare the tier with the source and write nothing; exit 1 on drift, naming each leaf |
 | `--write-agent` | write the tier's `.agent` with the command that regenerates it |
 
-Exit 0 clean, 1 drift or a failure, 2 a usage error or a refusal (nothing written). Run `--write-agent` from the instance root: the command it records uses paths relative to where it ran.
+Exit 0 clean, 1 drift or a failure, 2 a usage error or a refusal (nothing written); every script's codes are in `common/HYGIENE.md`'s "Exit codes" section. Run `--write-agent` from the instance root: the command it records uses paths relative to where it ran.
 
 ## The profile
 

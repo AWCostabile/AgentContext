@@ -1,7 +1,7 @@
 # Inbox
 
-The one cheap landing for a thought mid-session: append only, one dated line per item, promoted or
-dropped when triaged.
+The one cheap landing for a thought mid-session: one dated line per item, appended between triages
+and removed when promoted or dropped.
 
 ## Mine
 

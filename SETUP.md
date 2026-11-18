@@ -2,7 +2,7 @@
 
 This is a run-sheet. It is written for a coding agent working on a user's machine, and it reads just as well for a person at a terminal. Every step has a **Run** line and a **Check** line: run the command, then confirm the check against what is now on disk before moving to the next step. Nothing here asks you to read another file and work out what to do; when a step refuses, stop and tell the user what it said.
 
-The pinned release is `v0.5.0`. Replace it everywhere below if the user names another.
+The pinned release is `v0.5.1`. Replace it everywhere below if the user names another.
 
 ## Before you start: ask the user
 
@@ -33,17 +33,17 @@ Work in a scratch directory the user is happy to delete afterwards.
 **Run**
 
 ```
-curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/v0.5.0.tar.gz | tar xz
+curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/v0.5.1.tar.gz | tar xz
 ```
 
-**Check**: a directory `AgentContext-0.5.0/` exists and holds `init.sh`, `blueprint/AGENTS.md`, `scripts/cure.sh` and `adapters/`. (GitHub names the archive's top directory after the tag without its `v`.) Nothing else has been written anywhere.
+**Check**: a directory `AgentContext-0.5.1/` exists and holds `init.sh`, `blueprint/AGENTS.md`, `scripts/cure.sh` and `adapters/`. (GitHub names the archive's top directory after the tag without its `v`.) Nothing else has been written anywhere.
 
 ## 2. Write the `.conf`
 
 **Run**
 
 ```
-cp AgentContext-0.5.0/blueprint/common/.conf.example ./my.conf
+cp AgentContext-0.5.1/blueprint/common/.conf.example ./my.conf
 ```
 
 Then edit `my.conf` from the user's answers: the `AI_` lines, the `MY_` lines and `CATALOGS`. Delete the `PRIVATE_SCOPES` line: the example's value names the example's own catalogs, and with the line absent the deployer derives it from `CATALOGS` plus `journal`. If the user asked for a specific search scope, respell the line instead, naming only their catalogs and `journal`. Leave `ORCH_BUDGET` as it is unless the user asked for something specific.
@@ -61,7 +61,7 @@ prints `8`; `grep '^CATALOGS=' my.conf` shows the user's catalogs in quotes; and
 **Run** (drop `--no-private` if the user wants a private tree; add `--adapter <name>` if they chose one; add `--name <RepositoryName>` if the directory's basename is not the name they want; one `--sibling <name>` per repository from the seventh answer)
 
 ```
-bash AgentContext-0.5.0/init.sh --target <path> --conf ./my.conf --sibling <name>
+bash AgentContext-0.5.1/init.sh --target <path> --conf ./my.conf --sibling <name>
 ```
 
 **Check**: the output is one line per stage, `copied N files`, `catalogs: <the catalogs>`, `private: initialised` (or `skipped`), `workspace: <RepositoryName>.code-workspace` and `manifest: N core files`, then, with an adapter, `adapter: <name>` and last `done: <path>`. Without an adapter, `done: <path>` is followed by `adapters (none laid down; pass --adapter <name> for a written one):` and one line per adapter the release ships, each marked `written` or `stub`. Then:
@@ -135,7 +135,7 @@ cd <path> && self="../$(basename "$PWD")/" && for d in ../*/; do [ "$d" = "$self
 **Run** (the first line from the scratch directory; its `cd` takes you to the instance root for the second)
 
 ```
-bash AgentContext-0.5.0/init.sh --adopt context-retention --target <path> && cd <path>
+bash AgentContext-0.5.1/init.sh --adopt context-retention --target <path> && cd <path>
 bash common/modules/context-retention/meta.sh init
 ```
 
@@ -146,7 +146,7 @@ When the user is not at the terminal, `meta.sh init --yes` or `meta.sh init --no
 **With the Claude Code adapter, measure the prompt-cache lifetime too.** An orchestrating session that waits on a delegated job for longer than the cache lives pays a cold write of its whole prompt on its next turn; the harness caches for five minutes by default on an API key or a cloud provider, and for an hour on a subscription within its plan.
 
 ```
-bash AgentContext-0.5.0/adapters/claude-code/cache-ttl.sh <path>
+bash AgentContext-0.5.1/adapters/claude-code/cache-ttl.sh <path>
 ```
 
 **Check**: the second line reads `prompt cache: 1h …` or `prompt cache: 5m …`. On `5m`, ask the user whether to try for the hour: `… cache-ttl.sh <path> --apply` writes `promptCacheTtl` and `subagentPromptCacheTtl` as `"1h"` into `<path>/.claude/settings.local.json` (this machine's file; add `.claude/settings.local.json` to the instance's `.gitignore` if `git check-ignore` does not already ignore it) and probes again. If the second probe still says `5m`, the account does not grant the hour or the build predates the setting (Claude Code 2.1.242): tell the user to ask their account's administrator, and keep `ORCH_BUDGET=lean` in `.conf`, which keeps an orchestrator's waits short.
@@ -158,7 +158,7 @@ The constitution is the tree's law about itself: starting rulings, the articles 
 **Run**
 
 ```
-bash AgentContext-0.5.0/init.sh --adopt constitution --target <path> && cd <path> && bash common/scripts/cure.sh
+bash AgentContext-0.5.1/init.sh --adopt constitution --target <path> && cd <path> && bash common/scripts/cure.sh
 ```
 
 Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
@@ -181,7 +181,7 @@ then removes its guidance comment and adds its row to the Contents of `private/j
 
 **Check**: `<path>/constitution/.index.md`, `constitution/history/rulings/`, `constitution/articles/` and `constitution/process/` exist; `cure.sh` still ends with 0 fails; `constitution/README.md` does not exist (the module's README stays in the release, only `tree/` is laid); `grep -x module=constitution common/.agentcontext` prints the line; with the ledger copied, `bash common/scripts/review.sh` prints `Questions: none open`.
 
-Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1, and the user keeps what applies and strikes the rest before the first commit. When a leaf is as the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one), and it is also what an update reads: a leaf still exactly as the release shipped it, a seed, is replaced by the next release's seed, and any leaf the user has changed is kept and reported. The adoption steps in `AgentContext-0.5.0/modules/constitution/README.md` walk the same ground. Commit here (`AGENTS.md`, `common/`, `constitution/`), and the ledger with its row in the private repository.
+Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1, and the user keeps what applies and strikes the rest before the first commit. When a leaf is as the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one), and it is also what an update reads: a leaf still exactly as the release shipped it, a seed, is replaced by the next release's seed, and any leaf the user has changed is kept and reported. The adoption steps in `AgentContext-0.5.1/modules/constitution/README.md` walk the same ground. Commit here (`AGENTS.md`, `common/`, `constitution/`), and the ledger with its row in the private repository.
 
 ## 9. Adopt the change-log module (optional)
 
@@ -190,7 +190,7 @@ The change-log module is a GitHub Actions workflow for any repository the user k
 **Run** (from the scratch directory, once per such repository, with `<repository>` its path and the repository on `main`)
 
 ```
-mkdir -p <repository>/.github/workflows && cp AgentContext-0.5.0/modules/change-log/post-merge.yml <repository>/.github/workflows/post-merge.yml
+mkdir -p <repository>/.github/workflows && cp AgentContext-0.5.1/modules/change-log/post-merge.yml <repository>/.github/workflows/post-merge.yml
 git -C <repository> add .github/workflows/post-merge.yml && git -C <repository> commit -m "chore: the post-merge workflow squashes, bubble-merges and logs each pull request"
 ```
 
@@ -198,7 +198,7 @@ This is the one module `init.sh --adopt` refuses: the workflow lives in each rep
 
 Then the user adds a repository secret named `ACTION_TOKEN` (a fine-grained personal access token with Contents: read and write on that repository) under Settings, Secrets and variables, Actions, and checks three settings: "Allow merge commits" on, "Automatically delete head branches" off, and force pushes to `main` allowed for their account if the branch is protected. The agent cannot do these; say exactly what to click.
 
-**Check**: `.github/workflows/post-merge.yml` is on `main` and is identical to the module's file (`cmp AgentContext-0.5.0/modules/change-log/post-merge.yml <repository>/.github/workflows/post-merge.yml` prints nothing); the secret exists; the next merged pull request leaves `main` with a `merge: pull request #<n>` bubble and a `CHANGE_LOG.md` whose first heading is that pull request's title. Every clone then re-syncs with `git fetch && git reset --hard origin/main`, never a pull. `modules/change-log/README.md` says what the workflow asks of commit subjects.
+**Check**: `.github/workflows/post-merge.yml` is on `main` and is identical to the module's file (`cmp AgentContext-0.5.1/modules/change-log/post-merge.yml <repository>/.github/workflows/post-merge.yml` prints nothing); the secret exists; the next merged pull request leaves `main` with a `merge: pull request #<n>` bubble and a `CHANGE_LOG.md` whose first heading is that pull request's title. Every clone then re-syncs with `git fetch && git reset --hard origin/main`, never a pull. `modules/change-log/README.md` says what the workflow asks of commit subjects.
 
 ## 10. Adopt the codebase module (optional)
 
@@ -219,7 +219,7 @@ An area name is lowercase letters, digits and hyphens, never `map` or `surfaces`
 **Run** (the first line from the scratch directory, its `cd` taking you to the instance root; the command after it once per product, `<repository>` the product's checkout beside the instance)
 
 ```
-bash AgentContext-0.5.0/init.sh --adopt codebase --target <path> && cd <path>
+bash AgentContext-0.5.1/init.sh --adopt codebase --target <path> && cd <path>
 python common/modules/codebase/codebase.py --repo ../<repository> --into public/<catalog>/<Product>/codebase \
   --profile ../<repository>/codebase.profile.json --write-agent
 ```
@@ -243,7 +243,7 @@ The graphify module keeps one Graphify knowledge graph per repository in the tre
 **Run** (the first line from the scratch directory, its `cd` taking you to the instance root for the rest; `<slug>` a short lowercase name per repository)
 
 ```
-bash AgentContext-0.5.0/init.sh --adopt graphify --target <path> && cd <path>
+bash AgentContext-0.5.1/init.sh --adopt graphify --target <path> && cd <path>
 printf 'GRAPHS="<slug>=../<repository>"\n' >> .conf
 bash common/modules/graphify/graphs.sh home <slug>
 uv tool install "graphifyy[mcp]" && graphify install
@@ -269,7 +269,7 @@ The local module is a branch of the private tree that belongs to the user rather
 **Run** (from the scratch directory)
 
 ```
-bash AgentContext-0.5.0/init.sh --adopt local --target <path> && cd <path>
+bash AgentContext-0.5.1/init.sh --adopt local --target <path> && cd <path>
 ```
 
 Then the user adds its row to the Contents of `private/.index.md` (until they do, `cure.sh` fails the private root with `orphan (not in private/.index.md): private/local`, C03):
@@ -289,7 +289,7 @@ The linkcheck module asks every `http://` and `https://` URL the leaves in the s
 **Run** (from the scratch directory, then from the instance root)
 
 ```
-bash AgentContext-0.5.0/init.sh --adopt linkcheck --target <path> && cd <path>
+bash AgentContext-0.5.1/init.sh --adopt linkcheck --target <path> && cd <path>
 bash common/modules/linkcheck/linkcheck.sh
 ```
 
@@ -312,7 +312,7 @@ bash AgentContext-<tag without v>/init.sh --update --target <path> --ref <tag>
 
 **Check**: the report ends with `update: N moved, N replaced, N kept, N added, N removed-upstream` and then `manifest: ref=<tag>, N core files` (with `, N module files (<modules>)` when modules are adopted), one line per file above them; an adopted module's files take the same verbs as the core's:
 
-- `moved <old> -> <new>`: a core file the release moved (its `MOVES` file lists them), never edited by the user: written at the new path, the old one removed with any directory it leaves empty. It is the only thing the update deletes;
+- `moved <old> -> <new>`: a core file the release moved (its `MOVES` file lists them), never edited by the user: written at the new path, the old one removed with any directory it leaves empty. The deployer deletes only a file whose bytes equal a hash it holds (the recorded one on an update, the release's on an adoption) and the root manifest it has just rewritten under `common/`; nothing else, ever;
 - `kept <old> (changed locally; moved to <new>)`: a moved file the user edited; it stays at its old path, the release's copy is written at the new one, and the user brings the change across and deletes the old file;
 - `replaced`: a core file the user never edited, now the new release's version;
 - `kept … (changed locally)`: a core file the user edited; it is left as it was, and the user merges   the release's version by hand if they want it (`deleted locally` and `exists locally` are the same outcome for a file the user removed, or created before the release shipped one);
@@ -338,6 +338,7 @@ The skeleton carries `{{ }}` placeholders. The deployer resolves every one outsi
 | --- | --- |
 | `{{catalog}}`, `{{Catalog}}` | one branch per `CATALOGS` entry, under `public/` and `private/`, the placeholder `catalog/` removed |
 | `{{REPOSITORY_NAME}}` | the workspace file's name; a sibling repository folder only with `--sibling <name>` |
+| `{{TREE_NAME}}` | the repository name (`--name`, or the target directory's basename) in the reader page `README.md`'s H1; an update reads it back from the instance's workspace file's name, or the target's basename without one |
 | `{{YYYY-MM-DD}}` | the install date, in the journal |
 | the status page's fields | `nothing yet`, and `none` for unpushed branches |
 | an example Contents row whose target is a placeholder | removed; the table keeps its header |
