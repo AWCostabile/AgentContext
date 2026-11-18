@@ -4,8 +4,9 @@
 # every worked example as of its snapshot date, runs tests/check.sh, the scripts' own
 # check over the fixture tree, updates instances of the last release through the move
 # rule onto the common directory, adopts modules into instances and updates over them, and
-# proves the reference branch's ledger and copied guides, and stages a release's tree into the
-# staging directory without touching the rest of an instance.
+# proves the reference branch's ledger and copied guides, stages a release's tree into the
+# staging directory without touching the rest of an instance, and proves that an archive of a
+# tagged commit names its release from its own stamp, whatever it is called.
 #
 # Usage: bash tests/tools/deploy-smoke.sh   (from anywhere; no arguments)
 #
@@ -58,6 +59,12 @@ echo "== deploy smoke — $(date '+%Y-%m-%d %H:%M') =="
 [ -n "$(git status --porcelain)" ] && warn "the worktree is dirty; the smoke proves HEAD, not the worktree"
 mkdir -p "$SRC" && git archive HEAD | tar -x -C "$SRC"
 check "git archive of HEAD extracted as the source" '[ -f "$INIT" ] && [ -f "$SRC/blueprint/AGENTS.md" ]'
+# The archive fills in the release stamp, naming HEAD's tags when it has any. Every section
+# but 23 proves the source as a checkout holds it, so the stamp goes back to its committed
+# placeholder and the smoke reads the same whether or not HEAD is tagged; 23 proves the stamp.
+check "the archive filled in the release stamp RELEASE" \
+  '[ -f "$SRC/RELEASE" ] && ! cmp -s <(git show HEAD:RELEASE) "$SRC/RELEASE" && ! grep -q "\$Format:" "$SRC/RELEASE"'
+git show HEAD:RELEASE > "$SRC/RELEASE"
 
 # -- 2. deploy -------------------------------------------------------------------------------
 # PRIVATE_SCOPES and ORCH_BUDGET are dropped so the deployer has to derive them.
@@ -99,6 +106,8 @@ check "README.md is the reader page, named after the instance, with no placehold
   '[ -f "$I1/README.md" ] && [ "$(head -n 1 "$I1/README.md")" = "# Example" ] && ! grep -q "{{" "$I1/README.md"'
 check "README.md is listed in the manifest as a core file" 'grep -q "  README.md$" "$I1/common/.agentcontext"'
 check "no tests/ directory and no MIGRATE.md are laid into an instance" '[ ! -e "$I1/tests" ] && [ ! -e "$I1/MIGRATE.md" ]'
+check "the release stamp is never laid into an instance: no RELEASE at its root or under common/" \
+  '[ ! -e "$I1/RELEASE" ] && [ -z "$(find "$I1/common" -name RELEASE)" ]'
 root1=$(ls -A "$I1" | LC_ALL=C sort | tr '\n' ' ')   # the fresh root, judged in section 18
 
 # -- 4. the instance lints clean ----------------------------------------------------------------
@@ -707,6 +716,57 @@ err1=$(bash "$INIT" --stage --target "$I12" --from "$SRC" 2>&1 >/dev/null); rc1=
 err2=$(bash "$INIT" --adopt linkcheck --stage --target "$I12" --from "$SRC" 2>&1 >/dev/null); rc2=$?
 check "--stage without --update refuses with exit 2 and writes nothing" \
   '[ $rc1 -eq 2 ] && [ $rc2 -eq 2 ] && printf "%s\n" "$err1" "$err2" | grep -c "^init.sh: --stage goes with --update only" | grep -qx 2 && [ "$(tree_digest "$I12")" = "$whole" ]'
+
+# -- 23. the release stamp: a release names itself from inside --------------------------------------------------
+# A throwaway repository holds the source, its stamp the committed placeholder, and tags it v9.9.9:
+# an archive of the tag records v9.9.9 whatever its file or directory is called, for an install, a
+# staged tree and an update; an adoption records no release of its own; --ref still wins (curl
+# stood in for by a copy of the archive). A checkout records working-tree, and an archive of an
+# untagged commit what its directory's name gives, as without a stamp; a stamp naming two tags
+# takes the one the directory spells, else the highest. This repository's tags are never touched.
+SR="$TMP/stamp"; RP="$SR/repo"
+refof() { sed -n 's/^ref=//p' "$1/common/.agentcontext" 2>/dev/null; }
+lay() { bash "$INIT" --from "$1" --target "$2" --conf "$CONF" --no-private >/dev/null 2>&1; }
+unpack() { mkdir -p "$SR/x" && "${G[@]}" -C "$RP" archive --format=tar.gz --prefix="$2/" "$1" | tar -xz -C "$SR/x"; }
+mkdir -p "$RP" && cp -R "$SRC/." "$RP/"
+"${G[@]}" -C "$RP" init -q && "${G[@]}" -C "$RP" add -A && "${G[@]}" -C "$RP" commit -q -m "chore: a release" \
+  && "${G[@]}" -C "$RP" tag v9.9.9
+"${G[@]}" -C "$RP" archive --format=tar.gz --prefix=anything/ v9.9.9 > "$SR/download.tar.gz"
+unpack v9.9.9 anything
+check "an archive of the tag fills the stamp with it" 'grep -q "^refs=.*tag: v9\.9\.9" "$SR/x/anything/RELEASE"'
+lay "$SR/x/anything" "$SR/i-dir"
+check "an install from the tag's archive extracted as anything/ records ref=v9.9.9 (found: $(refof "$SR/i-dir"))" '[ "$(refof "$SR/i-dir")" = v9.9.9 ]'
+lay "$SR/download.tar.gz" "$SR/i-arc"
+check "an install from the tag's archive file download.tar.gz records ref=v9.9.9 (found: $(refof "$SR/i-arc"))" '[ "$(refof "$SR/i-arc")" = v9.9.9 ]'
+lay "$SRC" "$SR/i-up"
+sed -i 's/^ref=.*/ref=v0.5.0/' "$SR/i-up/common/.agentcontext"
+out=$(bash "$INIT" --update --target "$SR/i-up" --from "$SR/download.tar.gz" --stage 2>&1); rc=$?
+check "--stage from the tag's archive file stages the tree under common/staging/v9.9.9/" \
+  '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^staged: common/staging/v9\.9\.9/, " && [ -d "$SR/i-up/common/staging/v9.9.9" ]'
+out=$(bash "$INIT" --update --target "$SR/i-up" --from "$SR/download.tar.gz" 2>&1); rc=$?
+check "an update from the tag's archive file records ref=v9.9.9 and its ledger line names v0.5.0 → v9.9.9" \
+  '[ $rc -eq 0 ] && [ "$(refof "$SR/i-up")" = v9.9.9 ] && tail -n 1 "$SR/i-up/common/reference/updates.md" | grep -q " — update v0\.5\.0 → v9\.9\.9: "'
+lay "$SRC" "$SR/i-adopt"
+out=$(bash "$INIT" --adopt codebase --target "$SR/i-adopt" --from "$SR/download.tar.gz" 2>&1); rc=$?
+check "an adoption from the tag's archive file leaves the instance's ref=working-tree as it was" \
+  '[ $rc -eq 0 ] && [ "$(refof "$SR/i-adopt")" = working-tree ] && grep -qx "module=codebase" "$SR/i-adopt/common/.agentcontext"'
+mkdir -p "$SR/bin" && printf '%s\n' '#!/bin/bash' 'while [ $# -gt 0 ]; do [ "$1" = -o ] && cp "$SMOKE_ARCHIVE" "$2"; shift; done' > "$SR/bin/curl" && chmod +x "$SR/bin/curl"
+lay "$SRC" "$SR/i-ref"
+out=$(PATH="$SR/bin:$PATH" SMOKE_ARCHIVE="$SR/download.tar.gz" bash "$INIT" --update --target "$SR/i-ref" --ref v9.9.8 2>&1); rc=$?
+check "--ref wins over the stamp: the archive of v9.9.9 fetched as v9.9.8 records ref=v9.9.8 (found: $(refof "$SR/i-ref"))" \
+  '[ $rc -eq 0 ] && [ "$(refof "$SR/i-ref")" = v9.9.8 ]'
+lay "$RP" "$SR/i-co"
+check "an install from a checkout, its stamp the placeholder, records ref=working-tree (found: $(refof "$SR/i-co"))" '[ "$(refof "$SR/i-co")" = working-tree ]'
+"${G[@]}" -C "$RP" commit -q --allow-empty -m "chore: after the release"
+unpack HEAD AgentContext-1.2.3; unpack HEAD untagged
+lay "$SR/x/AgentContext-1.2.3" "$SR/i-un1"; lay "$SR/x/untagged" "$SR/i-un2"
+check "an archive of an untagged commit records what its directory's name gives: v1.2.3 as AgentContext-1.2.3/, working-tree as untagged/" \
+  '[ "$(refof "$SR/i-un1")" = v1.2.3 ] && [ "$(refof "$SR/i-un2")" = working-tree ]'
+"${G[@]}" -C "$RP" tag v9.9.10 v9.9.9
+unpack v9.9.9 AgentContext-9.9.9; unpack v9.9.9 both
+lay "$SR/x/AgentContext-9.9.9" "$SR/i-two1"; lay "$SR/x/both" "$SR/i-two2"
+check "a stamp naming v9.9.9 and v9.9.10 records the one the directory spells, else the highest: v9.9.9, v9.9.10" \
+  '[ "$(refof "$SR/i-two1")" = v9.9.9 ] && [ "$(refof "$SR/i-two2")" = v9.9.10 ]'
 
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL
