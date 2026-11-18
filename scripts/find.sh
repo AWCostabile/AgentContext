@@ -21,6 +21,9 @@
 #                                          mention is the bare path. --moves names a file of
 #                                          "<old> <new>" pairs (the template's MOVES): a hit a
 #                                          pair reaches gains a fourth field, its new spelling.
+#                                          A mention in a link's text is no hit when its new
+#                                          spelling is the path the link's target resolves to
+#                                          ([HYGIENE.md](common/HYGIENE.md) names its target).
 #                                          A hit in a verbatim record (an immutable provenance
 #                                          tier, or a leaf a "Landed as" manifest lists, as the
 #                                          linters judge it) is marked "link (verbatim)" or
@@ -312,6 +315,12 @@ case $MODE in
         for (j = i; j <= nb; j++) out = out b[j] (j < nb ? "/" : "")
         return out
       }
+      # named: the position lies in a link text whose target resolves to <now>, the mention
+      # already true of the file it links to
+      function named(pos, now,   q) {
+        for (q = 1; q <= nl; q++) if (pos > ls[q] && pos < le[q] && lt[q] == now) return 1
+        return 0
+      }
       # hit: one line of the listing; under --respell, the respelled hits alone, each recorded
       function hit(kind, spelled, now, at) {
         if (apply) { if (!writable || now == "") return; edit(at, length(spelled), now) }
@@ -361,11 +370,19 @@ case $MODE in
           hit("link", t, now, at)
         }
         # bare mentions: the prefix where a path starts, outside every link target (masked,
-        # so a position in the masked line is a position in the line)
-        line = ""; rest = $0
+        # so a position in the masked line is a position in the line); the span of each link text,
+        # from its [ to its ], kept with the root-relative path its target resolves to
+        line = ""; rest = $0; seen = 0; nl = 0
         while (match(rest, /\]\([^)]*\)/)) {
+          o = 0; while ((k = index(substr(rest, o + 1, RSTART - o - 1), "[")) > 0) o += k
+          if (o > 0) {
+            t = substr(rest, RSTART + 2, RLENGTH - 3)
+            sub(/[ \t].*$/, "", t); sub(/^</, "", t); sub(/>$/, "", t); sub(/#.*$/, "", t)
+            nl++; ls[nl] = seen + o; le[nl] = seen + RSTART
+            lt[nl] = (t == "" || t ~ /^[a-z]+:/ || t ~ /^\//) ? "" : norm((dir == "" ? "" : dir "/") t)
+          }
           line = line substr(rest, 1, RSTART); for (k = 1; k < RLENGTH; k++) line = line "\001"
-          rest = substr(rest, RSTART + RLENGTH)
+          seen += RSTART + RLENGTH - 1; rest = substr(rest, RSTART + RLENGTH)
         }
         line = line rest; seen = 0
         while ((i = index(line, prefix)) > 0) {
@@ -375,6 +392,7 @@ case $MODE in
           tok = substr(line, i, j - i); at = seen + i; line = substr(line, j); seen += j - 1
           sub(/[.]+$/, "", tok)
           m = moved(tok)
+          if (m != tok && named(at, m)) continue
           hit("mention", tok, (m != tok) ? m : "", at)
         }
         if (!writable) next
