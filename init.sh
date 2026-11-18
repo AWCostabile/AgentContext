@@ -28,15 +28,20 @@
 #   --dry-run         print every file it would write, and write nothing
 #
 # Update (the second form) brings the core files of an instance up to another release:
-# common/ (scripts/, rules/, templates/, HYGIENE.md, .conf.example), .vscode/, AGENTS.md,
+# common/ (scripts/, rules/, templates/, reference/, HYGIENE.md, .conf.example), .vscode/, AGENTS.md,
 # README.md and the adapter's payload. A core file edited locally is kept and reported, never
 # overwritten; public/, private/, .conf, .gitignore, .gitattributes and the workspace file are
 # never touched. The paths a release moved are listed in its MOVES file, one "<old> <new>"
 # pair per line (a trailing / for a directory prefix): an untouched file at an old name is
 # moved, and its old name removed with any directory it leaves empty; an edited one stays at
 # its old name beside the release's copy at the new one. When a file is kept, the template's
-# migrations/<version>.md guides are named from the instance's release onwards. A manifest at
-# the instance root (an older release) is read there and rewritten under common/.
+# migrations/<version>.md guides are named from the instance's release onwards, and each one
+# named is copied to common/reference/migrations/<version>.md. A run that changed something
+# (any count above zero, or another release) appends one line to the ledger
+# common/reference/updates.md: "- YYYY-MM-DD — update <from> → <to>: <the counts>"; the
+# ledger is the one file the deployer appends to, and neither it nor the guides are in the
+# manifest. A manifest at the instance root (an older release) is read there and rewritten
+# under common/.
 # The deployer deletes only a file whose bytes equal a hash it holds (the recorded one on
 # --update, the release's on --adopt) and the root manifest it has just rewritten under
 # common/; nothing else, ever.
@@ -51,8 +56,10 @@
 # with a private tree only). A module already in place is recorded, nothing copied, each file
 # reported as matching the release or differing from it; one at the old place MOVES names for it
 # (a module copied in by hand before the common directory) is moved file by file as an update
-# moves the core. The change-log module is refused: its workflow goes into a repository's
-# .github/workflows/, never an instance. The source defaults to the directory init.sh lives in.
+# moves the core. The ledger common/reference/updates.md gains "- YYYY-MM-DD — adopt <module>:
+# N file(s)", N the files written (0 for a module recorded in place). The change-log module is
+# refused: its workflow goes into a repository's .github/workflows/, never an instance. The
+# source defaults to the directory init.sh lives in.
 #   --ref <tag>       fetch the module from that release of the upstream repository
 #   --from <src>      take it from a local directory or .tar.gz instead
 #   --dry-run         print the report, and write nothing
@@ -70,6 +77,9 @@ REQUIRED_KEYS="CATALOGS MY_NAME MY_NICK MY_PRONOUNS MY_ROLE MY_USER"
 RESERVED_CATALOGS="catalog misc scratch-tools"
 # The manifest, and where a release before the common directory left it.
 MANIFEST=common/.agentcontext OLD_MANIFEST=.agentcontext
+# The reference branch's two deployer-kept paths, never in the manifest: the ledger, the one
+# file the deployer appends to, and the migration guides an update copied in.
+LEDGER=common/reference/updates.md GUIDES=common/reference/migrations
 
 TMPS=()
 cleanup() { local d; for d in "${TMPS[@]}"; do rm -rf "$d"; done; }
@@ -85,6 +95,13 @@ usage()  { awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }'
 refuse() { printf 'init.sh: %s\n' "$*" >&2; exit 2; }
 die()    { printf 'init.sh: failed: %s\n' "$*" >&2; exit 1; }
 say()    { printf '%s\n' "$*"; }
+# ledger <text>: append "- <today> — <text>" to the instance's ledger, created with its H1
+ledger() {
+  local f="$TARGET/$LEDGER"
+  mkdir -p "$(dirname "$f")" || return 1
+  [ -f "$f" ] || printf '%s\n\n' "# Updates" > "$f" || return 1
+  printf -- '- %s — %s\n' "$TODAY" "$1" >> "$f"
+}
 
 # -- arguments ------------------------------------------------------------------
 MODE=install TARGET="" CONF="" NAME="" FROM="" REF="" ADAPTER="" ADOPT="" NO_PRIVATE=0 DRY=0
@@ -439,9 +456,7 @@ if [ "$MODE" = update ]; then
   # A guide is named for the release it leaves; those from the instance's release up to the
   # source's apply. Only a release names a version: a working-tree ref names none.
   ver_lt() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n 1)" = "$1" ]; }
-  advice() {
-    [ $n_mv -gt 0 ] && [ $n_rootkept -gt 0 ] \
-      && say "run bash common/scripts/cure.sh: $n_rootkept kept file(s) may name moved paths"
+  guide_versions() {   # the versions whose guides apply, oldest first; none unless a file was kept
     [ $n_kept -gt 0 ] || return 0
     local from=${HEADER[ref]:-} to="" g v
     case "$from" in v[0-9]*) from=${from#v} ;; *) return 0 ;; esac
@@ -449,8 +464,14 @@ if [ "$MODE" = update ]; then
     while IFS= read -r v; do
       ver_lt "$v" "$from" && continue
       [ -n "$to" ] && ! ver_lt "$v" "$to" && continue
-      say "guide: migrations/$v.md"
+      printf '%s\n' "$v"
     done < <(for g in "$SRC"/migrations/[0-9]*.md; do [ -f "$g" ] && basename "$g" .md; done | sort -V)
+  }
+  advice() {
+    local v
+    [ $n_mv -gt 0 ] && [ $n_rootkept -gt 0 ] \
+      && say "run bash common/scripts/cure.sh: $n_rootkept kept file(s) may name moved paths"
+    while IFS= read -r v; do [ -n "$v" ] && say "guide: migrations/$v.md"; done < <(guide_versions)
   }
   if [ $DRY -eq 1 ]; then
     say "$summary"
@@ -481,6 +502,17 @@ if [ "$MODE" = update ]; then
     d=$(dirname "$p")
     while [ "$d" != . ] && rmdir "$TARGET/$d" 2>/dev/null; do d=$(dirname "$d"); done
   done
+  # The reference branch: each guide named is copied in, and a run that changed something
+  # (a count above zero, or another release) appends its line to the ledger.
+  while IFS= read -r v; do
+    [ -n "$v" ] || continue
+    { mkdir -p "$TARGET/$GUIDES" && cp "$SRC/migrations/$v.md" "$TARGET/$GUIDES/$v.md"; } \
+      || die "copying the guide migrations/$v.md into $GUIDES/; $MANIFEST is written"
+  done < <(guide_versions)
+  if [ $((n_mv + n_rep + n_kept + n_add + n_rm)) -gt 0 ] || [ "${HEADER[ref]:-}" != "$SRC_REF" ]; then
+    ledger "update ${HEADER[ref]:-unknown} → $SRC_REF: ${summary#update: }" \
+      || die "appending to $LEDGER; $MANIFEST is written"
+  fi
   say "$summary"
   advice
   nmod=0
@@ -583,6 +615,7 @@ if [ "$MODE" = adopt ]; then
     d=$(dirname "$p")
     while [ "$d" != . ] && rmdir "$TARGET/$d" 2>/dev/null; do d=$(dirname "$d"); done
   done
+  ledger "adopt $ADOPT: ${#WRITE[@]} file(s)" || die "appending to $LEDGER; $MANIFEST is written"
   say "$summary"
   say "manifest: module=$ADOPT, $n_files file(s) hashed"
   exit 0

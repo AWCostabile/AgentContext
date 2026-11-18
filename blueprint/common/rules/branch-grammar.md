@@ -20,6 +20,10 @@ private mirror by `private/.index.md`.
 - Links run one way: private leaves may link into `public/`; nothing under `public/` links to,
   or cites the path of, a private record. Never edit an immutable record that already does; its
   branch index carries a one-line note instead.
+- A leaf under `public/` names a tool, never its path: "run the linter", not where the script
+  lives under `common/`. The tree's navigation into `common/` is the root `AGENTS.md`'s. A leaf
+  under `private/` follows the same rule unless its record's work was on those files: a kickoff
+  or a pull-request body naming the command that was run.
 - `.conf`'s `PRIVATE_SCOPES` says which private branches `find.sh` searches by default;
   `find.sh -p` searches all of `private/`.
 

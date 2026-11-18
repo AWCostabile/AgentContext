@@ -13,6 +13,15 @@
 #                                          -f '<key>=<value>' those equal to it, -f '<key><<value>'
 #                                          and -f '<key>><value>' compare the value as text, which
 #                                          orders dates (quote the argument: < and > are the shell's)
+#   bash common/scripts/find.sh --refs <prefix> [--moves <file>]
+#                                          every mention of a path prefix (`scripts/`, a file
+#                                          path) across public/, all of private/ and the root
+#                                          *.md, one line per hit: path:line TAB link|mention TAB
+#                                          the spelling; a link is resolved from its file, a
+#                                          mention is the bare path. --moves names a file of
+#                                          "<old> <new>" pairs (the template's MOVES): a hit a
+#                                          pair reaches gains a fourth field, its new spelling.
+#                                          Exits 0 with or without hits
 # Flags:
 #   -a            with -k: also search leaf bodies (default: .index.md files only)
 #   -p            search EVERYTHING under private/, whatever .conf says
@@ -26,8 +35,8 @@
 #
 # Scope: public/ always, plus the private branches .conf's PRIVATE_SCOPES opts in to
 # (lib-scopes.sh). Unset or empty means public-only, which is what a fresh clone gets;
-# a missing private/ is never an error. Each tag result ends with its tree
-# (public | private).
+# a missing private/ is never an error. The reference branch common/reference/ is searched
+# beside them when it exists. Each tag result ends with its tree (public | private | common).
 #
 # A citation (-b) is any occurrence of the leaf's basename in another file's text, a
 # Markdown link or a bare path alike, because the smell linter keeps leaf basenames unique
@@ -48,15 +57,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CALLER_DIR="$(pwd)"
 ROOT="$CALLER_DIR"
 
-usage() { sed -n '2,45p' "$0" | sed 's/^#//; s/^ //'; }
+usage() { sed -n '2,/^set -u/p' "$0" | sed '$d' | sed 's/^#//; s/^ //'; }
 
 # --root is a long option, which getopts cannot parse: lift it (and its synonym) out first
 ARGS=()
+REFS="" MOVES_FILE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --root|-r) [ $# -ge 2 ] || { echo "$1 needs a directory" >&2; exit 2; }
                ROOT="$(cd "$2" 2>/dev/null && pwd)" || { echo "no such directory: $2" >&2; exit 2; }
                shift 2 ;;
+    --refs)    [ $# -ge 2 ] && [ -n "$2" ] || { echo "--refs needs a path prefix: --refs scripts/" >&2; exit 2; }
+               REFS=$2; shift 2 ;;
+    --moves)   [ $# -ge 2 ] || { echo "--moves needs a file of <old> <new> pairs" >&2; exit 2; }
+               [ -f "$2" ] || { echo "--moves: no such file: $2" >&2; exit 2; }
+               MOVES_FILE="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"; shift 2 ;;
     --help) usage; exit 0 ;;
     *) ARGS+=("$1"); shift ;;
   esac
@@ -77,11 +92,19 @@ while getopts "klx:b:f:aph" opt; do
   esac
 done
 shift $((OPTIND - 1))
+if [ -n "$REFS" ]; then
+  [ "$MODE" = tags ] && [ $# -eq 0 ] || { echo "--refs takes one prefix and no other mode (see --help)" >&2; exit 2; }
+  MODE=refs
+elif [ -n "$MOVES_FILE" ]; then
+  echo "--moves goes with --refs (see --help)" >&2; exit 2
+fi
 cd "$ROOT" || exit 1
 [ -d public ] || { echo "no public/ directory under $ROOT — pass --root <tree root>" >&2; exit 2; }
 . "$SCRIPT_DIR/lib-scopes.sh"
 
 if [ $PRIVATE -eq 1 ]; then SCOPES=$(search_dirs all); else SCOPES=$(search_dirs); fi
+# the tree's reference branch answers beside the trees, labelled common
+[ -d common/reference ] && SCOPES="$SCOPES common/reference"
 SCOPES=$(printf '%s ' $SCOPES)
 # what to suggest when nothing matched: -p only helps where it would widen the search
 WIDER=""
@@ -221,8 +244,85 @@ case $MODE in
       exit 1
     fi
     printf '%s\n' "$results" | awk -F'\t' -v m="$#" '{
-      tree = (index($3, "private") == 1) ? "private" : "public"
+      tree = (index($3, "private") == 1) ? "private" : (index($3, "common/") == 1) ? "common" : "public"
       printf "%s  %s  [%s/%s tags, %s hits]  %s\n", $3, $4, $1, m, $2, tree }'
+    ;;
+
+  refs)
+    # every *.md of public/, all of private/ and the root documents; .git never read
+    mapfile -t RFILES < <({ find public private -type f -name '*.md' ! -path '*/.git/*' 2>/dev/null
+                            for f in *.md; do [ -f "$f" ] && printf '%s\n' "$f"; done; } | LC_ALL=C sort)
+    [ ${#RFILES[@]} -gt 0 ] || exit 0
+    awk -v prefix="$REFS" -v moves="$MOVES_FILE" '
+      # norm: a path with its . and .. segments collapsed; "\001" when it climbs out of the root
+      function norm(p,   n, a, i, k, s, out) {
+        n = split(p, a, "/"); k = 0
+        for (i = 1; i <= n; i++) {
+          if (a[i] == "" || a[i] == ".") continue
+          if (a[i] == "..") { if (k == 0) return "\001"; k--; continue }
+          s[++k] = a[i]
+        }
+        out = ""; for (i = 1; i <= k; i++) out = out (i > 1 ? "/" : "") s[i]
+        if (p ~ /\/$/ && out != "") out = out "/"
+        return out
+      }
+      # moved: a root-relative path through every MOVES pair, as init.sh --update moves it
+      function moved(p,   i) {
+        for (i = 1; i <= nm; i++) {
+          if (mo[i] ~ /\/$/) { if (index(p, mo[i]) == 1) p = mn[i] substr(p, length(mo[i]) + 1) }
+          else if (p == mo[i]) p = mn[i]
+        }
+        return p
+      }
+      # rel: the relative spelling of root-relative <to> from directory <from> ("" the root)
+      function rel(from, to,   na, nb, a, b, i, j, out) {
+        na = (from == "") ? 0 : split(from, a, "/"); nb = split(to, b, "/")
+        i = 1; while (i <= na && i < nb && a[i] == b[i]) i++
+        out = ""; for (j = i; j <= na; j++) out = out "../"
+        for (j = i; j <= nb; j++) out = out b[j] (j < nb ? "/" : "")
+        return out
+      }
+      function hit(kind, spelled, now) {
+        printf "%s:%d\t%s\t%s", FILENAME, FNR, kind, spelled
+        if (nm > 0 && now != "") printf "\t%s", now
+        printf "\n"
+      }
+      BEGIN {
+        PATHCH = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._/~-"
+        if (moves != "") while ((getline l < moves) > 0) {
+          sub(/\r$/, "", l)
+          if (l ~ /^[ \t]*(#|$)/) continue
+          split(l, w, /[ \t]+/); if (w[1] == "" || w[2] == "") continue
+          nm++; mo[nm] = w[1]; mn[nm] = w[2]
+        }
+      }
+      FNR == 1 { dir = FILENAME; if (!sub(/\/[^\/]*$/, "", dir)) dir = "" }
+      {
+        sub(/\r$/, "")
+        line = $0; rest = $0
+        # links: each target resolved from the file to a root-relative path
+        while (match(rest, /\]\([^)]*\)/)) {
+          t = substr(rest, RSTART + 2, RLENGTH - 3); rest = substr(rest, RSTART + RLENGTH)
+          sub(/[ \t].*$/, "", t); sub(/^</, "", t); sub(/>$/, "", t); sub(/#.*$/, "", t)
+          if (t == "" || t ~ /^[a-z]+:/ || t ~ /^\//) continue
+          r = norm((dir == "" ? "" : dir "/") t)
+          if (r == "\001" || index(r, prefix) != 1) continue
+          m = moved(r)
+          hit("link", t, (m != r) ? rel(dir, m) : "")
+        }
+        # bare mentions: the prefix where a path starts, outside every link target
+        gsub(/\]\([^)]*\)/, "]", line)
+        while ((i = index(line, prefix)) > 0) {
+          before = (i > 1) ? substr(line, i - 1, 1) : ""
+          if (before != "" && index(PATHCH, before)) { line = substr(line, i + 1); continue }
+          j = i; while (j <= length(line) && index(PATHCH, substr(line, j, 1))) j++
+          tok = substr(line, i, j - i); line = substr(line, j)
+          sub(/[.]+$/, "", tok)
+          m = moved(tok)
+          hit("mention", tok, (m != tok) ? m : "")
+        }
+      }' "${RFILES[@]}"
+    exit 0
     ;;
 
   grep)

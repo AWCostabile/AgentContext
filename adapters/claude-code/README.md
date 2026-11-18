@@ -19,7 +19,8 @@ instance.
 - **Orientation at session start.** A `SessionStart` hook hands the session the tree's lint
   verdict, the one-line brief of `common/scripts/review.sh` when the instance has it (the smell count,
   the inbox, the open questions, the stale and uncited leaves, the retro pressure, the unpushed branches, the newest
-  journal entry), the journal's status page, the retro pressure, and every repository's branch,
+  journal entry), one line stating the citation rule (a public leaf names a tool, never its path),
+  the journal's status page, the retro pressure, and every repository's branch,
   sync state and unpushed branches, in at most 45 lines.
 - **Kickoff detection.** A `UserPromptSubmit` hook recognises a kickoff on a session's first
   prompt and injects `.claude/process/KICKOFF.md`; the output style switches from `scoping` to `orchestrated`.
