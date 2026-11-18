@@ -8,7 +8,8 @@
 # review.sh over it and asserts:
 #   - every C and S id fires on exactly the file planted for it and nowhere else;
 #   - the verdict, the smell summary and its per-id cells match;
-#   - find.sh's tag, -k, -x, -b and -f modes answer with the expected lines;
+#   - find.sh's tag, -k, -x, -b, -f and --refs modes answer with the expected lines, the
+#     reference branch common/reference/ labelled common;
 #   - review.sh's agenda and --brief line carry the expected counts, and its exit code is
 #     cure.sh's fail count.
 # The calendar smells are judged as of 2026-11-03 (smell.sh --today), so the run is the same
@@ -21,7 +22,9 @@
 # Two plantings are deliberate pairs (S01 on a design and a research leaf, to prove the
 # windows differ; S02 on a design and a features leaf), and three ids name the place that
 # carries the defect rather than a leaf: S06 and S16 name the index holding the row, S17 the
-# retros branch, S12 the duplicated basename.
+# retros branch, S12 the duplicated basename. One ruling of the verbatim history tier carries
+# the pair --refs is proved on, a link and a bare mention of scripts/ (which MOVES reaches):
+# verbatim, so its dead link and its path trip no check.
 #
 # Usage: bash tests/check.sh   (from anywhere; no arguments)
 # Exit: the number of failed assertions.
@@ -104,6 +107,7 @@ expected=$({
   e S18 public/misc/leaves/vocabulary.md
   e S20 public/products/Lantern/design/design.uncited.md
   e S21 private/journal/inbox.md
+  e S22 public/misc/leaves/toolpath.md
 } | sort)
 same "smell.sh: every smell fires on its planted file and nowhere else" "$expected" "$actual"
 n=$(printf '%s\n' "$expected" | wc -l | tr -d ' ')
@@ -111,7 +115,7 @@ check "smell.sh: SUMMARY $n smell(s), landed-since-retro=3, exit $n" \
   'printf "%s\n" "$smell" | grep -q "^== SUMMARY: $n smell(s) — landed-since-retro=3 ==$" && [ $src -eq $n ]'
 # the per-id cells of the summary table against the expected counts (every id, fired or not)
 cells=$(printf '%s\n' "$smell" | sed -n '/^== SUMMARY/,$p' | grep -oE 'S[0-9][0-9] [A-Za-z./ -]*[0-9]+' | sed -E 's/^(S[0-9][0-9]) .* ([0-9]+)$/\1 \2/' | sort)
-want=$(for id in S01 S02 S03 S04 S05 S06 S07 S08 S09 S10 S11 S12 S13 S14 S16 S17 S18 S20 S21; do
+want=$(for id in S01 S02 S03 S04 S05 S06 S07 S08 S09 S10 S11 S12 S13 S14 S16 S17 S18 S20 S21 S22; do
          printf '%s %s\n' "$id" "$(printf '%s\n' "$expected" | grep -c "^$id"$'\t')"; done | sort)
 same "smell.sh: the summary table's cells match the findings, id by id" "$want" "$cells"
 check "smell.sh: the two windows differ — research.oil.md (reviewed 2026-07-01) is quiet at 180 days while design.stale.md fires at 90" \

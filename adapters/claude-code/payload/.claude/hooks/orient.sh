@@ -3,7 +3,8 @@
 #   (a) the first line: the VERDICT of common/scripts/cure.sh --fast, so the session opens
 #       knowing whether the tree is structurally sound; then, when the instance has
 #       common/scripts/review.sh, its one-line brief: the smell count, the inbox, the stale and
-#       uncited leaves, the retro pressure, the unpushed branches, the newest entry
+#       uncited leaves, the retro pressure, the unpushed branches, the newest entry; then
+#       one line stating the citation rule, placed here so the 45-line cap never cuts it
 #   (b) the work journal's status page, private/journal/latest.md, when this machine
 #       has one; nothing when it does not
 #   (c) private tree only: the retro pressure, how many manifest rows landed after
@@ -40,6 +41,7 @@ if [ -f "$ROOT/common/scripts/review.sh" ]; then
   brief=$(cd "$ROOT" && timeout 40 bash common/scripts/review.sh --brief 2>/dev/null | tail -n 1)
   [ -n "$brief" ] && add "$brief"
 fi
+add "Citation rule: a public/ leaf names a tool, never its path (\"run the linter\"); only the root AGENTS.md navigates into common/."
 
 # (b) the journal, capped so the repository table below always fits
 JOURNAL="$ROOT/private/journal/latest.md"

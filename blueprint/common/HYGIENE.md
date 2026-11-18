@@ -359,6 +359,24 @@ line carries `landed-since-retro=<n>`. Ids are stable; a missing number is a ret
 - **Deliberate exceptions:** none. An item that needs more time is a question for a ledger, not
   an inbox line.
 
+### S22 — tool path in the public tree
+
+- **Signal:** an authored leaf under `public/` spelling a path under `common/`, such as the path
+  of a script.
+- **Why it matters:** `common/` is the template's, and a release may move what is in it; a leaf
+  that spells those paths goes stale the day it does, and teaches its reader where the tooling
+  lives instead of what it is for. The tree's one navigation into `common/` is the root
+  `AGENTS.md`.
+- **Detection:** `common/` where a path starts (at the head of a line, or after a character that
+  cannot be part of a path), one finding per file with its line count. Out of scope: every
+  `.index.md` and `.agent`, which navigate, and verbatim copies, which keep the words they were
+  written in.
+- **Rectification:** name the tool, not its path: "run the linter", "search the tags",
+  never the script's path. A reader who needs the command finds it from `AGENTS.md`.
+- **Deliberate exceptions:** none under `public/`. A private record whose work was on those
+  files (a kickoff or a pull-request body naming the command that was run) may spell them; the
+  smell never reads the private tree.
+
 ## Archiving
 
 Archiving marks a leaf as superseded without losing it. Both edits are one action:
