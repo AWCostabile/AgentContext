@@ -77,11 +77,11 @@ git -C <path> switch -c migrate/v0.6.0
 
 ```
 bash AgentContext-0.6.0/init.sh --update --target <path> --from AgentContext-0.6.0 > <path>/common/staging/update.txt
-(cd <path>/common/staging/v0.6.0 && find . -type f | sed 's|^\./||') | while IFS= read -r p; do cmp -s "<path>/common/staging/v0.6.0/$p" "<path>/$p" || grep '^kept ' <path>/common/staging/report.txt | grep -qF "$p" || echo "DIFFERS $p"; done
+(cd <path>/common/staging/v0.6.0 && find . -type f | sed 's|^\./||') | while IFS= read -r p; do cmp -s "<path>/common/staging/v0.6.0/$p" "<path>/$p" || awk -v p="$p" '$1 == "kept" { s = $2; if (match($0, /moved to [^,)]*/)) s = substr($0, RSTART + 9, RLENGTH - 9); if (s == p) f = 1 } END { exit !f }' <path>/common/staging/report.txt || echo "DIFFERS $p"; done
 git -C <path> add -A && git -C <path> commit -m "chore: core files updated to v0.6.0"
 ```
 
-**Check**: `grep '^update: ' <path>/common/staging/update.txt` is the same line as `grep '^update: ' <path>/common/staging/report.txt`; the loop prints nothing: every staged file the report did not keep is now byte for byte in the instance; `grep '^ref=' <path>/common/.agentcontext` prints `ref=v0.6.0`; beside the files `update.txt` reports line by line, the commit holds the rewritten manifest `common/.agentcontext` (the report's last line, `manifest: ref=v0.6.0, …`) and two things the update keeps for itself and never reports as `added`: `common/reference/updates.md`, with its one new ledger line, and each guide a `guide:` line names, copied to `common/reference/migrations/`; `git -C <path> status --short` prints nothing.
+**Check**: `grep '^update: ' <path>/common/staging/update.txt` is the same line as `grep '^update: ' <path>/common/staging/report.txt`; the loop prints nothing: every staged file the report did not keep is now byte for byte in the instance (a `kept` line excuses the one staged path it names exactly: `kept <file> (…)` the file, `kept <old> (…; moved to <new>)` the file at `<new>`); `grep '^ref=' <path>/common/.agentcontext` prints `ref=v0.6.0`; beside the files `update.txt` reports line by line, the commit holds the rewritten manifest `common/.agentcontext` (the report's last line, `manifest: ref=v0.6.0, …`) and two things the update keeps for itself and never reports as `added`: `common/reference/updates.md`, with its one new ledger line, and each guide a `guide:` line names, copied to `common/reference/migrations/`; `git -C <path> status --short` prints nothing.
 
 **Run** (every hit of `refs.md` that is no verbatim record and lies under `public/` or `private/`, respelled in place; then one commit per repository that changed)
 
