@@ -16,4 +16,7 @@ When the deployer refuses, it exits 2, writes nothing, and the last line of its 
 | `module '<name>' goes into the private tree, and <path> has none` | the module lives in `private/` (the local module), and this instance was deployed with `--no-private` | adopt it on the machine that holds the private tree |
 | `module '<name>' is already recorded in common/.agentcontext …` | the module was adopted before | nothing to do: `--update` refreshes it |
 | `the manifest is at the instance root, as an older release left it …` | `--adopt` on an instance deployed before the common directory, not yet updated | run the update (the template's `SETUP.md`, "How to update") first, then adopt |
+| `--stage goes with --update only` | `--stage` was given to an install or an `--adopt` | add `--update`, or leave `--stage` out |
+| `common/staging/<ref>/ exists: a tree of <ref> is staged already …` | a tree of that release was staged before and is still there; the deployer never empties the staging directory | finish or abandon the migration that staged it, empty `common/staging/` keeping its `.gitignore`, and run again |
+| `--stage: '<ref>' cannot name a directory under common/staging/` | the release's name holds a `/` or is empty, so it cannot be a directory's name | fetch the release as an archive, or extract it to a directory named `AgentContext-<version>` |
 | `not a template source (no blueprint/AGENTS.md)` | `--from` points at something that is not a release | check the extracted directory's name and contents |

@@ -5,7 +5,7 @@
 #   init.sh --target <dir> [--conf <file>] [--name <RepositoryName>]
 #           [--from <dir|archive.tar.gz>] [--no-private] [--sibling <RepoName>]...
 #           [--adapter <name>] [--dry-run]
-#   init.sh --update --target <dir> (--ref <tag> | --from <dir|archive.tar.gz>) [--dry-run]
+#   init.sh --update --target <dir> (--ref <tag> | --from <dir|archive.tar.gz>) [--stage] [--dry-run]
 #   init.sh --adopt <module> --target <dir> [--ref <tag> | --from <dir|archive.tar.gz>] [--dry-run]
 #   init.sh --help
 #
@@ -28,7 +28,7 @@
 #   --dry-run         print every file it would write, and write nothing
 #
 # Update (the second form) brings the core files of an instance up to another release:
-# common/ (scripts/, rules/, templates/, reference/, HYGIENE.md, .conf.example), .vscode/, AGENTS.md,
+# common/ (scripts/, rules/, templates/, reference/, staging/.gitignore, HYGIENE.md, .conf.example), .vscode/, AGENTS.md,
 # README.md and the adapter's payload. A core file edited locally is kept and reported, never
 # overwritten; public/, private/, .conf, .gitignore, .gitattributes and the workspace file are
 # never touched. The paths a release moved are listed in its MOVES file, one "<old> <new>"
@@ -48,6 +48,12 @@
 # common/; nothing else, ever.
 #   --ref <tag>       fetch that release of the upstream repository
 #   --from <src>      take the release from a local directory or .tar.gz instead
+#   --stage           print the same report, then write the release's core and module files
+#                     to common/staging/<ref>/ (<ref> the release's name, or working-tree)
+#                     and nothing else: no core file, no manifest, no ledger line, no guide.
+#                     The staging directory's .gitignore is laid when the instance has none.
+#                     A common/staging/<ref>/ that exists is refused: the deployer never
+#                     empties it. With --update only
 #   --dry-run         print the report, and write nothing
 #
 # Adopt (the third form) lays one module of the release into an instance and records it in the
@@ -81,6 +87,9 @@ MANIFEST=common/.agentcontext OLD_MANIFEST=.agentcontext
 # The reference branch's two deployer-kept paths, never in the manifest: the ledger, the one
 # file the deployer appends to, and the migration guides an update copied in.
 LEDGER=common/reference/updates.md GUIDES=common/reference/migrations
+# The staging directory: a working directory that ignores its own contents, where --stage
+# writes a release's tree under the release's name.
+STAGING=common/staging
 
 TMPS=()
 cleanup() { local d; for d in "${TMPS[@]}"; do rm -rf "$d"; done; }
@@ -105,7 +114,7 @@ ledger() {
 }
 
 # -- arguments ------------------------------------------------------------------
-MODE=install TARGET="" CONF="" NAME="" FROM="" REF="" ADAPTER="" ADOPT="" NO_PRIVATE=0 DRY=0
+MODE=install TARGET="" CONF="" NAME="" FROM="" REF="" ADAPTER="" ADOPT="" NO_PRIVATE=0 DRY=0 STAGE_RUN=0
 SIBLINGS=()
 need_value() { [ $# -ge 2 ] && [ -n "$2" ] || refuse "$1 needs a value (see --help)"; }
 one_mode()   { [ "$MODE" = install ] || refuse "--update and --adopt are separate runs (see --help)"; }
@@ -122,18 +131,20 @@ while [ $# -gt 0 ]; do
     --adapter)    need_value "$@"; ADAPTER=$2; shift ;;
     --sibling)    need_value "$@"; SIBLINGS+=("$2"); shift ;;
     --no-private) NO_PRIVATE=1 ;;
+    --stage)      STAGE_RUN=1 ;;
     --dry-run)    DRY=1 ;;
     *)            refuse "unknown argument: $1 (see --help)" ;;
   esac
   shift
 done
+[ $STAGE_RUN -eq 0 ] || [ "$MODE" = update ] || refuse "--stage goes with --update only (see --help)"
 [ -n "$TARGET" ] || refuse "--target is required (see --help)"
 TARGET=${TARGET%/}
 if [ "$MODE" = install ]; then
   [ -z "$REF" ] || refuse "--ref is for --update and --adopt only"
 else
   [ -z "$CONF$NAME$ADAPTER" ] && [ $NO_PRIVATE -eq 0 ] && [ ${#SIBLINGS[@]} -eq 0 ] \
-    || refuse "--$MODE takes only --target, --ref or --from, and --dry-run"
+    || refuse "--$MODE takes only --target, --ref or --from,$([ "$MODE" = update ] && printf ' --stage') and --dry-run"
   if [ "$MODE" = update ]; then
     { [ -n "$REF" ] && [ -z "$FROM" ]; } || { [ -z "$REF" ] && [ -n "$FROM" ]; } \
       || refuse "--update needs exactly one of --ref <tag> and --from <dir|archive.tar.gz>"
@@ -370,6 +381,11 @@ read_moves
 # =====================================================================================
 if [ "$MODE" = update ]; then
   TARGET=$(cd "$TARGET" && pwd)
+  if [ $STAGE_RUN -eq 1 ]; then
+    case "$SRC_REF" in ''|.|..|*/*|*\\*) refuse "--stage: '$SRC_REF' cannot name a directory under $STAGING/" ;; esac
+    [ ! -e "$TARGET/$STAGING/$SRC_REF" ] \
+      || refuse "$STAGING/$SRC_REF/ exists: a tree of $SRC_REF is staged already; empty $STAGING/ (keep its .gitignore) and run again"
+  fi
   declare -A UP LOCAL MOVED_TO
   read_manifest "$TARGET"
   INST_ADAPTER=${HEADER[adapter]:-}
@@ -477,7 +493,25 @@ if [ "$MODE" = update ]; then
   if [ $DRY -eq 1 ]; then
     say "$summary"
     advice
+    [ $STAGE_RUN -eq 1 ] && say "would stage: $STAGING/$SRC_REF/, ${#UP[@]} file(s)"
     say "dry-run: nothing written to $TARGET"
+    exit 0
+  fi
+  # --stage: the release's tree, every core and module path as the update would place it,
+  # written under the staging directory; the instance itself is left exactly as it was.
+  if [ $STAGE_RUN -eq 1 ]; then
+    say "$summary"
+    advice
+    if [ ! -f "$TARGET/$STAGING/.gitignore" ]; then
+      mkdir -p "$TARGET/$STAGING" || die "creating $STAGING/ (nothing written)"
+      if [ -f "$UPDIR/$STAGING/.gitignore" ]; then cp "$UPDIR/$STAGING/.gitignore" "$TARGET/$STAGING/.gitignore"
+      else printf '%s\n' '*' '!.gitignore' > "$TARGET/$STAGING/.gitignore"; fi \
+        || die "laying $STAGING/.gitignore (nothing else written)"
+      say "laid $STAGING/.gitignore: the staging directory ignores what is staged in it"
+    fi
+    { mkdir -p "$TARGET/$STAGING/$SRC_REF" && cp -R "$UPDIR/." "$TARGET/$STAGING/$SRC_REF/"; } \
+      || die "staging into $STAGING/$SRC_REF/; a partial tree may be there: empty it and run again"
+    say "staged: $STAGING/$SRC_REF/, ${#UP[@]} file(s); nothing written outside $STAGING/"
     exit 0
   fi
   done_n=0
