@@ -167,6 +167,21 @@ check "find.sh -l: the dead tag is counted once" 'F -l | grep -q "^  1  zeppelin
 out=$(F lantern)
 check "find.sh <tag>: both trees' Lantern branches answer, each labelled with its tree" \
   'printf "%s\n" "$out" | grep -q "^public/products/Lantern  .*  public$" && printf "%s\n" "$out" | grep -q "^private/products/Lantern  .*  private$"'
+same "find.sh <tag>: common/reference/ is in the default scope, labelled common" \
+  "common/reference  (reference, refusal)  [1/1 tags, 0 hits]  common" "$(F refusal)"
+FLAME=public/products/Lantern/history/rulings.flame.md
+same "find.sh --refs: the planted link and bare mention of scripts/, each marked" \
+  "$(printf '%s\t%s\t%s\n' "$FLAME:7" link ../../../../scripts/cure.sh "$FLAME:8" mention scripts/cure.sh)" \
+  "$(F --refs scripts/)"
+same "find.sh --refs --moves: the respelling MOVES gives each hit beside it" \
+  "$(printf '%s\t%s\t%s\t%s\n' "$FLAME:7" link ../../../../scripts/cure.sh ../../../../common/scripts/cure.sh "$FLAME:8" mention scripts/cure.sh common/scripts/cure.sh)" \
+  "$(F --refs scripts/ --moves "$REPO/MOVES")"
+out=$(F --refs no-such-prefix/); rc=$?
+check "find.sh --refs: no hit prints nothing and exits 0" '[ $rc -eq 0 ] && [ -z "$out" ]'
+F --refs >/dev/null; rc=$?
+check "find.sh --refs without a prefix is a usage error, exit 2" '[ $rc -eq 2 ]'
+F --refs scripts/ --moves "$FX/no-such-file" >/dev/null; rc=$?
+check "find.sh --refs --moves with a missing file is a usage error, exit 2" '[ $rc -eq 2 ]'
 
 # -- 4. review.sh: the agenda ------------------------------------------------------------------------------
 brief=$(bash "$REPO/scripts/review.sh" --root "$FX" --brief --today "$TODAY" 2>&1); rc=$?
