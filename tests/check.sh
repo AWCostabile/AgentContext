@@ -192,22 +192,29 @@ F --refs scripts/ --moves "$FX/no-such-file" >/dev/null; rc=$?
 check "find.sh --refs --moves with a missing file is a usage error, exit 2" '[ $rc -eq 2 ]'
 F --refs scripts/ --respell >/dev/null; rc=$?
 check "find.sh --respell without --moves is a usage error, exit 2" '[ $rc -eq 2 ]'
-# --respell writes, so it runs on a copy of the fixture with one authored line of links and
-# mentions added (a title, an angle-bracketed target with an anchor, a mention twice, and a
-# spelling the prefix only ends): each hit is respelled where it stands, the verbatim ruling is not.
+# --respell writes, so it runs on a copy of the fixture with two authored lines of links and
+# mentions added: one with a title, an angle-bracketed target with an anchor, a mention twice, and a
+# spelling the prefix only ends; one with a link text naming the target its link already resolves to,
+# which is no hit, beside a link text and target both stale, which are two. Each hit is respelled
+# where it stands, the verbatim ruling is not.
 RX=$(mktemp -d "${TMPDIR:-/tmp}/check-respell.XXXXXX") && cp -R "$FX/." "$RX/"
 TP=public/misc/leaves/toolpath.md
-printf '%s\n' '- Run `scripts/cure.sh`, then [it](../../../scripts/cure.sh "t"), [this](<../../../scripts/find.sh#x>) and scripts/cure.sh; not common/scripts/x.' >> "$RX/$TP"
+printf '%s\n' '- Run `scripts/cure.sh`, then [it](../../../scripts/cure.sh "t"), [this](<../../../scripts/find.sh#x>) and scripts/cure.sh; not common/scripts/x.' \
+  '- [scripts/cure.sh](../../../common/scripts/cure.sh) names the file it links to, [scripts/find.sh](../../../scripts/find.sh) a stale one.' >> "$RX/$TP"
+same "find.sh --refs --moves: a link text naming its link's resolved target is no hit; beside a stale target it is one" \
+  "$(printf '%s\t%s\t%s\t%s\n' "$TP:8" link ../../../scripts/find.sh ../../../common/scripts/find.sh "$TP:8" mention scripts/find.sh common/scripts/find.sh)" \
+  "$(bash "$REPO/scripts/find.sh" --root "$RX" --refs scripts/ --moves "$REPO/MOVES" | grep "^$TP:8	")"
 out=$(bash "$REPO/scripts/find.sh" --root "$RX" --refs scripts/ --moves "$REPO/MOVES" --respell 2>&1); rc=$?
-same "find.sh --respell: the authored line's four hits respelled in place and listed, the verbatim ruling's left" \
-  "$(printf '%s\t%s\t%s\t%s\n' "$TP:7" link ../../../scripts/cure.sh ../../../common/scripts/cure.sh "$TP:7" link ../../../scripts/find.sh ../../../common/scripts/find.sh "$TP:7" mention scripts/cure.sh common/scripts/cure.sh "$TP:7" mention scripts/cure.sh common/scripts/cure.sh)
+same "find.sh --respell: the authored lines' six hits respelled in place and listed, the verbatim ruling's left" \
+  "$(printf '%s\t%s\t%s\t%s\n' "$TP:7" link ../../../scripts/cure.sh ../../../common/scripts/cure.sh "$TP:7" link ../../../scripts/find.sh ../../../common/scripts/find.sh "$TP:7" mention scripts/cure.sh common/scripts/cure.sh "$TP:7" mention scripts/cure.sh common/scripts/cure.sh "$TP:8" link ../../../scripts/find.sh ../../../common/scripts/find.sh "$TP:8" mention scripts/find.sh common/scripts/find.sh)
 - Run \`common/scripts/cure.sh\`, then [it](../../../common/scripts/cure.sh \"t\"), [this](<../../../common/scripts/find.sh#x>) and common/scripts/cure.sh; not common/scripts/x.
+- [scripts/cure.sh](../../../common/scripts/cure.sh) names the file it links to, [common/scripts/find.sh](../../../common/scripts/find.sh) a stale one.
 rc=0 ruling-unchanged" \
   "$out
-$(tail -n 1 "$RX/$TP")
+$(tail -n 2 "$RX/$TP")
 rc=$rc $(cmp -s "$FX/$FLAME" "$RX/$FLAME" && printf 'ruling-unchanged')"
 out=$(bash "$REPO/scripts/find.sh" --root "$RX" --refs scripts/ --moves "$REPO/MOVES" --respell 2>&1)
-check "find.sh --respell: a second run finds nothing left to respell" '[ -z "$out" ] && [ "$(sed "\$d" "$RX/$TP")" = "$(cat "$FX/$TP")" ]'
+check "find.sh --respell: a second run finds nothing left to respell" '[ -z "$out" ] && [ "$(head -n "$(wc -l < "$FX/$TP")" "$RX/$TP")" = "$(cat "$FX/$TP")" ]'
 rm -rf "$RX"
 
 # -- 4. review.sh: the agenda ------------------------------------------------------------------------------
