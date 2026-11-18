@@ -1,3 +1,13 @@
+## Fix | Documents Match the Scripts [ _2026-11-18 10:59:53 UTC_ ]
+
+- chore: the examples re-laid from the working tree and the pin moved to v0.5.1
+- docs: one exit-code guide, and the graphify README's two tracked things
+- feat: graphs.sh owns a generated header block of graphs/.agent, the authored body below it survives
+- fix: the bill templates write the plan counter without the word
+- docs: the inbox is appended between triages and emptied by them
+- docs: the module, example and core-file lists match the release
+- docs: state the deployer's deletion guarantee in one form
+
 ## Feature | Local and Link-Check Modules [ _2026-11-08 14:40:59 UTC_ ]
 
 - docs: the constitution step names the private commit its ledger takes
