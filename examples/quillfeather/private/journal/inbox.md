@@ -9,6 +9,6 @@ a ruling, a design change, a feature-log entry) or dropped; nothing here is file
 its own. An item older than 14 days is a smell (S21).
 ## Mine
 
-- 2026-11-02 — gift cards: ask the two shops that asked whether a card must work across their branches before the plan is written
+- 2026-11-06 — gift cards: ask the two shops that asked whether a card must work across their branches before the plan is written
 
 ## Candidates
