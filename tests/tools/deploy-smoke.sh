@@ -4,7 +4,8 @@
 # every worked example as of its snapshot date, runs tests/check.sh, the scripts' own
 # check over the fixture tree, updates instances of the last release through the move
 # rule onto the common directory, adopts modules into instances and updates over them, and
-# proves the reference branch's ledger and copied guides.
+# proves the reference branch's ledger and copied guides, and stages a release's tree into the
+# staging directory without touching the rest of an instance.
 #
 # Usage: bash tests/tools/deploy-smoke.sh   (from anywhere; no arguments)
 #
@@ -633,6 +634,72 @@ check "--adopt of a module already in place appends 0 file(s)" \
 check "outside common/ the instance is byte-identical after every update and adoption" '[ "$(outside "$I11")" = "$o0" ]'
 (cd "$I11" && bash common/scripts/cure.sh >/dev/null 2>&1); crc=$?
 check "the instance with a ledger and a copied guide lints with 0 fails" '[ $crc -eq 0 ]'
+
+# -- 22. the staging directory: --update --stage -------------------------------------------------------------
+# An instance in a git repository, with a module adopted, one core file it will replace (its
+# recorded hash rewritten to its edited bytes, as an older release's file), one it will add (file
+# and manifest line removed), one it keeps (edited), and no staging directory, as an instance laid
+# before there was one. --stage prints the update's own report, lays the staging directory's
+# .gitignore and writes the release's tree under common/staging/<ref>/; outside that directory the
+# instance is byte-identical, git sees the .gitignore alone, and a copy of the instance then updated
+# for real holds every staged file's bytes but the kept one's. The refusals write nothing.
+G=(git -c user.name=smoke -c user.email=smoke@example.invalid -c core.autocrlf=false -c core.safecrlf=false)
+I12="$TMP/instance12"; M12="$I12/common/.agentcontext"; STG="$I12/common/staging"
+bash "$INIT" --from "$SRC" --target "$I12" --conf "$CONF" >/dev/null 2>&1
+check "a fresh instance carries common/staging/ holding its .gitignore alone, recorded in the manifest" \
+  '[ "$(ls -A "$STG")" = .gitignore ] && [ "$(cat "$STG/.gitignore")" = "$(printf "*\n!.gitignore")" ] && grep -q "  common/staging/.gitignore$" "$M12"'
+bash "$INIT" --adopt codebase --target "$I12" --from "$SRC" >/dev/null 2>&1
+rehash() { awk -v p="$1" -v h="$2" 'substr($0, 67) == p { $0 = h "  " p } { print }' "$M12" > "$M12.tmp" && mv "$M12.tmp" "$M12"; }
+printf '%s\n' "An older release's line." >> "$I12/common/rules/design-tier.md"
+rehash common/rules/design-tier.md "$(sha256sum < "$I12/common/rules/design-tier.md" | cut -c1-64)"
+rm "$I12/.vscode/extensions.json"; sed -i '/  \.vscode\/extensions\.json$/d' "$M12"
+printf '%s\n' "A local note." >> "$I12/common/rules/branch-grammar.md"
+rm "$STG/.gitignore" && rmdir "$STG"; sed -i '/  common\/staging\/\.gitignore$/d' "$M12"
+"${G[@]}" -C "$I12" init -q && "${G[@]}" -C "$I12" add -A && "${G[@]}" -C "$I12" commit -q -m "chore: the instance"
+whole=$(tree_digest "$I12")
+nled=$(grep -c '^- ' "$I12/common/reference/updates.md" 2>/dev/null)
+dry=$(bash "$INIT" --update --target "$I12" --from "$SRC" --dry-run 2>&1)
+out=$(bash "$INIT" --update --target "$I12" --from "$SRC" --stage --dry-run 2>&1); rc=$?
+check "--stage --dry-run prints the report and the tree it would stage, and writes nothing" \
+  '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^would stage: common/staging/working-tree/, [0-9]* file(s)$" && [ "$(tree_digest "$I12")" = "$whole" ]'
+before=$(cd "$I12" && find . -type f ! -path './common/staging/*' ! -path './.git/*' ! -path './private/.git/*' -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)
+cp "$M12" "$TMP/m12.before"
+out=$(bash "$INIT" --update --target "$I12" --from "$SRC" --stage 2>&1); rc=$?
+printf '%s\n' "$out" > "$TMP/stage.txt"
+nst=$(cd "$STG/working-tree" && find . -type f | wc -l | tr -d ' ')
+check "--stage exits 0 and ends naming the staged tree and its $nst file(s)" \
+  '[ $rc -eq 0 ] && [ "$(tail -n 1 "$TMP/stage.txt")" = "staged: common/staging/working-tree/, $nst file(s); nothing written outside common/staging/" ]'
+check "--stage prints the update's own report: replaced, added and kept as a dry run says" \
+  '[ "$(grep -vE "^(laid |staged: )" "$TMP/stage.txt")" = "$(printf "%s\n" "$dry" | grep -v "^dry-run: ")" ] && grep -qx "replaced common/rules/design-tier.md" "$TMP/stage.txt" && grep -qx "added .vscode/extensions.json" "$TMP/stage.txt" && grep -qx "kept common/rules/branch-grammar.md (changed locally)" "$TMP/stage.txt"'
+check "--stage lays the staging directory's .gitignore on an instance that had none" \
+  'grep -q "^laid common/staging/.gitignore" "$TMP/stage.txt" && [ "$(cat "$STG/.gitignore")" = "$(printf "*\n!.gitignore")" ]'
+after=$(cd "$I12" && find . -type f ! -path './common/staging/*' ! -path './.git/*' ! -path './private/.git/*' -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)
+check "outside common/staging/ the instance is byte-identical after --stage" '[ "$after" = "$before" ]'
+check "--stage leaves the manifest as it was and writes no ledger line" \
+  'cmp -s "$M12" "$TMP/m12.before" && [ "$(grep -c "^- " "$I12/common/reference/updates.md" 2>/dev/null)" = "$nled" ]'
+check "git sees the staging directory's .gitignore and nothing staged beneath it" \
+  '[ "$("${G[@]}" -C "$I12" status --porcelain --untracked-files=all)" = "?? common/staging/.gitignore" ]'
+(cd "$I12" && bash common/scripts/cure.sh >/dev/null 2>&1); crc=$?
+check "the instance holding a staged tree lints with 0 fails: the staging directory is no branch" '[ $crc -eq 0 ]'
+I12u="$TMP/instance12u"
+cp -R "$I12" "$I12u" && rm -rf "$I12u/common/staging/working-tree"
+bash "$INIT" --update --target "$I12u" --from "$SRC" >/dev/null 2>&1
+staged=$(cd "$STG/working-tree" && find . -type f | sed 's|^\./||' | LC_ALL=C sort)
+check "the staged tree holds exactly the paths the real update records, codebase's among them" \
+  '[ "$staged" = "$(sed "1,/^$/d" "$I12u/common/.agentcontext" | cut -c67- | LC_ALL=C sort)" ] && printf "%s\n" "$staged" | grep -q "^common/modules/codebase/"'
+differ=$(printf '%s\n' "$staged" | while IFS= read -r p; do
+  grep -qxF "kept $p (changed locally)" "$TMP/stage.txt" && continue
+  cmp -s "$STG/working-tree/$p" "$I12u/$p" || printf '%s ' "$p"
+done)
+check "every staged file but the kept one is byte for byte what the real update placed${differ:+ (differ: $differ)}" '[ -z "$differ" ]'
+whole=$(tree_digest "$I12")
+err=$(bash "$INIT" --update --target "$I12" --from "$SRC" --stage 2>&1 >/dev/null); rc=$?
+check "a second --stage into the same common/staging/<ref>/ refuses with exit 2 and writes nothing" \
+  '[ $rc -eq 2 ] && printf "%s\n" "$err" | grep -q "^init.sh: common/staging/working-tree/ exists: " && [ "$(tree_digest "$I12")" = "$whole" ]'
+err1=$(bash "$INIT" --stage --target "$I12" --from "$SRC" 2>&1 >/dev/null); rc1=$?
+err2=$(bash "$INIT" --adopt linkcheck --stage --target "$I12" --from "$SRC" 2>&1 >/dev/null); rc2=$?
+check "--stage without --update refuses with exit 2 and writes nothing" \
+  '[ $rc1 -eq 2 ] && [ $rc2 -eq 2 ] && printf "%s\n" "$err1" "$err2" | grep -c "^init.sh: --stage goes with --update only" | grep -qx 2 && [ "$(tree_digest "$I12")" = "$whole" ]'
 
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL
