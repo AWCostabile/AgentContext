@@ -618,8 +618,10 @@ out=$(bash "$INIT" --update --target "$I11" --from "$SRC" 2>&1); rc=$?
 re='^- [0-9]{4}-[0-9]{2}-[0-9]{2} — update v0\.5\.0 → working-tree: 0 moved, 0 replaced, 1 kept, 0 added, 0 removed-upstream$'
 check "an update that changed something appends exactly one well-formed line ($(tail -n 1 "$L11" 2>/dev/null))" \
   '[ $rc -eq 0 ] && [ "$(lines)" = 1 ] && grep -qE "$re" "$L11"'
-check "the guide the update named is copied byte for byte into common/reference/migrations/" \
-  'printf "%s\n" "$out" | grep -qx "guide: migrations/0.5.0.md" && cmp -s "$SRC/migrations/0.5.0.md" "$I11/common/reference/migrations/0.5.0.md" && [ "$(ls "$I11/common/reference/migrations")" = 0.5.0.md ]'
+named=$(printf "%s\n" "$out" | sed -n 's|^guide: migrations/||p' | sort -V | tr '\n' ' ')
+same=1; for g in $named; do cmp -s "$SRC/migrations/$g" "$I11/common/reference/migrations/$g" || same=0; done
+check "the guides the update named, 0.5.0.md onwards, are copied byte for byte into common/reference/migrations/ (named: ${named:-none})" \
+  '[ "${named%% *}" = 0.5.0.md ] && [ $same -eq 1 ] && [ "$(ls "$I11/common/reference/migrations" | sort -V | tr "\n" " ")" = "$named" ]'
 check "neither the ledger nor the guide is in the manifest" '! grep -qE "  common/reference/(updates\.md|migrations/)" "$I11/common/.agentcontext"'
 n0=$(lines)
 out=$(bash "$INIT" --update --target "$I11" --from "$SRC" 2>&1); rc=$?
