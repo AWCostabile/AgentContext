@@ -591,8 +591,8 @@ out=$(bash "$I1/common/scripts/cure.sh" --root "$I1" 2>&1); rc=$?
 check "with the row appended to private/.index.md, cure.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
 
 # -- 21. the reference branch: the ledger and the copied guides ------------------------------------------------
-# A fresh instance carries common/reference/ and no ledger. An update that changes nothing and
-# every dry run append nothing; an update that keeps a file from a versioned ref appends exactly
+# A fresh instance carries common/reference/ and no ledger. An update that changes nothing, one
+# that only keeps a file it kept before, and every dry run append nothing; an update that keeps a file from a versioned ref appends exactly
 # one well-formed line and copies the guide it names into common/reference/migrations/; --adopt
 # appends its line, 0 file(s) for a module recorded in place. Outside common/ nothing moves.
 outside() { (cd "$1" && find . -type f ! -path './common/*' ! -path './private/.git/*' -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum); }
@@ -615,6 +615,10 @@ check "an update that changed something appends exactly one well-formed line ($(
 check "the guide the update named is copied byte for byte into common/reference/migrations/" \
   'printf "%s\n" "$out" | grep -qx "guide: migrations/0.5.0.md" && cmp -s "$SRC/migrations/0.5.0.md" "$I11/common/reference/migrations/0.5.0.md" && [ "$(ls "$I11/common/reference/migrations")" = 0.5.0.md ]'
 check "neither the ledger nor the guide is in the manifest" '! grep -qE "  common/reference/(updates\.md|migrations/)" "$I11/common/.agentcontext"'
+n0=$(lines)
+out=$(bash "$INIT" --update --target "$I11" --from "$SRC" 2>&1); rc=$?
+check "an update from the same release that only keeps a file appends nothing" \
+  '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^update: 0 moved, 0 replaced, 1 kept, 0 added, 0 removed-upstream$" && [ "$(lines)" = "$n0" ]'
 n1=$(lines)
 out=$(bash "$INIT" --adopt codebase --target "$I11" --from "$SRC" --dry-run 2>&1); rc=$?
 check "an --adopt dry run appends nothing" '[ $rc -eq 0 ] && [ "$(lines)" = "$n1" ]'
