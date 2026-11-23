@@ -9,7 +9,8 @@
 #   - every C and S id fires on exactly the file planted for it and nowhere else;
 #   - the verdict, the smell summary and its per-id cells match;
 #   - find.sh's tag, -k, -x, -b, -f and --refs modes answer with the expected lines, the
-#     reference branch common/reference/ labelled common;
+#     reference branch common/reference/ labelled common, and --respell rewrites a copy of the
+#     fixture, never the fixture itself;
 #   - review.sh's agenda and --brief line carry the expected counts, and its exit code is
 #     cure.sh's fail count.
 # The calendar smells are judged as of 2026-11-03 (smell.sh --today), so the run is the same
@@ -24,7 +25,7 @@
 # carries the defect rather than a leaf: S06 and S16 name the index holding the row, S17 the
 # retros branch, S12 the duplicated basename. One ruling of the verbatim history tier carries
 # the pair --refs is proved on, a link and a bare mention of scripts/ (which MOVES reaches):
-# verbatim, so its dead link and its path trip no check.
+# verbatim, so its dead link and its path trip no check, and --refs marks both hits verbatim.
 #
 # Usage: bash tests/check.sh   (from anywhere; no arguments)
 # Exit: the number of failed assertions.
@@ -174,18 +175,47 @@ check "find.sh <tag>: both trees' Lantern branches answer, each labelled with it
 same "find.sh <tag>: common/reference/ is in the default scope, labelled common" \
   "common/reference  (reference, refusal)  [1/1 tags, 0 hits]  common" "$(F refusal)"
 FLAME=public/products/Lantern/history/rulings.flame.md
-same "find.sh --refs: the planted link and bare mention of scripts/, each marked" \
-  "$(printf '%s\t%s\t%s\n' "$FLAME:7" link ../../../../scripts/cure.sh "$FLAME:8" mention scripts/cure.sh)" \
+same "find.sh --refs: the planted link and bare mention of scripts/, each marked, and verbatim" \
+  "$(printf '%s\t%s\t%s\n' "$FLAME:7" 'link (verbatim)' ../../../../scripts/cure.sh "$FLAME:8" 'mention (verbatim)' scripts/cure.sh)" \
   "$(F --refs scripts/)"
 same "find.sh --refs --moves: the respelling MOVES gives each hit beside it" \
-  "$(printf '%s\t%s\t%s\t%s\n' "$FLAME:7" link ../../../../scripts/cure.sh ../../../../common/scripts/cure.sh "$FLAME:8" mention scripts/cure.sh common/scripts/cure.sh)" \
+  "$(printf '%s\t%s\t%s\t%s\n' "$FLAME:7" 'link (verbatim)' ../../../../scripts/cure.sh ../../../../common/scripts/cure.sh "$FLAME:8" 'mention (verbatim)' scripts/cure.sh common/scripts/cure.sh)" \
   "$(F --refs scripts/ --moves "$REPO/MOVES")"
+same "find.sh --refs: a hit in an authored leaf or index carries no verbatim mark" \
+  "$(printf '%s\t%s\t%s\n' public/misc/leaves/.index.md:19 mention common/ public/misc/leaves/toolpath.md:5 mention common/scripts/cure.sh)" \
+  "$(F --refs common/)"
 out=$(F --refs no-such-prefix/); rc=$?
 check "find.sh --refs: no hit prints nothing and exits 0" '[ $rc -eq 0 ] && [ -z "$out" ]'
 F --refs >/dev/null; rc=$?
 check "find.sh --refs without a prefix is a usage error, exit 2" '[ $rc -eq 2 ]'
 F --refs scripts/ --moves "$FX/no-such-file" >/dev/null; rc=$?
 check "find.sh --refs --moves with a missing file is a usage error, exit 2" '[ $rc -eq 2 ]'
+F --refs scripts/ --respell >/dev/null; rc=$?
+check "find.sh --respell without --moves is a usage error, exit 2" '[ $rc -eq 2 ]'
+# --respell writes, so it runs on a copy of the fixture with two authored lines of links and
+# mentions added: one with a title, an angle-bracketed target with an anchor, a mention twice, and a
+# spelling the prefix only ends; one with a link text naming the target its link already resolves to,
+# which is no hit, beside a link text and target both stale, which are two. Each hit is respelled
+# where it stands, the verbatim ruling is not.
+RX=$(mktemp -d "${TMPDIR:-/tmp}/check-respell.XXXXXX") && cp -R "$FX/." "$RX/"
+TP=public/misc/leaves/toolpath.md
+printf '%s\n' '- Run `scripts/cure.sh`, then [it](../../../scripts/cure.sh "t"), [this](<../../../scripts/find.sh#x>) and scripts/cure.sh; not common/scripts/x.' \
+  '- [scripts/cure.sh](../../../common/scripts/cure.sh) names the file it links to, [scripts/find.sh](../../../scripts/find.sh) a stale one.' >> "$RX/$TP"
+same "find.sh --refs --moves: a link text naming its link's resolved target is no hit; beside a stale target it is one" \
+  "$(printf '%s\t%s\t%s\t%s\n' "$TP:8" link ../../../scripts/find.sh ../../../common/scripts/find.sh "$TP:8" mention scripts/find.sh common/scripts/find.sh)" \
+  "$(bash "$REPO/scripts/find.sh" --root "$RX" --refs scripts/ --moves "$REPO/MOVES" | grep "^$TP:8	")"
+out=$(bash "$REPO/scripts/find.sh" --root "$RX" --refs scripts/ --moves "$REPO/MOVES" --respell 2>&1); rc=$?
+same "find.sh --respell: the authored lines' six hits respelled in place and listed, the verbatim ruling's left" \
+  "$(printf '%s\t%s\t%s\t%s\n' "$TP:7" link ../../../scripts/cure.sh ../../../common/scripts/cure.sh "$TP:7" link ../../../scripts/find.sh ../../../common/scripts/find.sh "$TP:7" mention scripts/cure.sh common/scripts/cure.sh "$TP:7" mention scripts/cure.sh common/scripts/cure.sh "$TP:8" link ../../../scripts/find.sh ../../../common/scripts/find.sh "$TP:8" mention scripts/find.sh common/scripts/find.sh)
+- Run \`common/scripts/cure.sh\`, then [it](../../../common/scripts/cure.sh \"t\"), [this](<../../../common/scripts/find.sh#x>) and common/scripts/cure.sh; not common/scripts/x.
+- [scripts/cure.sh](../../../common/scripts/cure.sh) names the file it links to, [common/scripts/find.sh](../../../common/scripts/find.sh) a stale one.
+rc=0 ruling-unchanged" \
+  "$out
+$(tail -n 2 "$RX/$TP")
+rc=$rc $(cmp -s "$FX/$FLAME" "$RX/$FLAME" && printf 'ruling-unchanged')"
+out=$(bash "$REPO/scripts/find.sh" --root "$RX" --refs scripts/ --moves "$REPO/MOVES" --respell 2>&1)
+check "find.sh --respell: a second run finds nothing left to respell" '[ -z "$out" ] && [ "$(head -n "$(wc -l < "$FX/$TP")" "$RX/$TP")" = "$(cat "$FX/$TP")" ]'
+rm -rf "$RX"
 
 # -- 4. review.sh: the agenda ------------------------------------------------------------------------------
 brief=$(bash "$REPO/scripts/review.sh" --root "$FX" --brief --today "$TODAY" 2>&1); rc=$?
@@ -203,8 +233,12 @@ check "review.sh: the questions line counts the open lines only, oldest first, a
 before=$(cd "$FX" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)
 check "review.sh wrote nothing to the fixture" '[ "$(cd "$FX" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)" = "$before" ]'
 
-# -- 5. the fixture is never laid into an instance ----------------------------------------------------------
+# -- 5. the fixture, the migration sheet and the release stamp are never laid into an instance ----------------------------------------------------------
 check "init.sh's core lists do not name tests/" '! grep -E "^CORE_(DIRS|FILES)=" "$REPO/init.sh" | grep -q tests'
+check "the migration sheet is never laid: init.sh's core lists do not name MIGRATE.md and the skeleton holds none" \
+  '! grep -E "^CORE_(DIRS|FILES)=" "$REPO/init.sh" | grep -q MIGRATE && [ -z "$(find "$REPO/blueprint" -name MIGRATE.md)" ]'
+check "the release stamp is never laid: init.sh's core lists do not name RELEASE and the skeleton holds none" \
+  '! grep -E "^CORE_(DIRS|FILES)=" "$REPO/init.sh" | grep -q RELEASE && [ -z "$(find "$REPO/blueprint" -name RELEASE)" ]'
 
 echo "== script check: $FAIL fail(s) =="
 exit $FAIL

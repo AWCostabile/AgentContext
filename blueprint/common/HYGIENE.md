@@ -26,8 +26,9 @@ stated in [AGENTS.md](../AGENTS.md) and the grammar documents under `common/rule
 top-level private branch except the freeform `local/`, `mod/` and `temp/`. An absent `private/`
 is never an error, so `public/` must lint clean on a fresh clone. A fix inside `private/` ends
 with one commit of the private repository. Besides the trees, `cure.sh` reads the root documents
-for dead links only: every `*.md` at the root, `common/rules/*.md`, `common/scripts/.index.md` and
-`common/templates/.index.md`. `common/templates/` is never linted as a branch, because it carries `{{ }}`
+for dead links only: every `*.md` at the root, `common/HYGIENE.md`, `common/rules/*.md`,
+`common/scripts/.index.md`, `common/templates/.index.md`, `common/reference/.index.md` and every
+`*.md` beside it. `common/templates/` is never linted as a branch, because it carries `{{ }}`
 placeholders for good.
 
 **Template mode.** With no `.conf` at the root, the root is the skeleton itself, and both
@@ -429,7 +430,7 @@ Every script the tree runs says how it ended in its exit code. The codes, script
 | `common/scripts/cure.sh` | its FAIL count; 2 usage or refusal | the last line, `== VERDICT: N fail(s), N warning(s) ==` |
 | `common/scripts/smell.sh` | its smell count, capped at 255; 2 usage or refusal | `== SUMMARY: N smell(s) — landed-since-retro=N ==`, then its per-id table, whose last line ends `(rows landed since last retro: N)` |
 | `common/scripts/review.sh` | `cure.sh`'s FAIL count; 2 usage or refusal | the first line, `== review — <tree> — <date> ==`; with `--brief` the one line `review: cure N fail(s) · …` |
-| `common/scripts/find.sh` | 0 a result printed; 1 nothing found (no branch matches the tags, no keyword match, no file carries the field, nothing cites the leaf, no leaf of that name in scope, no index at the `-x` directory); 2 usage or refusal (no `public/`, a bad `--root`, no terms, a directory or a leaf path that does not exist, a leaf name that matches more than one leaf, `-f` without a key) | none: a result goes to stdout; nothing found and a refusal say so on stderr, and a call without terms prints the usage |
+| `common/scripts/find.sh` | 0 a result printed, and `--refs` (with or without `--respell`) whether it found hits or none; 1 nothing found (no branch matches the tags, no keyword match, no file carries the field, nothing cites the leaf, no leaf of that name in scope, no index at the `-x` directory), or a `--refs` run that failed mid-way (a temporary directory not created, a file not rewritten); 2 usage or refusal (no `public/`, a bad `--root`, no terms, a directory or a leaf path that does not exist, a leaf name that matches more than one leaf, `-f` without a key, `--refs` without a prefix or beside another mode, `--moves` without `--refs` or naming no file, `--respell` without both) | none: a result goes to stdout; nothing found and a refusal say so on stderr, `--refs` with no hits prints nothing, and a call without terms prints the usage |
 | the template's `init.sh` | 0 done; 2 usage or refusal, nothing written; 1 a failure mid-way, what was written said | none needed: the codes do not overlap |
 | `common/modules/codebase/codebase.py` | 0 clean; 1 drift or a failure; 2 usage or refusal, nothing written | none needed: the codes do not overlap |
 | `common/modules/graphify/graphs.sh` | its FAIL count; 2 usage or refusal, nothing written | the last line, `== graphs: N fail(s), N warning(s) ==` |

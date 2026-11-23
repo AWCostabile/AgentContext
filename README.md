@@ -17,7 +17,7 @@ Hand the job to your coding agent. Paste this into a fresh session, with your ow
 
 ```
 Set up a knowledge tree for <organisation> at <path>, from the AgentContext template.
-Fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/v0.5.1/SETUP.md and follow
+Fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/v0.6.0/SETUP.md and follow
 it as a run-sheet: ask me its questions first, then run each step's command and confirm its
 check before moving on. If a step refuses, stop and show me what it said.
 ```
@@ -48,6 +48,7 @@ The Claude Code adapter gives an instance its guard on the immutable tiers, its 
 - [ARCHITECTURE.md](./ARCHITECTURE.md): the method in full, section by section.
 - [CHANGE_LOG.md](./CHANGE_LOG.md): what each release landed, generated from the pull requests.
 - [SETUP.md](./SETUP.md): the run-sheet, deploying and updating.
+- [MIGRATE.md](./MIGRATE.md): the run-sheet for a release that moves things, staged and brought across on a branch of its own.
 - [blueprint/AGENTS.md](./blueprint/AGENTS.md): what an instance tells an agent.
 - [blueprint/common/HYGIENE.md](./blueprint/common/HYGIENE.md): every check, what it means and how to fix it.
 - [Quillfeather's reader page](./examples/quillfeather/README.md): a filled tree, and what to open first.
