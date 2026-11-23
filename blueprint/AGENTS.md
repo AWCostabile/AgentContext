@@ -33,6 +33,7 @@ one leaf per area, each opening with a **State today** paragraph. Follow its lin
 | [Scripts](./common/scripts/.index.md) | `find.sh` search; `cure.sh` the linter; `smell.sh` the smells; `review.sh` the agenda |
 | [Rules](./common/rules/.index.md) | the grammar and tier rules as plain documents |
 | [Reference](./common/reference/.index.md) | lookups: the deployer's refusals, its ledger of updates to this tree, the migration guides that applied |
+| `common/staging/` | a working directory for a migration's staged release and reports, ignored by git: never filed into |
 
 ## Where to write
 
@@ -101,10 +102,11 @@ Both read `.conf` and treat an absent `private/` as normal. Run the linter after
 leaves and before merging a branch: zero fails, every smell fixed or reasoned. The grammar the checks
 enforce is written out in [common/rules/](./common/rules/.index.md).
 
-The core files this tree received from the template (`common/scripts/`, `common/rules/`, `common/templates/`, `common/reference/`, `.vscode/`,
+The core files this tree received from the template (`common/scripts/`, `common/rules/`, `common/templates/`, `common/reference/`, `common/staging/.gitignore`, `.vscode/`,
 this file, `common/HYGIENE.md`, `README.md`, `common/.conf.example`, an adapter's payload where one was laid, and every
 module adopted: `common/modules/<name>/`, `constitution/`, `private/local/`) are listed with their hashes in
 `common/.agentcontext`, with the release they came from. A later release is pulled in with the template's deployer in
 update mode, which replaces what was never edited here and reports what was; the procedure is the "How to update"
-section of the template's `SETUP.md`, at the `upstream=` address the manifest names. Nothing filed in `public/` or
-`private/` is ever touched by it.
+section of the template's `SETUP.md`, at the `upstream=` address the manifest names, and a release that moves things is
+brought across by the template's `MIGRATE.md` beside it. Nothing filed in `public/` or `private/` is ever touched by
+the update.

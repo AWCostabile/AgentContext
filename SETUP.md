@@ -2,7 +2,7 @@
 
 This is a run-sheet. It is written for a coding agent working on a user's machine, and it reads just as well for a person at a terminal. Every step has a **Run** line and a **Check** line: run the command, then confirm the check against what is now on disk before moving to the next step. Nothing here asks you to read another file and work out what to do; when a step refuses, stop and tell the user what it said.
 
-The pinned release is `v0.5.1`. Replace it everywhere below if the user names another.
+The pinned release is `v0.6.0`. Replace it everywhere below if the user names another.
 
 ## Before you start: ask the user
 
@@ -33,17 +33,17 @@ Work in a scratch directory the user is happy to delete afterwards.
 **Run**
 
 ```
-curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/v0.5.1.tar.gz | tar xz
+curl -fsSL https://github.com/AWCostabile/AgentContext/archive/refs/tags/v0.6.0.tar.gz | tar xz
 ```
 
-**Check**: a directory `AgentContext-0.5.1/` exists and holds `init.sh`, `blueprint/AGENTS.md`, `scripts/cure.sh` and `adapters/`. (GitHub names the archive's top directory after the tag without its `v`.) Nothing else has been written anywhere.
+**Check**: a directory `AgentContext-0.6.0/` exists and holds `init.sh`, `blueprint/AGENTS.md`, `scripts/cure.sh` and `adapters/`. (GitHub names the archive's top directory after the tag without its `v`.) Nothing else has been written anywhere.
 
 ## 2. Write the `.conf`
 
 **Run**
 
 ```
-cp AgentContext-0.5.1/blueprint/common/.conf.example ./my.conf
+cp AgentContext-0.6.0/blueprint/common/.conf.example ./my.conf
 ```
 
 Then edit `my.conf` from the user's answers: the `AI_` lines, the `MY_` lines and `CATALOGS`. Delete the `PRIVATE_SCOPES` line: the example's value names the example's own catalogs, and with the line absent the deployer derives it from `CATALOGS` plus `journal`. If the user asked for a specific search scope, respell the line instead, naming only their catalogs and `journal`. Leave `ORCH_BUDGET` as it is unless the user asked for something specific.
@@ -61,7 +61,7 @@ prints `8`; `grep '^CATALOGS=' my.conf` shows the user's catalogs in quotes; and
 **Run** (drop `--no-private` if the user wants a private tree; add `--adapter <name>` if they chose one; add `--name <RepositoryName>` if the directory's basename is not the name they want; one `--sibling <name>` per repository from the seventh answer)
 
 ```
-bash AgentContext-0.5.1/init.sh --target <path> --conf ./my.conf --sibling <name>
+bash AgentContext-0.6.0/init.sh --target <path> --conf ./my.conf --sibling <name>
 ```
 
 **Check**: the output is one line per stage, `copied N files`, `catalogs: <the catalogs>`, `private: initialised` (or `skipped`), `workspace: <RepositoryName>.code-workspace` and `manifest: N core files`, then, with an adapter, `adapter: <name>` and last `done: <path>`. Without an adapter, `done: <path>` is followed by `adapters (none laid down; pass --adapter <name> for a written one):` and one line per adapter the release ships, each marked `written` or `stub`. Then:
@@ -135,7 +135,7 @@ cd <path> && self="../$(basename "$PWD")/" && for d in ../*/; do [ "$d" = "$self
 **Run** (the first line from the scratch directory; its `cd` takes you to the instance root for the second)
 
 ```
-bash AgentContext-0.5.1/init.sh --adopt context-retention --target <path> && cd <path>
+bash AgentContext-0.6.0/init.sh --adopt context-retention --target <path> && cd <path>
 bash common/modules/context-retention/meta.sh init
 ```
 
@@ -146,7 +146,7 @@ When the user is not at the terminal, `meta.sh init --yes` or `meta.sh init --no
 **With the Claude Code adapter, measure the prompt-cache lifetime too.** An orchestrating session that waits on a delegated job for longer than the cache lives pays a cold write of its whole prompt on its next turn; the harness caches for five minutes by default on an API key or a cloud provider, and for an hour on a subscription within its plan.
 
 ```
-bash AgentContext-0.5.1/adapters/claude-code/cache-ttl.sh <path>
+bash AgentContext-0.6.0/adapters/claude-code/cache-ttl.sh <path>
 ```
 
 **Check**: the second line reads `prompt cache: 1h …` or `prompt cache: 5m …`. On `5m`, ask the user whether to try for the hour: `… cache-ttl.sh <path> --apply` writes `promptCacheTtl` and `subagentPromptCacheTtl` as `"1h"` into `<path>/.claude/settings.local.json` (this machine's file; add `.claude/settings.local.json` to the instance's `.gitignore` if `git check-ignore` does not already ignore it) and probes again. If the second probe still says `5m`, the account does not grant the hour or the build predates the setting (Claude Code 2.1.242): tell the user to ask their account's administrator, and keep `ORCH_BUDGET=lean` in `.conf`, which keeps an orchestrator's waits short.
@@ -158,7 +158,7 @@ The constitution is the tree's law about itself: starting rulings, the articles 
 **Run**
 
 ```
-bash AgentContext-0.5.1/init.sh --adopt constitution --target <path> && cd <path> && bash common/scripts/cure.sh
+bash AgentContext-0.6.0/init.sh --adopt constitution --target <path> && cd <path> && bash common/scripts/cure.sh
 ```
 
 Then add one row to the index table in `<path>/AGENTS.md`, after the Rules row:
@@ -181,7 +181,7 @@ then removes its guidance comment and adds its row to the Contents of `private/j
 
 **Check**: `<path>/constitution/.index.md`, `constitution/history/rulings/`, `constitution/articles/` and `constitution/process/` exist; `cure.sh` still ends with 0 fails; `constitution/README.md` does not exist (the module's README stays in the release, only `tree/` is laid); `grep -x module=constitution common/.agentcontext` prints the line; with the ledger copied, `bash common/scripts/review.sh` prints `Questions: none open`.
 
-Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1, and the user keeps what applies and strikes the rest before the first commit. When a leaf is as the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one), and it is also what an update reads: a leaf still exactly as the release shipped it, a seed, is replaced by the next release's seed, and any leaf the user has changed is kept and reported. The adoption steps in `AgentContext-0.5.1/modules/constitution/README.md` walk the same ground. Commit here (`AGENTS.md`, `common/`, `constitution/`), and the ledger with its row in the private repository.
+Then prune: the seed rulings ship with `_status:_ seed — adopt, amend or delete` under each H1, and the user keeps what applies and strikes the rest before the first commit. When a leaf is as the user wants it, change that line to `_status:_ adopted YYYY-MM-DD`; the status line is what freezes it (an adapter's pre-write guard lets a seed leaf be edited and blocks an adopted one), and it is also what an update reads: a leaf still exactly as the release shipped it, a seed, is replaced by the next release's seed, and any leaf the user has changed is kept and reported. The adoption steps in `AgentContext-0.6.0/modules/constitution/README.md` walk the same ground. Commit here (`AGENTS.md`, `common/`, `constitution/`), and the ledger with its row in the private repository.
 
 ## 9. Adopt the change-log module (optional)
 
@@ -190,7 +190,7 @@ The change-log module is a GitHub Actions workflow for any repository the user k
 **Run** (from the scratch directory, once per such repository, with `<repository>` its path and the repository on `main`)
 
 ```
-mkdir -p <repository>/.github/workflows && cp AgentContext-0.5.1/modules/change-log/post-merge.yml <repository>/.github/workflows/post-merge.yml
+mkdir -p <repository>/.github/workflows && cp AgentContext-0.6.0/modules/change-log/post-merge.yml <repository>/.github/workflows/post-merge.yml
 git -C <repository> add .github/workflows/post-merge.yml && git -C <repository> commit -m "chore: the post-merge workflow squashes, bubble-merges and logs each pull request"
 ```
 
@@ -198,7 +198,7 @@ This is the one module `init.sh --adopt` refuses: the workflow lives in each rep
 
 Then the user adds a repository secret named `ACTION_TOKEN` (a fine-grained personal access token with Contents: read and write on that repository) under Settings, Secrets and variables, Actions, and checks three settings: "Allow merge commits" on, "Automatically delete head branches" off, and force pushes to `main` allowed for their account if the branch is protected. The agent cannot do these; say exactly what to click.
 
-**Check**: `.github/workflows/post-merge.yml` is on `main` and is identical to the module's file (`cmp AgentContext-0.5.1/modules/change-log/post-merge.yml <repository>/.github/workflows/post-merge.yml` prints nothing); the secret exists; the next merged pull request leaves `main` with a `merge: pull request #<n>` bubble and a `CHANGE_LOG.md` whose first heading is that pull request's title. Every clone then re-syncs with `git fetch && git reset --hard origin/main`, never a pull. `modules/change-log/README.md` says what the workflow asks of commit subjects.
+**Check**: `.github/workflows/post-merge.yml` is on `main` and is identical to the module's file (`cmp AgentContext-0.6.0/modules/change-log/post-merge.yml <repository>/.github/workflows/post-merge.yml` prints nothing); the secret exists; the next merged pull request leaves `main` with a `merge: pull request #<n>` bubble and a `CHANGE_LOG.md` whose first heading is that pull request's title. Every clone then re-syncs with `git fetch && git reset --hard origin/main`, never a pull. `modules/change-log/README.md` says what the workflow asks of commit subjects.
 
 ## 10. Adopt the codebase module (optional)
 
@@ -219,7 +219,7 @@ An area name is lowercase letters, digits and hyphens, never `map` or `surfaces`
 **Run** (the first line from the scratch directory, its `cd` taking you to the instance root; the command after it once per product, `<repository>` the product's checkout beside the instance)
 
 ```
-bash AgentContext-0.5.1/init.sh --adopt codebase --target <path> && cd <path>
+bash AgentContext-0.6.0/init.sh --adopt codebase --target <path> && cd <path>
 python common/modules/codebase/codebase.py --repo ../<repository> --into public/<catalog>/<Product>/codebase \
   --profile ../<repository>/codebase.profile.json --write-agent
 ```
@@ -243,7 +243,7 @@ The graphify module keeps one Graphify knowledge graph per repository in the tre
 **Run** (the first line from the scratch directory, its `cd` taking you to the instance root for the rest; `<slug>` a short lowercase name per repository)
 
 ```
-bash AgentContext-0.5.1/init.sh --adopt graphify --target <path> && cd <path>
+bash AgentContext-0.6.0/init.sh --adopt graphify --target <path> && cd <path>
 printf 'GRAPHS="<slug>=../<repository>"\n' >> .conf
 bash common/modules/graphify/graphs.sh home <slug>
 uv tool install "graphifyy[mcp]" && graphify install
@@ -269,7 +269,7 @@ The local module is a branch of the private tree that belongs to the user rather
 **Run** (from the scratch directory)
 
 ```
-bash AgentContext-0.5.1/init.sh --adopt local --target <path> && cd <path>
+bash AgentContext-0.6.0/init.sh --adopt local --target <path> && cd <path>
 ```
 
 Then the user adds its row to the Contents of `private/.index.md` (until they do, `cure.sh` fails the private root with `orphan (not in private/.index.md): private/local`, C03):
@@ -289,7 +289,7 @@ The linkcheck module asks every `http://` and `https://` URL the leaves in the s
 **Run** (from the scratch directory, then from the instance root)
 
 ```
-bash AgentContext-0.5.1/init.sh --adopt linkcheck --target <path> && cd <path>
+bash AgentContext-0.6.0/init.sh --adopt linkcheck --target <path> && cd <path>
 bash common/modules/linkcheck/linkcheck.sh
 ```
 
@@ -299,9 +299,11 @@ bash common/modules/linkcheck/linkcheck.sh
 
 ## How to update
 
-A release of the template changes the core files an instance received: everything under `common/` (`scripts/`, `rules/`, `templates/`, `reference/`, `HYGIENE.md`, `.conf.example`), `.vscode/`, `AGENTS.md`, `README.md`, an adapter's payload, and every module adopted with `--adopt` (the steps above), file by file as the core. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `common/.agentcontext` records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone. (An instance deployed before the common directory keeps its manifest at the root; the update reads it there and rewrites it under `common/`.)
+A release of the template changes the core files an instance received: everything under `common/` (`scripts/`, `rules/`, `templates/`, `reference/`, `staging/.gitignore`, `HYGIENE.md`, `.conf.example`), `.vscode/`, `AGENTS.md`, `README.md`, an adapter's payload, and every module adopted with `--adopt` (the steps above), file by file as the core. It never changes what the user has filed: `public/`, `private/`, `.conf`, the workspace file. The manifest `common/.agentcontext` records the release installed and a hash of every core file, so the update can tell a file the user edited from one they left alone. (An instance deployed before the common directory keeps its manifest at the root; the update reads it there and rewrites it under `common/`.)
 
 Always run the update with the **new** release's `init.sh`: an older one cannot read a newer layout. When the update keeps a file, it names the migration guides that apply (`migrations/<version>.md` in the template repository, one per release, read in order from the instance's own) and copies each into the instance as `common/reference/migrations/<version>.md`; they say what to finish by hand.
+
+A release that moves things (its `MOVES` file lists a pair the instance has not crossed) is brought across with the migration sheet instead of the steps below: fetch https://raw.githubusercontent.com/AWCostabile/AgentContext/<tag>/MIGRATE.md and follow it as a run-sheet, as this one is followed. It stages the release with `init.sh --update --stage`, which prints the report below and writes the release's tree to `common/staging/<tag>/` and nothing else, then makes the update and respells the moved paths on a branch named for the release, for the user to walk and merge.
 
 **Run** (with the new tag; the deployer fetches that release itself)
 
@@ -320,7 +322,7 @@ bash AgentContext-<tag without v>/init.sh --update --target <path> --ref <tag>
 - `removed-upstream`: a core file the release no longer ships; the local copy stays;
 - `removed-upstream module <name> (its files stay)`: an adopted module the release no longer ships; its `module=` line leaves the manifest and its files stay where they are.
 
-After the summary, `run bash common/scripts/cure.sh: N kept file(s) may name moved paths` means an edited root document (an `AGENTS.md`, say) still names old paths, and `guide: migrations/<version>.md` names each guide to read, copied into `common/reference/migrations/`. An update that changed something (any count above zero, or another release) has appended one line to `common/reference/updates.md`, `- YYYY-MM-DD — update <from> → <to>:` and the counts; `tail -n 1 common/reference/updates.md` shows it. Then run step 4 again (`cure.sh` at 0 fails) and commit:
+After the summary, `run bash common/scripts/cure.sh: N kept file(s) may name moved paths` means an edited root document (an `AGENTS.md`, say) still names old paths, and `guide: migrations/<version>.md` names each guide to read, copied into `common/reference/migrations/`. An update that wrote something, or came from another release, has appended one line to `common/reference/updates.md`, `- YYYY-MM-DD — update <from> → <to>:` and the counts; `tail -n 1 common/reference/updates.md` shows it. Then run step 4 again (`cure.sh` at 0 fails) and commit:
 
 ```
 cd <path> && git add -A && git commit -m "chore: core files updated to <tag>"
@@ -347,7 +349,7 @@ The skeleton carries `{{ }}` placeholders. The deployer resolves every one outsi
 
 `common/templates/` keeps its placeholders on purpose: those files are copied by hand when a branch or a product is added, and the linter never reads them as part of the tree.
 
-Besides the core it lays, the deployer keeps two things of its own in `common/reference/`, neither shipped nor recorded in the manifest: `updates.md`, the ledger it appends one line to per update that changed something and per adoption (the one file it appends to rather than replaces), and `migrations/`, the guides an update named. Both appear with the first run that writes them.
+Besides the core it lays, the deployer keeps two things of its own in `common/reference/`, neither shipped nor recorded in the manifest: `updates.md`, the ledger it appends one line to per update that wrote something or came from another release and per adoption (the one file it appends to rather than replaces), and `migrations/`, the guides an update named. Both appear with the first run that writes them. Beside it, `common/staging/` is a working directory: only its `.gitignore` is laid and recorded, it ignores everything else in it, `--stage` writes a release's tree there, and the deployer never empties it.
 
 ## When a step refuses
 

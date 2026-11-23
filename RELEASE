@@ -1,0 +1,3 @@
+# The release this tree is: git archive fills the line below with the archived commit's ref
+# names (export-subst, in .gitattributes), and init.sh reads the release tag from it.
+refs=$Format:%d$

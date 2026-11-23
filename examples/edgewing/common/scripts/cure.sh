@@ -18,7 +18,8 @@
 #        [a-z0-9-] tag per line, no commas (a malformed line is a WARN)
 #   C03  every leaf file and child directory is referenced by its branch index
 #   C04  every relative link in *.md resolves, in both trees and in the root documents
-#        (*.md at the root, common/HYGIENE.md, common/rules/*.md, common/scripts/.index.md, common/templates/.index.md). Links
+#        (*.md at the root, common/HYGIENE.md, common/rules/*.md, common/scripts/.index.md, common/templates/.index.md,
+#        common/reference/.index.md, common/reference/*.md). Links
 #        into private/ from the root documents are conditional on the machine and are
 #        skipped; {{ }} targets are skipped. Verbatim provenance (lib-scopes.sh
 #        verbatim_path, and every leaf listed in a manifest, an index whose Contents
@@ -56,7 +57,7 @@ while [ $# -gt 0 ]; do
     --root) [ $# -ge 2 ] || { echo "--root needs a directory" >&2; exit 2; }
             ROOT="$(cd "$2" 2>/dev/null && pwd)" || { echo "no such directory: $2" >&2; exit 2; }
             shift 2 ;;
-    -h|--help) sed -n '2,42p' "$0" | sed 's/^#//; s/^ //'; exit 0 ;;
+    -h|--help) sed -n '2,43p' "$0" | sed 's/^#//; s/^ //'; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -99,7 +100,8 @@ md_files() {   # NUL-separated, for xargs -0
 # The root documents: dead links only, never linted as branches. common/templates/ carries
 # {{ }} forever, so only its index is read.
 ROOT_DOCS=()
-for f in *.md common/HYGIENE.md common/rules/*.md common/scripts/.index.md common/templates/.index.md; do
+for f in *.md common/HYGIENE.md common/rules/*.md common/scripts/.index.md common/templates/.index.md \
+         common/reference/.index.md common/reference/*.md; do
   [ -f "$f" ] && ROOT_DOCS+=("$f")
 done
 

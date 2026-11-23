@@ -5,7 +5,7 @@
 #   init.sh --target <dir> [--conf <file>] [--name <RepositoryName>]
 #           [--from <dir|archive.tar.gz>] [--no-private] [--sibling <RepoName>]...
 #           [--adapter <name>] [--dry-run]
-#   init.sh --update --target <dir> (--ref <tag> | --from <dir|archive.tar.gz>) [--dry-run]
+#   init.sh --update --target <dir> (--ref <tag> | --from <dir|archive.tar.gz>) [--stage] [--dry-run]
 #   init.sh --adopt <module> --target <dir> [--ref <tag> | --from <dir|archive.tar.gz>] [--dry-run]
 #   init.sh --help
 #
@@ -28,7 +28,7 @@
 #   --dry-run         print every file it would write, and write nothing
 #
 # Update (the second form) brings the core files of an instance up to another release:
-# common/ (scripts/, rules/, templates/, reference/, HYGIENE.md, .conf.example), .vscode/, AGENTS.md,
+# common/ (scripts/, rules/, templates/, reference/, staging/.gitignore, HYGIENE.md, .conf.example), .vscode/, AGENTS.md,
 # README.md and the adapter's payload. A core file edited locally is kept and reported, never
 # overwritten; public/, private/, .conf, .gitignore, .gitattributes and the workspace file are
 # never touched. The paths a release moved are listed in its MOVES file, one "<old> <new>"
@@ -36,17 +36,24 @@
 # moved, and its old name removed with any directory it leaves empty; an edited one stays at
 # its old name beside the release's copy at the new one. When a file is kept, the template's
 # migrations/<version>.md guides are named from the instance's release onwards, and each one
-# named is copied to common/reference/migrations/<version>.md. A run that changed something
-# (any count above zero, or another release) appends one line to the ledger
-# common/reference/updates.md: "- YYYY-MM-DD — update <from> → <to>: <the counts>"; the
-# ledger is the one file the deployer appends to, and neither it nor the guides are in the
-# manifest. A manifest at the instance root (an older release) is read there and rewritten
-# under common/.
+# named is copied to common/reference/migrations/<version>.md. A run that wrote a file or
+# changed what the manifest records (a move, a replacement, an addition, a removal upstream,
+# a guide copied in), or that came from another release, appends one line to the ledger
+# common/reference/updates.md: "- YYYY-MM-DD — update <from> → <to>: <the counts>"; a run
+# that only kept files appends nothing. The ledger is the one file the deployer appends to,
+# and neither it nor the guides are in the manifest. A manifest at the instance root (an
+# older release) is read there and rewritten under common/.
 # The deployer deletes only a file whose bytes equal a hash it holds (the recorded one on
 # --update, the release's on --adopt) and the root manifest it has just rewritten under
 # common/; nothing else, ever.
 #   --ref <tag>       fetch that release of the upstream repository
 #   --from <src>      take the release from a local directory or .tar.gz instead
+#   --stage           print the same report, then write the release's core and module files
+#                     to common/staging/<ref>/ (<ref> the release's name, or working-tree)
+#                     and nothing else: no core file, no manifest, no ledger line, no guide.
+#                     The staging directory's .gitignore is laid when the instance has none.
+#                     A common/staging/<ref>/ that exists is refused: the deployer never
+#                     empties it. With --update only
 #   --dry-run         print the report, and write nothing
 #
 # Adopt (the third form) lays one module of the release into an instance and records it in the
@@ -64,6 +71,13 @@
 #   --from <src>      take it from a local directory or .tar.gz instead
 #   --dry-run         print the report, and write nothing
 #
+# The release a run comes from (the manifest's ref=, the ledger line, the guides an update
+# names, the staged tree's directory) is --ref <tag> when given; else the release tag the
+# source's RELEASE file names, which git archive fills in for an archive of a tagged commit
+# (of several, the one the source's name spells, else the highest); else the source's name,
+# AgentContext-<x> naming v<x> (an archive's file name, or an extracted directory's); else
+# working-tree, as for a checkout.
+#
 # Exit: 0 done; 2 usage or refusal (the reason on stderr, nothing written); 1 failure
 # mid-way (what was written is said).
 
@@ -80,6 +94,9 @@ MANIFEST=common/.agentcontext OLD_MANIFEST=.agentcontext
 # The reference branch's two deployer-kept paths, never in the manifest: the ledger, the one
 # file the deployer appends to, and the migration guides an update copied in.
 LEDGER=common/reference/updates.md GUIDES=common/reference/migrations
+# The staging directory: a working directory that ignores its own contents, where --stage
+# writes a release's tree under the release's name.
+STAGING=common/staging
 
 TMPS=()
 cleanup() { local d; for d in "${TMPS[@]}"; do rm -rf "$d"; done; }
@@ -104,7 +121,7 @@ ledger() {
 }
 
 # -- arguments ------------------------------------------------------------------
-MODE=install TARGET="" CONF="" NAME="" FROM="" REF="" ADAPTER="" ADOPT="" NO_PRIVATE=0 DRY=0
+MODE=install TARGET="" CONF="" NAME="" FROM="" REF="" ADAPTER="" ADOPT="" NO_PRIVATE=0 DRY=0 STAGE_RUN=0
 SIBLINGS=()
 need_value() { [ $# -ge 2 ] && [ -n "$2" ] || refuse "$1 needs a value (see --help)"; }
 one_mode()   { [ "$MODE" = install ] || refuse "--update and --adopt are separate runs (see --help)"; }
@@ -121,18 +138,20 @@ while [ $# -gt 0 ]; do
     --adapter)    need_value "$@"; ADAPTER=$2; shift ;;
     --sibling)    need_value "$@"; SIBLINGS+=("$2"); shift ;;
     --no-private) NO_PRIVATE=1 ;;
+    --stage)      STAGE_RUN=1 ;;
     --dry-run)    DRY=1 ;;
     *)            refuse "unknown argument: $1 (see --help)" ;;
   esac
   shift
 done
+[ $STAGE_RUN -eq 0 ] || [ "$MODE" = update ] || refuse "--stage goes with --update only (see --help)"
 [ -n "$TARGET" ] || refuse "--target is required (see --help)"
 TARGET=${TARGET%/}
 if [ "$MODE" = install ]; then
   [ -z "$REF" ] || refuse "--ref is for --update and --adopt only"
 else
   [ -z "$CONF$NAME$ADAPTER" ] && [ $NO_PRIVATE -eq 0 ] && [ ${#SIBLINGS[@]} -eq 0 ] \
-    || refuse "--$MODE takes only --target, --ref or --from, and --dry-run"
+    || refuse "--$MODE takes only --target, --ref or --from,$([ "$MODE" = update ] && printf ' --stage') and --dry-run"
   if [ "$MODE" = update ]; then
     { [ -n "$REF" ] && [ -z "$FROM" ]; } || { [ -z "$REF" ] && [ -n "$FROM" ]; } \
       || refuse "--update needs exactly one of --ref <tag> and --from <dir|archive.tar.gz>"
@@ -164,7 +183,15 @@ extract_archive() {
   done
   printf '%s' "$t"
 }
-SRC_REF=working-tree
+# stamp_tags <dir>: the release tags the release stamp names, one per line. RELEASE, at a
+# release's root, is marked export-subst: git archive, and so a host's tarball of a tag, fills
+# its refs= line with the archived commit's ref names, "(HEAD -> main, tag: v1.2.0)"; a checkout
+# holds the placeholder, which names none.
+stamp_tags() {
+  [ -f "$1/RELEASE" ] || return 0
+  sed -n 's/^refs=//p' "$1/RELEASE" | tr -d '\r' | tr ',()' '\n\n\n' | sed -n 's/^ *tag: \(v[0-9][^ ]*\) *$/\1/p'
+}
+SRC_REF=working-tree NAMED=""
 if [ -z "$FROM" ] && [ -z "$REF" ]; then
   SRC=$SELF_DIR
 elif [ -n "$REF" ]; then
@@ -177,7 +204,7 @@ elif [ -n "$REF" ]; then
 elif [ -f "$FROM" ]; then
   case "$FROM" in *.tar.gz|*.tgz) ;; *) refuse "--from must be a directory or a .tar.gz: $FROM" ;; esac
   SRC=$(extract_archive "$FROM")
-  SRC_REF=$(release_name "$(basename "$FROM")")
+  NAMED=$(release_name "$(basename "$FROM")")
 elif [ -d "$FROM" ]; then
   SRC=$(cd "$FROM" && pwd)
 else
@@ -186,7 +213,18 @@ fi
 [ -f "$SRC/blueprint/AGENTS.md" ] || refuse "not a template source (no blueprint/AGENTS.md): ${FROM:-$SRC}"
 # An extracted release directory (no .git) named AgentContext-<x> names its release.
 if [ -z "$REF" ] && [ ! -f "$FROM" ] && [ ! -e "$SRC/.git" ]; then
-  case "$(basename "$SRC")" in AgentContext-?*) SRC_REF=$(release_name "$(basename "$SRC")") ;; esac
+  case "$(basename "$SRC")" in AgentContext-?*) NAMED=$(release_name "$(basename "$SRC")") ;; esac
+fi
+# Without --ref the stamp names the release: of several tags, the one the source's name
+# spells, else the highest. A stamp naming none leaves the name, else working-tree.
+if [ -z "$REF" ]; then
+  STAMPED=$(stamp_tags "$SRC")
+  if [ -n "$STAMPED" ]; then
+    if [ -n "$NAMED" ] && printf '%s\n' "$STAMPED" | grep -qxF -- "$NAMED"; then SRC_REF=$NAMED
+    else SRC_REF=$(printf '%s\n' "$STAMPED" | sort -V | tail -n 1); fi
+  elif [ -n "$NAMED" ]; then
+    SRC_REF=$NAMED
+  fi
 fi
 
 # -- adapters -----------------------------------------------------------------------
@@ -369,6 +407,11 @@ read_moves
 # =====================================================================================
 if [ "$MODE" = update ]; then
   TARGET=$(cd "$TARGET" && pwd)
+  if [ $STAGE_RUN -eq 1 ]; then
+    case "$SRC_REF" in ''|.|..|*/*|*\\*) refuse "--stage: '$SRC_REF' cannot name a directory under $STAGING/" ;; esac
+    [ ! -e "$TARGET/$STAGING/$SRC_REF" ] \
+      || refuse "$STAGING/$SRC_REF/ exists: a tree of $SRC_REF is staged already; empty $STAGING/ (keep its .gitignore) and run again"
+  fi
   declare -A UP LOCAL MOVED_TO
   read_manifest "$TARGET"
   INST_ADAPTER=${HEADER[adapter]:-}
@@ -476,7 +519,25 @@ if [ "$MODE" = update ]; then
   if [ $DRY -eq 1 ]; then
     say "$summary"
     advice
+    [ $STAGE_RUN -eq 1 ] && say "would stage: $STAGING/$SRC_REF/, ${#UP[@]} file(s)"
     say "dry-run: nothing written to $TARGET"
+    exit 0
+  fi
+  # --stage: the release's tree, every core and module path as the update would place it,
+  # written under the staging directory; the instance itself is left exactly as it was.
+  if [ $STAGE_RUN -eq 1 ]; then
+    say "$summary"
+    advice
+    if [ ! -f "$TARGET/$STAGING/.gitignore" ]; then
+      mkdir -p "$TARGET/$STAGING" || die "creating $STAGING/ (nothing written)"
+      if [ -f "$UPDIR/$STAGING/.gitignore" ]; then cp "$UPDIR/$STAGING/.gitignore" "$TARGET/$STAGING/.gitignore"
+      else printf '%s\n' '*' '!.gitignore' > "$TARGET/$STAGING/.gitignore"; fi \
+        || die "laying $STAGING/.gitignore (nothing else written)"
+      say "laid $STAGING/.gitignore: the staging directory ignores what is staged in it"
+    fi
+    { mkdir -p "$TARGET/$STAGING/$SRC_REF" && cp -R "$UPDIR/." "$TARGET/$STAGING/$SRC_REF/"; } \
+      || die "staging into $STAGING/$SRC_REF/; a partial tree may be there: empty it and run again"
+    say "staged: $STAGING/$SRC_REF/, ${#UP[@]} file(s); nothing written outside $STAGING/"
     exit 0
   fi
   done_n=0
@@ -502,14 +563,18 @@ if [ "$MODE" = update ]; then
     d=$(dirname "$p")
     while [ "$d" != . ] && rmdir "$TARGET/$d" 2>/dev/null; do d=$(dirname "$d"); done
   done
-  # The reference branch: each guide named is copied in, and a run that changed something
-  # (a count above zero, or another release) appends its line to the ledger.
+  # The reference branch: each guide named is copied in unless it is there already, and a run
+  # that wrote a file or changed the manifest's records, or came from another release, appends
+  # its line to the ledger; a run that only kept files appends nothing.
+  n_guides=0
   while IFS= read -r v; do
     [ -n "$v" ] || continue
+    cmp -s "$SRC/migrations/$v.md" "$TARGET/$GUIDES/$v.md" && continue
     { mkdir -p "$TARGET/$GUIDES" && cp "$SRC/migrations/$v.md" "$TARGET/$GUIDES/$v.md"; } \
       || die "copying the guide migrations/$v.md into $GUIDES/; $MANIFEST is written"
+    n_guides=$((n_guides + 1))
   done < <(guide_versions)
-  if [ $((n_mv + n_rep + n_kept + n_add + n_rm)) -gt 0 ] || [ "${HEADER[ref]:-}" != "$SRC_REF" ]; then
+  if [ $((${#WRITE[@]} + n_add + n_rm + n_guides)) -gt 0 ] || [ "${HEADER[ref]:-}" != "$SRC_REF" ]; then
     ledger "update ${HEADER[ref]:-unknown} → $SRC_REF: ${summary#update: }" \
       || die "appending to $LEDGER; $MANIFEST is written"
   fi

@@ -4,7 +4,9 @@
 # every worked example as of its snapshot date, runs tests/check.sh, the scripts' own
 # check over the fixture tree, updates instances of the last release through the move
 # rule onto the common directory, adopts modules into instances and updates over them, and
-# proves the reference branch's ledger and copied guides.
+# proves the reference branch's ledger and copied guides, stages a release's tree into the
+# staging directory without touching the rest of an instance, and proves that an archive of a
+# tagged commit names its release from its own stamp, whatever it is called.
 #
 # Usage: bash tests/tools/deploy-smoke.sh   (from anywhere; no arguments)
 #
@@ -57,6 +59,12 @@ echo "== deploy smoke — $(date '+%Y-%m-%d %H:%M') =="
 [ -n "$(git status --porcelain)" ] && warn "the worktree is dirty; the smoke proves HEAD, not the worktree"
 mkdir -p "$SRC" && git archive HEAD | tar -x -C "$SRC"
 check "git archive of HEAD extracted as the source" '[ -f "$INIT" ] && [ -f "$SRC/blueprint/AGENTS.md" ]'
+# The archive fills in the release stamp, naming HEAD's tags when it has any. Every section
+# but 23 proves the source as a checkout holds it, so the stamp goes back to its committed
+# placeholder and the smoke reads the same whether or not HEAD is tagged; 23 proves the stamp.
+check "the archive filled in the release stamp RELEASE" \
+  '[ -f "$SRC/RELEASE" ] && ! cmp -s <(git show HEAD:RELEASE) "$SRC/RELEASE" && ! grep -q "\$Format:" "$SRC/RELEASE"'
+git show HEAD:RELEASE > "$SRC/RELEASE"
 
 # -- 2. deploy -------------------------------------------------------------------------------
 # PRIVATE_SCOPES and ORCH_BUDGET are dropped so the deployer has to derive them.
@@ -97,7 +105,9 @@ check ".conf gained the derived PRIVATE_SCOPES and ORCH_BUDGET" \
 check "README.md is the reader page, named after the instance, with no placeholder left" \
   '[ -f "$I1/README.md" ] && [ "$(head -n 1 "$I1/README.md")" = "# Example" ] && ! grep -q "{{" "$I1/README.md"'
 check "README.md is listed in the manifest as a core file" 'grep -q "  README.md$" "$I1/common/.agentcontext"'
-check "no tests/ directory is laid into an instance" '[ ! -e "$I1/tests" ]'
+check "no tests/ directory and no MIGRATE.md are laid into an instance" '[ ! -e "$I1/tests" ] && [ ! -e "$I1/MIGRATE.md" ]'
+check "the release stamp is never laid into an instance: no RELEASE at its root or under common/" \
+  '[ ! -e "$I1/RELEASE" ] && [ -z "$(find "$I1/common" -name RELEASE)" ]'
 root1=$(ls -A "$I1" | LC_ALL=C sort | tr '\n' ' ')   # the fresh root, judged in section 18
 
 # -- 4. the instance lints clean ----------------------------------------------------------------
@@ -328,14 +338,19 @@ check "no identity file anywhere in the committed tree, and the deployer wrote n
 # SETUP.md names one release and reads every file out of that release's archive; README.md's
 # prompt fetches the same release's SETUP.md. A path the sheet names must exist in the release
 # it pins: in the tag when it has been cut, in HEAD before it is (the tag is cut from HEAD).
+# MIGRATE.md, the migration sheet, pins the same release and reads out of the same archive.
 PIN=$(sed -n 's/^The pinned release is `\(v[0-9][0-9.]*\)`.*/\1/p' SETUP.md | head -n 1)
 check "SETUP.md declares one pinned release${PIN:+ ($PIN)}" '[ -n "$PIN" ]'
+MPIN=$(sed -n 's/^The pinned release is `\(v[0-9][0-9.]*\)`.*/\1/p' MIGRATE.md | head -n 1)
+check "MIGRATE.md declares the same pinned release (found: ${MPIN:-none})" '[ -n "$MPIN" ] && [ "$MPIN" = "$PIN" ]'
 others=$(grep -ohE 'AgentContext-[0-9]+\.[0-9]+\.[0-9]+|AgentContext/v[0-9]+\.[0-9]+\.[0-9]+|tags/v[0-9]+\.[0-9]+\.[0-9]+' README.md SETUP.md \
   | sed -E 's/.*[-/]v?//' | sort -u | tr '\n' ' ')
 check "README.md and SETUP.md name no release but the pinned one (found: ${others:-none})" '[ "$others" = "${PIN#v} " ]'
+others=$(grep -ohE 'AgentContext-[0-9]+\.[0-9]+\.[0-9]+|v[0-9]+\.[0-9]+\.[0-9]+' MIGRATE.md | sed -E 's/^(AgentContext-|v)//' | sort -u | tr '\n' ' ')
+check "MIGRATE.md names no release but the pinned one (found: ${others:-none})" '[ "$others" = "${PIN#v} " ]'
 if git rev-parse -q --verify "refs/tags/$PIN^{commit}" >/dev/null 2>&1; then REL="$PIN"; else REL=HEAD; info "$PIN is not tagged yet: its paths are checked against HEAD"; fi
 missing=""
-for p in $(grep -ohE "AgentContext-${PIN#v}/[A-Za-z0-9_./-]+" SETUP.md | sed "s|^AgentContext-${PIN#v}/||" | sort -u) \
+for p in $(grep -ohE "AgentContext-${PIN#v}/[A-Za-z0-9_./-]+" SETUP.md MIGRATE.md | sed "s|^AgentContext-${PIN#v}/||" | sort -u) \
          $(grep -ohE "AgentContext/$PIN/[A-Za-z0-9_./-]+" README.md | sed "s|^AgentContext/$PIN/||" | sort -u); do
   git ls-tree -r --name-only "$REL" -- "$p" | grep -q . || missing="$missing $p"
 done
@@ -591,8 +606,8 @@ out=$(bash "$I1/common/scripts/cure.sh" --root "$I1" 2>&1); rc=$?
 check "with the row appended to private/.index.md, cure.sh reports 0 fails${rc:+ ($(printf '%s\n' "$out" | grep -E '^\[FAIL\]' | head -n 1))}" '[ $rc -eq 0 ]'
 
 # -- 21. the reference branch: the ledger and the copied guides ------------------------------------------------
-# A fresh instance carries common/reference/ and no ledger. An update that changes nothing and
-# every dry run append nothing; an update that keeps a file from a versioned ref appends exactly
+# A fresh instance carries common/reference/ and no ledger. An update that changes nothing, one
+# that only keeps a file it kept before, and every dry run append nothing; an update that keeps a file from a versioned ref appends exactly
 # one well-formed line and copies the guide it names into common/reference/migrations/; --adopt
 # appends its line, 0 file(s) for a module recorded in place. Outside common/ nothing moves.
 outside() { (cd "$1" && find . -type f ! -path './common/*' ! -path './private/.git/*' -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum); }
@@ -612,9 +627,15 @@ out=$(bash "$INIT" --update --target "$I11" --from "$SRC" 2>&1); rc=$?
 re='^- [0-9]{4}-[0-9]{2}-[0-9]{2} — update v0\.5\.0 → working-tree: 0 moved, 0 replaced, 1 kept, 0 added, 0 removed-upstream$'
 check "an update that changed something appends exactly one well-formed line ($(tail -n 1 "$L11" 2>/dev/null))" \
   '[ $rc -eq 0 ] && [ "$(lines)" = 1 ] && grep -qE "$re" "$L11"'
-check "the guide the update named is copied byte for byte into common/reference/migrations/" \
-  'printf "%s\n" "$out" | grep -qx "guide: migrations/0.5.0.md" && cmp -s "$SRC/migrations/0.5.0.md" "$I11/common/reference/migrations/0.5.0.md" && [ "$(ls "$I11/common/reference/migrations")" = 0.5.0.md ]'
+named=$(printf "%s\n" "$out" | sed -n 's|^guide: migrations/||p' | sort -V | tr '\n' ' ')
+same=1; for g in $named; do cmp -s "$SRC/migrations/$g" "$I11/common/reference/migrations/$g" || same=0; done
+check "the guides the update named, 0.5.0.md onwards, are copied byte for byte into common/reference/migrations/ (named: ${named:-none})" \
+  '[ "${named%% *}" = 0.5.0.md ] && [ $same -eq 1 ] && [ "$(ls "$I11/common/reference/migrations" | sort -V | tr "\n" " ")" = "$named" ]'
 check "neither the ledger nor the guide is in the manifest" '! grep -qE "  common/reference/(updates\.md|migrations/)" "$I11/common/.agentcontext"'
+n0=$(lines)
+out=$(bash "$INIT" --update --target "$I11" --from "$SRC" 2>&1); rc=$?
+check "an update from the same release that only keeps a file appends nothing" \
+  '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^update: 0 moved, 0 replaced, 1 kept, 0 added, 0 removed-upstream$" && [ "$(lines)" = "$n0" ]'
 n1=$(lines)
 out=$(bash "$INIT" --adopt codebase --target "$I11" --from "$SRC" --dry-run 2>&1); rc=$?
 check "an --adopt dry run appends nothing" '[ $rc -eq 0 ] && [ "$(lines)" = "$n1" ]'
@@ -629,6 +650,123 @@ check "--adopt of a module already in place appends 0 file(s)" \
 check "outside common/ the instance is byte-identical after every update and adoption" '[ "$(outside "$I11")" = "$o0" ]'
 (cd "$I11" && bash common/scripts/cure.sh >/dev/null 2>&1); crc=$?
 check "the instance with a ledger and a copied guide lints with 0 fails" '[ $crc -eq 0 ]'
+
+# -- 22. the staging directory: --update --stage -------------------------------------------------------------
+# An instance in a git repository, with a module adopted, one core file it will replace (its
+# recorded hash rewritten to its edited bytes, as an older release's file), one it will add (file
+# and manifest line removed), one it keeps (edited), and no staging directory, as an instance laid
+# before there was one. --stage prints the update's own report, lays the staging directory's
+# .gitignore and writes the release's tree under common/staging/<ref>/; outside that directory the
+# instance is byte-identical, git sees the .gitignore alone, and a copy of the instance then updated
+# for real holds every staged file's bytes but the kept one's. The refusals write nothing.
+G=(git -c user.name=smoke -c user.email=smoke@example.invalid -c core.autocrlf=false -c core.safecrlf=false)
+I12="$TMP/instance12"; M12="$I12/common/.agentcontext"; STG="$I12/common/staging"
+bash "$INIT" --from "$SRC" --target "$I12" --conf "$CONF" >/dev/null 2>&1
+check "a fresh instance carries common/staging/ holding its .gitignore alone, recorded in the manifest" \
+  '[ "$(ls -A "$STG")" = .gitignore ] && [ "$(cat "$STG/.gitignore")" = "$(printf "*\n!.gitignore")" ] && grep -q "  common/staging/.gitignore$" "$M12"'
+bash "$INIT" --adopt codebase --target "$I12" --from "$SRC" >/dev/null 2>&1
+rehash() { awk -v p="$1" -v h="$2" 'substr($0, 67) == p { $0 = h "  " p } { print }' "$M12" > "$M12.tmp" && mv "$M12.tmp" "$M12"; }
+printf '%s\n' "An older release's line." >> "$I12/common/rules/design-tier.md"
+rehash common/rules/design-tier.md "$(sha256sum < "$I12/common/rules/design-tier.md" | cut -c1-64)"
+rm "$I12/.vscode/extensions.json"; sed -i '/  \.vscode\/extensions\.json$/d' "$M12"
+printf '%s\n' "A local note." >> "$I12/common/rules/branch-grammar.md"
+rm "$STG/.gitignore" && rmdir "$STG"; sed -i '/  common\/staging\/\.gitignore$/d' "$M12"
+"${G[@]}" -C "$I12" init -q && "${G[@]}" -C "$I12" add -A && "${G[@]}" -C "$I12" commit -q -m "chore: the instance"
+whole=$(tree_digest "$I12")
+nled=$(grep -c '^- ' "$I12/common/reference/updates.md" 2>/dev/null)
+dry=$(bash "$INIT" --update --target "$I12" --from "$SRC" --dry-run 2>&1)
+out=$(bash "$INIT" --update --target "$I12" --from "$SRC" --stage --dry-run 2>&1); rc=$?
+check "--stage --dry-run prints the report and the tree it would stage, and writes nothing" \
+  '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^would stage: common/staging/working-tree/, [0-9]* file(s)$" && [ "$(tree_digest "$I12")" = "$whole" ]'
+before=$(cd "$I12" && find . -type f ! -path './common/staging/*' ! -path './.git/*' ! -path './private/.git/*' -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)
+cp "$M12" "$TMP/m12.before"
+out=$(bash "$INIT" --update --target "$I12" --from "$SRC" --stage 2>&1); rc=$?
+printf '%s\n' "$out" > "$TMP/stage.txt"
+nst=$(cd "$STG/working-tree" && find . -type f | wc -l | tr -d ' ')
+check "--stage exits 0 and ends naming the staged tree and its $nst file(s)" \
+  '[ $rc -eq 0 ] && [ "$(tail -n 1 "$TMP/stage.txt")" = "staged: common/staging/working-tree/, $nst file(s); nothing written outside common/staging/" ]'
+check "--stage prints the update's own report: replaced, added and kept as a dry run says" \
+  '[ "$(grep -vE "^(laid |staged: )" "$TMP/stage.txt")" = "$(printf "%s\n" "$dry" | grep -v "^dry-run: ")" ] && grep -qx "replaced common/rules/design-tier.md" "$TMP/stage.txt" && grep -qx "added .vscode/extensions.json" "$TMP/stage.txt" && grep -qx "kept common/rules/branch-grammar.md (changed locally)" "$TMP/stage.txt"'
+check "--stage lays the staging directory's .gitignore on an instance that had none" \
+  'grep -q "^laid common/staging/.gitignore" "$TMP/stage.txt" && [ "$(cat "$STG/.gitignore")" = "$(printf "*\n!.gitignore")" ]'
+after=$(cd "$I12" && find . -type f ! -path './common/staging/*' ! -path './.git/*' ! -path './private/.git/*' -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)
+check "outside common/staging/ the instance is byte-identical after --stage" '[ "$after" = "$before" ]'
+check "--stage leaves the manifest as it was and writes no ledger line" \
+  'cmp -s "$M12" "$TMP/m12.before" && [ "$(grep -c "^- " "$I12/common/reference/updates.md" 2>/dev/null)" = "$nled" ]'
+check "git sees the staging directory's .gitignore and nothing staged beneath it" \
+  '[ "$("${G[@]}" -C "$I12" status --porcelain --untracked-files=all)" = "?? common/staging/.gitignore" ]'
+(cd "$I12" && bash common/scripts/cure.sh >/dev/null 2>&1); crc=$?
+check "the instance holding a staged tree lints with 0 fails: the staging directory is no branch" '[ $crc -eq 0 ]'
+I12u="$TMP/instance12u"
+cp -R "$I12" "$I12u" && rm -rf "$I12u/common/staging/working-tree"
+bash "$INIT" --update --target "$I12u" --from "$SRC" >/dev/null 2>&1
+staged=$(cd "$STG/working-tree" && find . -type f | sed 's|^\./||' | LC_ALL=C sort)
+check "the staged tree holds exactly the paths the real update records, codebase's among them" \
+  '[ "$staged" = "$(sed "1,/^$/d" "$I12u/common/.agentcontext" | cut -c67- | LC_ALL=C sort)" ] && printf "%s\n" "$staged" | grep -q "^common/modules/codebase/"'
+differ=$(printf '%s\n' "$staged" | while IFS= read -r p; do
+  grep -qxF "kept $p (changed locally)" "$TMP/stage.txt" && continue
+  cmp -s "$STG/working-tree/$p" "$I12u/$p" || printf '%s ' "$p"
+done)
+check "every staged file but the kept one is byte for byte what the real update placed${differ:+ (differ: $differ)}" '[ -z "$differ" ]'
+whole=$(tree_digest "$I12")
+err=$(bash "$INIT" --update --target "$I12" --from "$SRC" --stage 2>&1 >/dev/null); rc=$?
+check "a second --stage into the same common/staging/<ref>/ refuses with exit 2 and writes nothing" \
+  '[ $rc -eq 2 ] && printf "%s\n" "$err" | grep -q "^init.sh: common/staging/working-tree/ exists: " && [ "$(tree_digest "$I12")" = "$whole" ]'
+err1=$(bash "$INIT" --stage --target "$I12" --from "$SRC" 2>&1 >/dev/null); rc1=$?
+err2=$(bash "$INIT" --adopt linkcheck --stage --target "$I12" --from "$SRC" 2>&1 >/dev/null); rc2=$?
+check "--stage without --update refuses with exit 2 and writes nothing" \
+  '[ $rc1 -eq 2 ] && [ $rc2 -eq 2 ] && printf "%s\n" "$err1" "$err2" | grep -c "^init.sh: --stage goes with --update only" | grep -qx 2 && [ "$(tree_digest "$I12")" = "$whole" ]'
+
+# -- 23. the release stamp: a release names itself from inside --------------------------------------------------
+# A throwaway repository holds the source, its stamp the committed placeholder, and tags it v9.9.9:
+# an archive of the tag records v9.9.9 whatever its file or directory is called, for an install, a
+# staged tree and an update; an adoption records no release of its own; --ref still wins (curl
+# stood in for by a copy of the archive). A checkout records working-tree, and an archive of an
+# untagged commit what its directory's name gives, as without a stamp; a stamp naming two tags
+# takes the one the directory spells, else the highest. This repository's tags are never touched.
+SR="$TMP/stamp"; RP="$SR/repo"
+refof() { sed -n 's/^ref=//p' "$1/common/.agentcontext" 2>/dev/null; }
+lay() { bash "$INIT" --from "$1" --target "$2" --conf "$CONF" --no-private >/dev/null 2>&1; }
+unpack() { mkdir -p "$SR/x" && "${G[@]}" -C "$RP" archive --format=tar.gz --prefix="$2/" "$1" | tar -xz -C "$SR/x"; }
+mkdir -p "$RP" && cp -R "$SRC/." "$RP/"
+"${G[@]}" -C "$RP" init -q && "${G[@]}" -C "$RP" add -A && "${G[@]}" -C "$RP" commit -q -m "chore: a release" \
+  && "${G[@]}" -C "$RP" tag v9.9.9
+"${G[@]}" -C "$RP" archive --format=tar.gz --prefix=anything/ v9.9.9 > "$SR/download.tar.gz"
+unpack v9.9.9 anything
+check "an archive of the tag fills the stamp with it" 'grep -q "^refs=.*tag: v9\.9\.9" "$SR/x/anything/RELEASE"'
+lay "$SR/x/anything" "$SR/i-dir"
+check "an install from the tag's archive extracted as anything/ records ref=v9.9.9 (found: $(refof "$SR/i-dir"))" '[ "$(refof "$SR/i-dir")" = v9.9.9 ]'
+lay "$SR/download.tar.gz" "$SR/i-arc"
+check "an install from the tag's archive file download.tar.gz records ref=v9.9.9 (found: $(refof "$SR/i-arc"))" '[ "$(refof "$SR/i-arc")" = v9.9.9 ]'
+lay "$SRC" "$SR/i-up"
+sed -i 's/^ref=.*/ref=v0.5.0/' "$SR/i-up/common/.agentcontext"
+out=$(bash "$INIT" --update --target "$SR/i-up" --from "$SR/download.tar.gz" --stage 2>&1); rc=$?
+check "--stage from the tag's archive file stages the tree under common/staging/v9.9.9/" \
+  '[ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^staged: common/staging/v9\.9\.9/, " && [ -d "$SR/i-up/common/staging/v9.9.9" ]'
+out=$(bash "$INIT" --update --target "$SR/i-up" --from "$SR/download.tar.gz" 2>&1); rc=$?
+check "an update from the tag's archive file records ref=v9.9.9 and its ledger line names v0.5.0 → v9.9.9" \
+  '[ $rc -eq 0 ] && [ "$(refof "$SR/i-up")" = v9.9.9 ] && tail -n 1 "$SR/i-up/common/reference/updates.md" | grep -q " — update v0\.5\.0 → v9\.9\.9: "'
+lay "$SRC" "$SR/i-adopt"
+out=$(bash "$INIT" --adopt codebase --target "$SR/i-adopt" --from "$SR/download.tar.gz" 2>&1); rc=$?
+check "an adoption from the tag's archive file leaves the instance's ref=working-tree as it was" \
+  '[ $rc -eq 0 ] && [ "$(refof "$SR/i-adopt")" = working-tree ] && grep -qx "module=codebase" "$SR/i-adopt/common/.agentcontext"'
+mkdir -p "$SR/bin" && printf '%s\n' '#!/bin/bash' 'while [ $# -gt 0 ]; do [ "$1" = -o ] && cp "$SMOKE_ARCHIVE" "$2"; shift; done' > "$SR/bin/curl" && chmod +x "$SR/bin/curl"
+lay "$SRC" "$SR/i-ref"
+out=$(PATH="$SR/bin:$PATH" SMOKE_ARCHIVE="$SR/download.tar.gz" bash "$INIT" --update --target "$SR/i-ref" --ref v9.9.8 2>&1); rc=$?
+check "--ref wins over the stamp: the archive of v9.9.9 fetched as v9.9.8 records ref=v9.9.8 (found: $(refof "$SR/i-ref"))" \
+  '[ $rc -eq 0 ] && [ "$(refof "$SR/i-ref")" = v9.9.8 ]'
+lay "$RP" "$SR/i-co"
+check "an install from a checkout, its stamp the placeholder, records ref=working-tree (found: $(refof "$SR/i-co"))" '[ "$(refof "$SR/i-co")" = working-tree ]'
+"${G[@]}" -C "$RP" commit -q --allow-empty -m "chore: after the release"
+unpack HEAD AgentContext-1.2.3; unpack HEAD untagged
+lay "$SR/x/AgentContext-1.2.3" "$SR/i-un1"; lay "$SR/x/untagged" "$SR/i-un2"
+check "an archive of an untagged commit records what its directory's name gives: v1.2.3 as AgentContext-1.2.3/, working-tree as untagged/" \
+  '[ "$(refof "$SR/i-un1")" = v1.2.3 ] && [ "$(refof "$SR/i-un2")" = working-tree ]'
+"${G[@]}" -C "$RP" tag v9.9.10 v9.9.9
+unpack v9.9.9 AgentContext-9.9.9; unpack v9.9.9 both
+lay "$SR/x/AgentContext-9.9.9" "$SR/i-two1"; lay "$SR/x/both" "$SR/i-two2"
+check "a stamp naming v9.9.9 and v9.9.10 records the one the directory spells, else the highest: v9.9.9, v9.9.10" \
+  '[ "$(refof "$SR/i-two1")" = v9.9.9 ] && [ "$(refof "$SR/i-two2")" = v9.9.10 ]'
 
 echo "== deploy smoke: $FAIL fail(s) =="
 exit $FAIL

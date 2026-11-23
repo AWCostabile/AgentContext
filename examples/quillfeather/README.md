@@ -23,8 +23,9 @@ tree starts at [AGENTS.md](./AGENTS.md), as it would in yours.
    moved it there, file by file); nothing there is edited by hand.
 
 The core files (`AGENTS.md`, `README.md`, `.vscode/` and everything under `common/`: `HYGIENE.md`,
-`rules/`, `scripts/`, `templates/`, `.conf.example`) are the template's own, copied in by the
-deployer and listed with their hashes in `common/.agentcontext`. Read them in the template rather
+`rules/`, `scripts/`, `templates/`, `reference/`, `staging/.gitignore`, `.conf.example`) are the
+template's own, copied in by the deployer and listed with their hashes in `common/.agentcontext`;
+the update's own ledger, `common/reference/updates.md`, sits beside them unlisted. Read them in the template rather
 than here.
 
 ## What to look at first

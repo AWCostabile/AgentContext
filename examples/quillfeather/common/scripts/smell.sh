@@ -37,6 +37,8 @@
 #   S20 uncited leaf                a public design/ or history/ leaf no file cites beyond
 #                                   its own branch index (the citation rule of find.sh -b)
 #   S21 inbox item overdue          a private/journal/inbox.md item older than 14 days
+#   S22 tool path in public/        an authored public/ leaf spelling a common/ path: it
+#                                   should name the tool, not where its script lives
 # Ids are stable; a missing number is a retired check.
 #
 # Usage: bash common/scripts/smell.sh [--root <dir>] [--quiet] [--today <YYYY-MM-DD>]
@@ -82,7 +84,7 @@ TMPL=0; template_mode && TMPL=1
 TERMS="$ROOT/common/scripts/retired-terms.txt"
 [ -f "$TERMS" ] || TERMS="$SCRIPT_DIR/retired-terms.txt"
 
-IDS="S01 S02 S03 S04 S05 S06 S07 S08 S09 S10 S11 S12 S13 S14 S16 S17 S18 S20 S21"
+IDS="S01 S02 S03 S04 S05 S06 S07 S08 S09 S10 S11 S12 S13 S14 S16 S17 S18 S20 S21 S22"
 declare -A COUNT
 for id in $IDS; do COUNT[$id]=0; done
 TOTAL=0 LANDED=0
@@ -535,6 +537,24 @@ if has_mirror && [ -f "$INBOX" ]; then
     }' "$INBOX")
 fi
 
+# -- S22: a tool's path in an authored public leaf -------------------------------------
+# A public leaf names a tool ("run the linter"), never the path of its script: common/ is
+# the template's, and the tree's one navigation into it is the root AGENTS.md. Scope: every
+# non-verbatim leaf under public/ (indexes and .agent files are navigation and exempt;
+# verbatim records keep the words they were written in). A path is common/ where a path
+# starts: at the line's head or after a character that cannot be part of one.
+mapfile -t S22_SCOPE < <(
+  for f in "${NONVERBATIM[@]}"; do
+    case "$f" in public/*) ;; *) continue ;; esac
+    case "$f" in */.index.md) continue ;; esac
+    printf '%s\n' "$f"
+  done
+)
+if [ ${#S22_SCOPE[@]} -gt 0 ]; then
+  emit < <(grep -cE '(^|[^A-Za-z0-9._/~-])common/' "${S22_SCOPE[@]}" /dev/null 2>/dev/null | grep -v ':0$' \
+    | awk -F: '{ print "S22\t" $1 ": " $2 " line" ($2 == 1 ? "" : "s") " spelling a common/ path — name the tool, not its path (\"run the linter\"); the root AGENTS.md navigates into common/" }')
+fi
+
 # -- summary --------------------------------------------------------------------
 echo "== SUMMARY: $TOTAL smell(s) — landed-since-retro=$LANDED =="
 printf '   S01 stale leaf         %3d   S02 leaf w/o provenance  %3d   S03 dead tag           %3d   S04 tag fragmentation  %3d\n' \
@@ -545,7 +565,7 @@ printf '   S09 template residue   %3d   S10 unindexed .agent     %3d   S11 cross
   "${COUNT[S09]}" "${COUNT[S10]}" "${COUNT[S11]}" "${COUNT[S12]}"
 printf '   S13 retired vocab      %3d   S14 oversized index ctx  %3d   S16 archive mismatch   %3d   S17 retro overdue      %3d\n' \
   "${COUNT[S13]}" "${COUNT[S14]}" "${COUNT[S16]}" "${COUNT[S17]}"
-printf '   S18 process vocabulary %3d   S20 uncited leaf         %3d   S21 inbox item overdue %3d   (rows landed since last retro: %d)\n' \
-  "${COUNT[S18]}" "${COUNT[S20]}" "${COUNT[S21]}" "$LANDED"
+printf '   S18 process vocabulary %3d   S20 uncited leaf         %3d   S21 inbox item overdue %3d   S22 public tool path   %3d   (rows landed since last retro: %d)\n' \
+  "${COUNT[S18]}" "${COUNT[S20]}" "${COUNT[S21]}" "${COUNT[S22]}" "$LANDED"
 [ "$TOTAL" -gt 255 ] && exit 255
 exit "$TOTAL"
