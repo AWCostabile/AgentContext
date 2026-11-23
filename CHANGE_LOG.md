@@ -1,3 +1,36 @@
+## Feature | Staged Migration [ _2026-11-23 10:04:26 UTC_ ]
+
+- docs: the migration sheet's hand-over names its commands and the smells output in the order they print
+- chore: the examples' inbox items dated inside their snapshot window
+- docs: Quillfeather's reader page lists the reference branch and the staging directory among its core files
+- docs: Edgewing's own instruction and constitution index name the reference branch and the process templates it holds
+- chore: the examples re-laid from the working tree
+- docs: the migration sheet says how to abandon a migration at any step before the merge
+- docs: the migration sheet saves the linter's verdict before anything changes and holds the migrated tree to it
+- docs: the migration sheet reports root-document hits as listed, a link's own text no longer among them
+- docs: the migration sheet's byte check excuses a kept file by its exact path, or the path it was to move to
+- test: the script check proves a link text naming its resolved target is no hit, and a stale one beside a stale target is
+- fix: find.sh --refs no longer reports a link's own text when the link already resolves to the moved path
+- docs: the release stamp is named where the manifest's ref and the never-laid files are described
+- test: the deploy smoke proves the release stamp and reads the same whether or not HEAD is tagged
+- feat: a release names itself from a stamp that git archive fills with its tag, whatever its directory is called
+- docs: MIGRATE.md words each check as the tools print it and searches the root documents again after the update
+- docs: the architecture, the run-sheet and the reader page describe the staging directory and the migration sheet
+- docs: an instance's instruction names the staging directory as a working directory and the migration sheet for a release that moves things
+- docs: HYGIENE.md states find.sh --refs exit codes and every root document cure.sh reads
+- test: the deploy smoke checks every guide an update names from the instance's release onwards
+- test: the deploy smoke proves the migration sheet pins the run-sheet's release and names only paths it ships
+- docs: the run-sheets and the fetch prompt pin v0.6.0
+- docs: the 0.5.1 migration guide, the reference and staging directories arriving with nothing moved
+- test: the migration sheet is proven never laid into an instance
+- docs: MIGRATE.md, a five-step run-sheet that stages, branches and respells an instance across a release
+- feat: find.sh --refs --respell rewrites the moved paths a tree spells, verbatim records left
+- feat: find.sh --refs marks a hit inside a verbatim record
+- test: the deploy smoke proves --stage writes only under the staging directory
+- feat: init.sh --update --stage writes a release's tree into common/staging/, which ignores its own contents
+- test: the deploy smoke proves a kept-only update leaves the ledger alone
+- fix: an update that only keeps edited files appends no ledger line
+
 ## Feature | Reference Branch [ _2026-11-18 12:01:37 UTC_ ]
 
 - docs: the reference branch, the deployer's ledger, path references and the citation rule are documented
